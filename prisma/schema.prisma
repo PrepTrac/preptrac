@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  // For PostgreSQL, change to: provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  name              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  items             Item[]
+  categories        Category[]
+  locations         Location[]
+  events            Event[]
+  notificationSettings NotificationSettings?
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String?  // Hex color for UI
+  icon        String?  // Icon name
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       Item[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       Item[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Item {
+  id                  String    @id @default(cuid())
+  name                String
+  description         String?
+  quantity            Float     @default(0)
+  unit                String    // e.g., "gallons", "rounds", "days", "pieces"
+  categoryId          String
+  category            Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  locationId          String
+  location            Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events              Event[]
+  
+  // Optional attributes
+  expirationDate      DateTime?
+  maintenanceInterval Int?      // Days between maintenance
+  lastMaintenanceDate DateTime?
+  rotationSchedule   Int?      // Days between rotations
+  lastRotationDate   DateTime?
+  notes               String?
+  imageUrl            String?
+  qrCode              String?   // QR code data
+  
+  // Tracking
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([categoryId])
+  @@index([locationId])
+  @@index([expirationDate])
+  @@index([lastMaintenanceDate])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  type        String   // "expiration", "maintenance", "rotation", "battery_replacement"
+  title       String
+  description String?
+  date        DateTime
+  itemId      String?
+  item        Item?    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@index([type])
+  @@index([completed])
+}
+
+model NotificationSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled          Boolean  @default(true)
+  emailExpirationDays   Int      @default(7)  // Notify X days before expiration
+  emailMaintenanceDays  Int      @default(3)  // Notify X days before maintenance
+  emailRotationDays     Int      @default(1)  // Notify X days before rotation
+  emailLowInventory     Boolean  @default(true)
+  inAppEnabled          Boolean  @default(true)
+  webhookEnabled        Boolean  @default(false)
+  webhookUrl            String?   // Webhook endpoint URL
+  webhookSecret         String?   // Optional secret for webhook signing
+  webhookExpirationDays Int      @default(7)  // Notify X days before expiration
+  webhookMaintenanceDays Int     @default(3)  // Notify X days before maintenance
+  webhookRotationDays   Int      @default(1)  // Notify X days before rotation
+  webhookLowInventory   Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
