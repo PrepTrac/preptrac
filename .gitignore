@@ -39,3 +39,5 @@ next-env.d.ts
 /prisma/dev.db
 /prisma/dev.db-journal
 
+#notes
+FutureUpdates.txt
