@@ -24,6 +24,34 @@ model User {
   events            Event[]
   consumptionLogs   ConsumptionLog[]
   notificationSettings NotificationSettings?
+  testDataRecords   TestDataRecord[]
+  familyMembers     FamilyMember[]
+}
+
+model FamilyMember {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?  // Optional display name (e.g. "Mom", "Child 1")
+  age       Int      // Years
+  weightKg  Float    // Weight in kilograms
+  heightCm  Float    // Height in centimeters
+  sex       String   // "male" | "female" (for calorie formula)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model TestDataRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordId  String   // id of the category, location, item, consumption_log, or event
+  kind      String   // "category" | "location" | "item" | "consumption_log" | "event"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Category {
@@ -83,11 +111,11 @@ model Item {
   qrCode              String?   // QR code data
   minQuantity         Float     @default(0) // Low inventory threshold
   targetQuantity      Float     @default(0)
-  
+  caloriesPerUnit     Float?    // For food items: calories per unit (e.g. per can) for Days of Food
   // Tracking
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
-  
+
   @@index([userId])
   @@index([categoryId])
   @@index([locationId])

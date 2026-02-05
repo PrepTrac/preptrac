@@ -59,5 +59,34 @@ export const locationsRouter = createTRPCRouter({
         where: { id: input.id },
       });
     }),
+
+  /** Consumption logs for items in this location (for location detail view). */
+  getConsumptionByLocation: protectedProcedure
+    .input(
+      z.object({
+        locationId: z.string(),
+        limit: z.number().min(1).max(100).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.consumptionLog.findMany({
+        where: {
+          userId: ctx.userId,
+          item: { locationId: input.locationId },
+        },
+        orderBy: { createdAt: "desc" },
+        take: input.limit ?? 50,
+        include: {
+          item: {
+            select: {
+              id: true,
+              name: true,
+              unit: true,
+              locationId: true,
+            },
+          },
+        },
+      });
+    }),
 });
 

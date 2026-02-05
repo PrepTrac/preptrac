@@ -8,10 +8,18 @@ interface DashboardMetricsProps {
     totalFoodDays?: number;
     totalAmmo?: number;
     totalItems?: number;
+    useHouseholdCalculation?: boolean;
   } | undefined;
 }
 
 export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
+  const foodDaysValue =
+    typeof stats?.totalFoodDays === "number"
+      ? Number.isInteger(stats.totalFoodDays)
+        ? stats.totalFoodDays
+        : stats.totalFoodDays.toFixed(1)
+      : 0;
+
   const metrics = [
     {
       name: "Total Water",
@@ -22,8 +30,9 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
     },
     {
       name: "Food Days",
-      value: stats?.totalFoodDays ?? 0,
+      value: foodDaysValue,
       unit: "days",
+      subtitle: stats?.useHouseholdCalculation ? "Based on your household" : undefined,
       icon: UtensilsCrossed,
       color: "bg-green-500",
     },
@@ -70,6 +79,11 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
                         {metric.unit}
                       </div>
                     </dd>
+                    {"subtitle" in metric && metric.subtitle && (
+                      <dd className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {metric.subtitle}
+                      </dd>
+                    )}
                   </dl>
                 </div>
               </div>

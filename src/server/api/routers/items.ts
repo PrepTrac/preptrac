@@ -238,6 +238,7 @@ export const itemsRouter = createTRPCRouter({
         qrCode: z.string().optional(),
         minQuantity: z.number().default(0),
         targetQuantity: z.number().default(0),
+        caloriesPerUnit: z.number().positive().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -276,6 +277,7 @@ export const itemsRouter = createTRPCRouter({
         qrCode: z.string().nullable().optional(),
         minQuantity: z.number().optional(),
         targetQuantity: z.number().optional(),
+        caloriesPerUnit: z.number().positive().nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

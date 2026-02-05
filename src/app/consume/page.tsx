@@ -65,6 +65,7 @@ export default function ConsumePage() {
       void utils.items.getAll.invalidate();
       void utils.items.getRecentConsumption.invalidate();
       void utils.items.getConsumptionStats.invalidate();
+      void utils.locations.getConsumptionByLocation.invalidate();
       setRows([emptyRow()]);
     },
   });

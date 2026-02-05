@@ -18,8 +18,7 @@ cp .env.example .env
 
 Edit `.env` and set:
 - `DATABASE_URL="file:./dev.db"` (SQLite - no setup needed)
-- `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
-- `NEXTAUTH_URL="http://localhost:3000"`
+- `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are optional (the app has no authentication)
 
 ## Step 3: Initialize Database
 
@@ -34,38 +33,38 @@ npm run db:generate
 npm run dev
 ```
 
-## Step 5: Create Your Account
+## Step 5: Open the App
 
 1. Open http://localhost:3000
-2. Click "Create a new account"
-3. Enter your email and password (min 8 characters)
-4. You'll be automatically signed in
+2. You’re taken straight to the **Dashboard** — there is no sign-in or registration
 
 ## Step 6: Set Up Your First Data
 
-### Create Categories
+You can either try the app with sample data first, or set up your own data.
+
+### Option A: Try With Sample Data (Recommended for First Run)
+
+1. Go to **Settings** → **Test data**
+2. Read the disclaimer: the test data tool is for visualizing the app only, not for production
+3. Click **Fill test data**
+4. You’ll get categories, locations, items, and some consumption history. Explore **Dashboard**, **Inventory**, **Locations**, **Consume**, and **Calendar**
+5. When you’re ready to use real data, go back to **Settings** → **Test data** and click **Remove test data** (only test data is removed; any real data you added is safe)
+
+### Option B: Set Up Your Own Data
+
+#### Create Categories
 
 1. Go to **Settings** → **Categories**
 2. Click **Add Category**
-3. Create categories like:
-   - Food
-   - Water
-   - Ammo
-   - Medical
-   - Tools
-   - Fuel
+3. Create categories like: Food, Water, Ammo, Medical, Tools, Fuel
 
-### Create Locations
+#### Create Locations
 
 1. Go to **Settings** → **Locations**
 2. Click **Add Location**
-3. Create locations like:
-   - Basement Shelf A
-   - Garage Cabinet
-   - Vehicle Trunk
-   - Storage Bin #1
+3. Create locations like: Basement Shelf A, Garage Cabinet, Vehicle Trunk, Storage Bin #1
 
-### Add Your First Item
+#### Add Your First Item
 
 1. Go to **Inventory**
 2. Click **Add Item**
@@ -80,18 +79,22 @@ npm run dev
 
 ## Step 7: Explore Features
 
-- **Dashboard**: See your inventory metrics
-- **Inventory**: Browse and filter your items
+- **Dashboard**: See your inventory metrics and upcoming events
+- **Inventory**: Browse and filter items; add or edit items
+- **Locations**: Select a location to see what’s stored there and consumption from that location
+- **Consume**: Log consumption (single or multiple items) and view consumption analytics
 - **Calendar**: View upcoming expirations and maintenance
-- **Settings**: Configure notifications and manage categories/locations
+- **Settings**: Notifications, Categories, Locations, and Test data (fill/remove sample data)
 
 ## Common First Steps
 
-1. ✅ Create 5-10 categories
-2. ✅ Create 3-5 locations
-3. ✅ Add 10-20 items
-4. ✅ Set expiration dates for perishables
-5. ✅ Configure notification preferences
+1. ✅ Try **Fill test data** in Settings → Test data to see the app with sample data, or create your own categories and locations
+2. ✅ Create 5-10 categories (or use the ones from test data)
+3. ✅ Create 3-5 locations
+4. ✅ Add 10-20 items (from Inventory or from Locations → Add item here)
+5. ✅ Log consumption from **Consume** and check **Locations** for per-location history
+6. ✅ Set expiration dates for perishables
+7. ✅ Configure notification preferences in Settings → Notifications
 
 ## Troubleshooting
 
@@ -107,10 +110,10 @@ npm install
 npm run db:generate
 ```
 
-**Can't sign in?**
-- Make sure you created an account first
-- Check that NEXTAUTH_SECRET is set
-- Clear browser cookies
+**Want to start over with no data?**
+- Delete `prisma/dev.db` (and `prisma/dev.db-journal` if it exists)
+- Run `npm run db:push`
+- Restart the app; the default user and default categories/locations are created automatically
 
 ## Next Steps
 

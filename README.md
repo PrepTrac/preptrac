@@ -4,12 +4,17 @@ A self-hosted web application for tracking all preparedness-related inventory bu
 
 ## Features
 
-- **Inventory Management**: Full CRUD operations for tracking items (food, water, ammo, medical supplies, tools, etc.)
+- **Inventory Management**: Full CRUD operations for tracking items (food, water, ammo, medical supplies, tools, etc.). Food items require **calories per unit** (e.g. per jar, can, bag) so the app can compute total pantry energy.
 - **Categories & Locations**: Organize items by category and storage location
+- **Household Profile**: Add family members (age, weight, height, sex). The app calculates each person’s daily calorie need (Mifflin-St Jeor) and uses the household total for **Days of Food**.
+- **Days of Food**: Total inventory calories (sum of quantity × calories per unit for all items) ÷ household daily calorie requirement. Shown on the dashboard; “Based on your household” when using this formula.
+- **Locations View**: Select a location to see everything stored there and consumption history from that location
+- **Consume**: Log consumption (single or multiple items), view recent consumption and analytics (charts, time range, by category)
 - **Calendar System**: Track expirations, rotations, maintenance schedules, and battery replacements
-- **Dashboard**: View key metrics including total water, food days, ammo counts, and upcoming events
+- **Dashboard**: View key metrics: total water, **Days of Food** (household-based when set up), ammo count, total items, and upcoming events
 - **Notifications**: Email and in-app notifications for expirations, maintenance, and low inventory
 - **Search & Filters**: Find items by category, location, expiration status, maintenance needs, and more
+- **Test Data (Settings)**: Fill sample preparedness inventory to visualize the app; remove test data without touching your real preps
 - **QR Code Support**: Generate QR codes for items and locations
 - **Dark Mode**: Full dark mode support
 - **PWA Support**: Progressive Web App with offline capabilities
@@ -20,10 +25,11 @@ A self-hosted web application for tracking all preparedness-related inventory bu
 - **API**: tRPC
 - **Database**: Prisma (SQLite or PostgreSQL)
 - **Styling**: TailwindCSS
-- **Authentication**: NextAuth.js (Credentials)
 - **Forms**: React Hook Form
 - **Icons**: Lucide React
 - **Date Handling**: date-fns
+
+The app runs **without authentication**: a single default user is used automatically, so there is no sign-in or registration. Open the app and start using Dashboard, Inventory, Locations, and Consume.
 
 ## Architecture
 
@@ -31,23 +37,27 @@ A self-hosted web application for tracking all preparedness-related inventory bu
 
 The application uses Prisma with the following models:
 
-- **User**: Authentication and user management
+- **User**: Single default user (no login; created automatically)
 - **Category**: Item categories (Food, Water, Ammo, Medical, etc.)
 - **Location**: Storage locations (basement, garage, vehicle, etc.)
-- **Item**: Inventory items with quantity, expiration, maintenance tracking
+- **Item**: Inventory items with quantity, unit, expiration, maintenance tracking, and optional **caloriesPerUnit** (required for food category for Days of Food)
+- **FamilyMember**: Household profile — age, weight (kg), height (cm), sex; used to compute daily calorie need per person
 - **Event**: Calendar events (expiration, maintenance, rotation, battery replacement)
+- **ConsumptionLog**: Records of item consumption (quantity, note, date)
 - **NotificationSettings**: User notification preferences
+- **TestDataRecord**: Tracks entities created by “Fill test data” so they can be removed without affecting real data
 
 ### API Structure
 
 tRPC routers organized by domain:
-- `items`: Item CRUD and filtering
+- `items`: Item CRUD, filtering, consumption logging, and consumption stats
 - `categories`: Category management
-- `locations`: Location management
+- `locations`: Location management and consumption-by-location
 - `events`: Calendar event management
-- `dashboard`: Dashboard statistics and metrics
+- `dashboard`: Dashboard statistics and metrics (including Days of Food from inventory calories ÷ household)
+- `household`: Family member CRUD and total daily calorie calculation
 - `notifications`: Notification settings and pending notifications
-- `auth`: User registration
+- `settings`: Fill test data, remove test data, and test-data status
 
 ### Frontend Structure
 
@@ -56,14 +66,17 @@ src/
 ├── app/              # Next.js App Router pages
 │   ├── dashboard/   # Dashboard page
 │   ├── inventory/   # Inventory list page
+│   ├── locations/   # Location detail: items and consumption per location
+│   ├── consume/     # Log consumption and view consumption analytics
+│   ├── household/   # Household profile: family members and daily calorie needs
 │   ├── calendar/    # Calendar view
-│   ├── settings/    # Settings page
-│   └── auth/        # Authentication pages
+│   ├── settings/    # Settings (notifications, categories, locations, test data)
+│   └── auth/        # Legacy auth pages (unused; app uses default user)
 ├── components/      # React components
 ├── server/          # Backend code
 │   ├── api/         # tRPC routers
 │   ├── db.ts        # Prisma client
-│   └── auth.ts      # NextAuth configuration
+│   └── auth.ts      # Default user (getOrCreateDefaultUser)
 └── utils/           # Utility functions
 ```
 
@@ -93,8 +106,7 @@ src/
    - `DATABASE_URL`: Database connection string
      - SQLite: `file:./dev.db`
      - PostgreSQL: `postgresql://user:password@localhost:5432/preptrac?schema=public`
-   - `NEXTAUTH_SECRET`: Generate a random string (e.g., `openssl rand -base64 32`)
-   - `NEXTAUTH_URL`: Your app URL (e.g., `http://localhost:3000`)
+   - `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are optional (the app does not use authentication; they are only needed if you add auth later)
 
 4. **Set up the database**:
    ```bash
@@ -112,15 +124,16 @@ src/
    ```
 
 7. **Open your browser**:
-   Navigate to `http://localhost:3000`
+   Navigate to `http://localhost:3000`. The app has no login — you are taken straight to the Dashboard.
 
 ### First-Time Setup
 
-1. **Create an account**: Click "Create a new account" on the sign-in page
-2. **Set up categories**: Go to Settings → Categories and create your categories (Food, Water, Ammo, etc.)
-3. **Set up locations**: Go to Settings → Locations and create storage locations
-4. **Add items**: Go to Inventory and start adding items
-5. **Configure notifications**: Go to Settings → Notifications to set up your preferences
+1. **Optional – try with sample data**: Go to Settings → Test data and click **Fill test data** to load a sample preparedness inventory and see how the app works. Use **Remove test data** later to clear only that data (your real preps are never touched). The test data tool is for visualization only and not for production use.
+2. **Household profile (for accurate Days of Food)**: Go to **Household** and add family members (age, weight in kg, height in cm, sex). The app uses Mifflin-St Jeor to estimate daily calorie needs and divides total food calories by this to show **Days of Food** on the dashboard.
+3. **Set up categories**: Go to Settings → Categories and create your categories (Food, Water, Ammo, etc.), or use the default categories created on first run.
+4. **Set up locations**: Go to Settings → Locations and create storage locations, or use the defaults.
+5. **Add items**: Go to Inventory and add items. For **food** items you must enter **Calories per unit** (e.g. per jar, can, bag); total calories = quantity × calories per unit. Non-food items can leave calories blank.
+6. **Configure notifications**: Go to Settings → Notifications to set up your preferences (optional).
 
 ## Database Options
 
@@ -202,8 +215,9 @@ CMD ["npm", "start"]
 1. Navigate to **Inventory**
 2. Click **Add Item**
 3. Fill in the required fields:
-   - Name, Quantity, Unit
-   - Category and Location
+   - **Name**, **Quantity**, **Unit** (e.g. jar, can, bag)
+   - **Category** and **Location**
+   - **Calories per unit**: Required when the category is Food. Enter the calories for one unit (e.g. 3100 for a jar of peanut butter). Total calories for the entry = quantity × calories per unit.
 4. Optionally add:
    - Expiration date
    - Maintenance interval and last maintenance date
@@ -225,6 +239,22 @@ CMD ["npm", "start"]
 3. Set name and description
 4. Examples: "Basement Shelf A", "Garage Cabinet", "Vehicle Trunk", "Bin #3"
 
+### Household Profile and Days of Food
+
+1. Go to **Household** (main nav)
+2. Click **Add member** and enter each family member’s name (optional), age, sex, weight (kg), and height (cm)
+3. The app shows each person’s estimated daily calorie need and the **total household daily requirement**
+4. On the **Dashboard**, **Days of Food** = (total calories in inventory from all items with calories per unit) ÷ (household daily requirement). When this is used, the card shows “Based on your household”
+5. For the calculation to work, add food (and any other) items with **Calories per unit** set so the app can sum total inventory calories
+
+### Viewing by Location
+
+1. Go to **Locations** (main nav)
+2. Select a location from the dropdown
+3. View all items at that location and their quantities
+4. Scroll to **Consumed from this location** to see consumption history for that location
+5. Use **Add item here** to create a new item pre-assigned to the selected location
+
 ### Calendar Events
 
 Events are automatically created based on:
@@ -234,12 +264,26 @@ Events are automatically created based on:
 
 You can also manually create events in the calendar view.
 
+### Logging Consumption
+
+1. Go to **Consume** (main nav)
+2. Select one or more items and enter the quantity consumed (add rows for multiple items)
+3. Optionally add a note (e.g., "Range day", "Emergency use")
+4. Click **Record consumption** — inventory quantities are updated and the log is saved
+5. Use the **Consumption analytics** section to view charts and totals over a chosen time range (by category)
+
 ### Notifications
 
 Configure notifications in **Settings** → **Notifications**:
 - Enable/disable email and in-app notifications
 - Set how many days before expiration/maintenance to notify
 - Enable low inventory alerts
+
+### Test Data (Settings)
+
+In **Settings** → **Test data** you can:
+- **Fill test data**: Add a sample preparedness inventory (categories, locations, items, some consumption) to visualize the app. Safe to run multiple times; existing categories and locations are reused. Not for production use.
+- **Remove test data**: Remove only data that was added by "Fill test data". Your real categories, locations, and items are never deleted. If you edited or tracked preps using the test data, that data will be removed when you click Remove test data.
 
 ### QR Codes
 
@@ -336,23 +380,24 @@ The T3 Stack provides end-to-end type safety:
 - For PostgreSQL, ensure the database exists and credentials are correct
 - Run `npm run db:push` to sync schema
 
-### Authentication Issues
-
-- Ensure `NEXTAUTH_SECRET` is set
-- Check `NEXTAUTH_URL` matches your deployment URL
-- Clear browser cookies if having login issues
-
 ### Build Errors
 
 - Run `npm run db:generate` to regenerate Prisma Client
 - Delete `.next` folder and rebuild
 - Check Node.js version (requires 18+)
 
+### Starting Over (Empty Database)
+
+To wipe all data and start from scratch:
+1. Stop the dev server
+2. Delete the database file(s): `prisma/dev.db` and `prisma/dev.db-journal` (if present)
+3. Run `npm run db:push` to recreate the schema
+4. Restart the app; the default user and default categories/locations will be created automatically on first load
+
 ## Security Considerations
 
-- Change `NEXTAUTH_SECRET` in production
-- Use strong passwords
-- Enable HTTPS in production
+- The app does not use authentication; it is intended for single-user / local use. Do not expose it to the internet without adding access control if needed.
+- Enable HTTPS in production if deployed
 - Regularly backup your database
 - Keep dependencies updated
 

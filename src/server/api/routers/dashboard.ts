@@ -25,12 +25,45 @@ export const dashboardRouter = createTRPCRouter({
       return sum + item.quantity;
     }, 0);
 
-    // Calculate food days (simplified - assumes average consumption)
+    // Total inventory calories: sum over ALL items that have caloriesPerUnit set
+    const totalInventoryCalories = items.reduce((sum, item) => {
+      const caloriesPerUnit = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
+      if (caloriesPerUnit != null && caloriesPerUnit > 0) {
+        return sum + item.quantity * caloriesPerUnit;
+      }
+      return sum;
+    }, 0);
+
     const foodItems = items.filter((item) =>
       item.category.name.toLowerCase().includes("food")
     );
-    // This is a placeholder calculation - adjust based on your needs
-    const totalFoodDays = foodItems.reduce((sum, item) => sum + item.quantity, 0) / 3; // Rough estimate
+
+    // Household total daily calories (Mifflin-St Jeor BMR sum)
+    const familyMembers = await ctx.prisma.familyMember.findMany({
+      where: { userId },
+    });
+    const getTotalDailyCalories = () => {
+      const base = (w: number, h: number, a: number, s: string) => {
+        const b = 10 * w + 6.25 * h - 5 * a;
+        return s.toLowerCase() === "female" ? b - 161 : b + 5;
+      };
+      return familyMembers.reduce(
+        (sum, m) => sum + Math.max(0, Math.round(base(m.weightKg, m.heightCm, m.age, m.sex))),
+        0
+      );
+    };
+    const totalDailyCalories = getTotalDailyCalories();
+
+    // Days of food: use household-based calculation when possible
+    let totalFoodDays: number;
+    let useHouseholdCalculation = false;
+    if (totalDailyCalories > 0 && totalInventoryCalories > 0) {
+      totalFoodDays = totalInventoryCalories / totalDailyCalories;
+      useHouseholdCalculation = true;
+    } else {
+      // Fallback: generic estimate (same as before)
+      totalFoodDays = foodItems.reduce((sum, item) => sum + item.quantity, 0) / 3;
+    }
 
     // Calculate ammo counts
     const ammoItems = items.filter((item) =>
@@ -144,7 +177,10 @@ export const dashboardRouter = createTRPCRouter({
 
     return {
       totalWater,
-      totalFoodDays: Math.round(totalFoodDays),
+      totalFoodDays: Math.round(totalFoodDays * 10) / 10,
+      totalInventoryCalories: Math.round(totalInventoryCalories),
+      householdDailyCalories: totalDailyCalories,
+      useHouseholdCalculation,
       totalAmmo,
       upcomingExpirations,
       needsMaintenance,

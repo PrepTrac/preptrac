@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 
 interface ItemFormProps {
   itemId?: string | null;
+  defaultLocationId?: string;
   onClose: () => void;
 }
 
@@ -26,9 +27,10 @@ interface ItemFormData {
   imageUrl?: string;
   minQuantity: number;
   targetQuantity: number;
+  caloriesPerUnit?: number;
 }
 
-export default function ItemForm({ itemId, onClose }: ItemFormProps) {
+export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFormProps) {
   const { data: item } = api.items.getById.useQuery(
     { id: itemId! },
     { enabled: !!itemId }
@@ -56,10 +58,16 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<ItemFormData>();
+
+  const selectedCategoryId = watch("categoryId");
+  const isFoodCategory =
+    categories?.find((c) => c.id === selectedCategoryId)?.name.toLowerCase().includes("food") ?? false;
 
   useEffect(() => {
     if (item) {
+      const itemWithCal = item as { caloriesPerUnit?: number | null };
       reset({
         name: item.name,
         description: item.description ?? "",
@@ -67,24 +75,29 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
         unit: item.unit,
         categoryId: item.categoryId,
         locationId: item.locationId,
-        expirationDate: item.expirationDate
-          ? new Date(item.expirationDate).toISOString().split("T")[0]
-          : "",
-        maintenanceInterval: item.maintenanceInterval ?? undefined,
-        lastMaintenanceDate: item.lastMaintenanceDate
-          ? new Date(item.lastMaintenanceDate).toISOString().split("T")[0]
-          : "",
-        rotationSchedule: item.rotationSchedule ?? undefined,
-        lastRotationDate: item.lastRotationDate
-          ? new Date(item.lastRotationDate).toISOString().split("T")[0]
-          : "",
-        notes: item.notes ?? "",
-        imageUrl: item.imageUrl ?? "",
-        minQuantity: item.minQuantity ?? 0,
-        targetQuantity: item.targetQuantity ?? 0,
+        caloriesPerUnit: itemWithCal.caloriesPerUnit ?? undefined,
+      });
+    } else if (defaultLocationId) {
+      reset({
+        name: "",
+        description: "",
+        quantity: 0,
+        unit: "",
+        categoryId: "",
+        locationId: defaultLocationId,
+        expirationDate: "",
+        maintenanceInterval: undefined,
+        lastMaintenanceDate: "",
+        rotationSchedule: undefined,
+        lastRotationDate: "",
+        notes: "",
+        imageUrl: "",
+        minQuantity: 0,
+        targetQuantity: 0,
+        caloriesPerUnit: undefined,
       });
     }
-  }, [item, reset]);
+  }, [item, defaultLocationId, reset]);
 
   const onSubmit = (data: ItemFormData) => {
     const submitData: any = {
@@ -99,6 +112,12 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
       minQuantity: Number(data.minQuantity) || 0,
       targetQuantity: Number(data.targetQuantity) || 0,
     };
+    const cal = data.caloriesPerUnit;
+    if (cal != null && !Number.isNaN(cal) && cal > 0) {
+      submitData.caloriesPerUnit = cal;
+    } else if (itemId) {
+      submitData.caloriesPerUnit = null;
+    }
 
     // Only include date fields if they have values
     if (data.expirationDate) {
@@ -255,6 +274,33 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Calories per unit {isFoodCategory && "*"}
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              {...register("caloriesPerUnit", {
+                valueAsNumber: true,
+                required: isFoodCategory ? "Required for food items" : false,
+                min: isFoodCategory
+                  ? { value: 1, message: "Enter calories per single unit (e.g. per jar, per can)" }
+                  : undefined,
+              })}
+              className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="e.g. 3100"
+            />
+            {errors.caloriesPerUnit && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.caloriesPerUnit.message}</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Calories per single unit (e.g. per jar, per can, per bag). Total for this item = quantity ×
+              calories per unit. {isFoodCategory ? "Required for food items for Days of Food." : "Optional for non-food."}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
