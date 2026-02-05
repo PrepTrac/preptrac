@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { generateQRCode } from "~/utils/qrcode";
 import { X } from "lucide-react";
 
@@ -60,7 +61,14 @@ export default function QRCodeDisplay({ data, title, onClose }: QRCodeDisplayPro
         </div>
       )}
       <div className="flex justify-center">
-        <img src={qrCode} alt="QR Code" className="max-w-full h-auto" />
+        <Image
+          src={qrCode}
+          alt="QR Code"
+          width={300}
+          height={300}
+          className="max-w-full h-auto"
+          unoptimized
+        />
       </div>
       <p className="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
         Scan with your phone to view details

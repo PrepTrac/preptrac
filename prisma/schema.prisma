@@ -78,6 +78,7 @@ model Item {
   notes               String?
   imageUrl            String?
   qrCode              String?   // QR code data
+  minQuantity         Float     @default(0) // Low inventory threshold
   
   // Tracking
   createdAt           DateTime  @default(now())

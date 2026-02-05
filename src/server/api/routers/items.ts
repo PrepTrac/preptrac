@@ -45,7 +45,20 @@ export const itemsRouter = createTRPCRouter({
       }
 
       if (input?.lowInventory) {
-        where.quantity = { lte: 10 };
+        where.OR = [
+          {
+            AND: [
+              { minQuantity: { gt: 0 } },
+              { quantity: { lte: ctx.prisma.item.fields.minQuantity } }
+            ]
+          },
+          {
+            AND: [
+              { minQuantity: 0 },
+              { quantity: { lte: 10 } }
+            ]
+          }
+        ];
       }
 
       if (input?.needsMaintenance) {
@@ -111,6 +124,7 @@ export const itemsRouter = createTRPCRouter({
         notes: z.string().optional(),
         imageUrl: z.string().optional(),
         qrCode: z.string().optional(),
+        minQuantity: z.number().default(0),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -144,6 +158,7 @@ export const itemsRouter = createTRPCRouter({
         notes: z.string().nullable().optional(),
         imageUrl: z.string().nullable().optional(),
         qrCode: z.string().nullable().optional(),
+        minQuantity: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

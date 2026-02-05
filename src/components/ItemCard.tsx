@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import Image from "next/image";
 import { Edit, AlertCircle, Wrench } from "lucide-react";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
@@ -33,10 +34,23 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         item.maintenanceInterval * 24 * 60 * 60 * 1000
     ) <= new Date();
 
-  const isLowInventory = item.quantity <= 10;
+  const isLowInventory = item.minQuantity > 0
+    ? item.quantity <= item.minQuantity
+    : item.quantity <= 10;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+      {item.imageUrl && (
+        <div className="relative h-40 w-full mb-4 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700">
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+      )}
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -89,7 +103,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         </p>
       )}
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-auto pt-4 flex justify-end">
         <button
           onClick={() => {
             if (confirm("Are you sure you want to delete this item?")) {
