@@ -73,21 +73,53 @@ export const notificationsRouter = createTRPCRouter({
         throw new Error("Webhook is not enabled or URL is not set");
       }
 
+      const inSevenDays = new Date();
+      inSevenDays.setDate(inSevenDays.getDate() + 7);
       const testPayload: WebhookPayload = {
-        type: "maintenance",
-        message: "Test webhook from PrepTrac",
-        date: new Date().toISOString(),
+        type: "expiration",
+        message: "Emergency Water expires in 7 days",
+        date: inSevenDays.toISOString(),
         timestamp: new Date().toISOString(),
+        item: {
+          id: "example-item-id",
+          name: "Emergency Water",
+          quantity: 10,
+          unit: "gallons",
+          category: "Water",
+          location: "Basement",
+          expirationDate: inSevenDays.toISOString(),
+        },
       };
+      const maintenanceExample: WebhookPayload = {
+        type: "maintenance",
+        message: "Generator needs scheduled maintenance",
+        date: inSevenDays.toISOString(),
+        timestamp: new Date().toISOString(),
+        item: {
+          id: "example-item-id-2",
+          name: "Backup Generator",
+          quantity: 1,
+          unit: "each",
+          category: "Fuel & Energy",
+          location: "Garage",
+        },
+      };
+      const examples = [testPayload, maintenanceExample];
+      const payload = examples[Math.floor(Math.random() * examples.length)]!;
 
       const result = await sendWebhook(
         settings.webhookUrl,
-        testPayload,
+        payload,
         settings.webhookSecret ?? undefined
       );
 
       if (!result.success) {
-        throw new Error(result.error ?? "Failed to send webhook");
+        const msg = result.error ?? "Failed to send webhook";
+        throw new Error(
+          msg.includes("400")
+            ? `${msg} Your endpoint may expect a different payload (e.g. Discord/Slack use their own format). See WEBHOOKS.md for PrepTrac's payload.`
+            : msg
+        );
       }
 
       return { success: true, message: "Test webhook sent successfully" };
