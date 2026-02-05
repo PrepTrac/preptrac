@@ -7,7 +7,7 @@ import * as nodemailer from "nodemailer";
 export const notificationsRouter = createTRPCRouter({
   getSettings: protectedProcedure.query(async ({ ctx }) => {
     let settings = await ctx.prisma.notificationSettings.findUnique({
-      where: { userId: ctx.session.user.id },
+      where: { userId: ctx.userId },
     });
 
     const hasSmtpConfig = !!(
@@ -20,7 +20,7 @@ export const notificationsRouter = createTRPCRouter({
     if (!settings) {
       settings = await ctx.prisma.notificationSettings.create({
         data: {
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
           emailEnabled: hasSmtpConfig,
         },
       });
@@ -54,9 +54,9 @@ export const notificationsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.notificationSettings.upsert({
-        where: { userId: ctx.session.user.id },
+        where: { userId: ctx.userId },
         create: {
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
           ...input,
         },
         update: input,
@@ -66,7 +66,7 @@ export const notificationsRouter = createTRPCRouter({
   sendTestWebhook: protectedProcedure
     .mutation(async ({ ctx }) => {
       const settings = await ctx.prisma.notificationSettings.findUnique({
-        where: { userId: ctx.session.user.id },
+        where: { userId: ctx.userId },
       });
 
       if (!settings?.webhookEnabled || !settings.webhookUrl) {
@@ -95,7 +95,7 @@ export const notificationsRouter = createTRPCRouter({
 
   sendTestEmail: protectedProcedure.mutation(async ({ ctx }) => {
     const settings = await ctx.prisma.notificationSettings.findUnique({
-      where: { userId: ctx.session.user.id },
+      where: { userId: ctx.userId },
     });
 
     const smtpHost = settings?.smtpHost || env.SMTP_HOST;
@@ -118,10 +118,14 @@ export const notificationsRouter = createTRPCRouter({
       },
     });
 
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.userId },
+      select: { email: true },
+    });
     try {
       await transporter.sendMail({
         from: smtpFrom,
-        to: ctx.session.user.email ?? smtpUser,
+        to: user?.email ?? smtpUser,
         subject: "PrepTrac Test Email",
         text: "This is a test email from your PrepTrac installation. Your SMTP settings are working correctly!",
         html: "<p>This is a test email from your <strong>PrepTrac</strong> installation. Your SMTP settings are working correctly!</p>",
@@ -136,7 +140,7 @@ export const notificationsRouter = createTRPCRouter({
 
   getPendingNotifications: protectedProcedure.query(async ({ ctx }) => {
     const settings = await ctx.prisma.notificationSettings.findUnique({
-      where: { userId: ctx.session.user.id },
+      where: { userId: ctx.userId },
     });
 
     if (!settings || !settings.inAppEnabled) {
@@ -160,7 +164,7 @@ export const notificationsRouter = createTRPCRouter({
 
       const expiringItems = await ctx.prisma.item.findMany({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
           expirationDate: {
             lte: expirationDate,
             gte: now,
@@ -182,7 +186,7 @@ export const notificationsRouter = createTRPCRouter({
     if (settings.emailMaintenanceDays) {
       const items = await ctx.prisma.item.findMany({
         where: {
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
           maintenanceInterval: { not: null },
         },
       });
@@ -208,7 +212,7 @@ export const notificationsRouter = createTRPCRouter({
     // Upcoming events
     const upcomingEvents = await ctx.prisma.event.findMany({
       where: {
-        userId: ctx.session.user.id,
+        userId: ctx.userId,
         completed: false,
         date: {
           gte: now,

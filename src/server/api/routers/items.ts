@@ -19,7 +19,7 @@ export const itemsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const where: any = {
-        userId: ctx.session.user.id,
+        userId: ctx.userId,
       };
 
       if (input?.categoryId) {
@@ -51,7 +51,7 @@ export const itemsRouter = createTRPCRouter({
         // Since Prisma can't compare fields within a where clause, we need to fetch and filter
         const items = await ctx.prisma.item.findMany({
           where: {
-            userId: ctx.session.user.id,
+            userId: ctx.userId,
           },
         });
 
@@ -72,7 +72,7 @@ export const itemsRouter = createTRPCRouter({
       if (input?.needsMaintenance) {
         const items = await ctx.prisma.item.findMany({
           where: {
-            userId: ctx.session.user.id,
+            userId: ctx.userId,
             maintenanceInterval: { not: null },
           },
         });
@@ -106,7 +106,7 @@ export const itemsRouter = createTRPCRouter({
       return ctx.prisma.item.findFirst({
         where: {
           id: input.id,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
         include: {
           category: true,
@@ -119,7 +119,7 @@ export const itemsRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
     .query(async ({ ctx, input }) => {
       return ctx.prisma.consumptionLog.findMany({
-        where: { userId: ctx.session.user.id },
+        where: { userId: ctx.userId },
         orderBy: { createdAt: "desc" },
         take: input?.limit ?? 25,
         include: {
@@ -138,7 +138,7 @@ export const itemsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.userId;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - input.days);
       startDate.setHours(0, 0, 0, 0);
@@ -244,7 +244,7 @@ export const itemsRouter = createTRPCRouter({
       const item = await ctx.prisma.item.create({
         data: {
           ...input,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
         include: {
           category: true,
@@ -252,7 +252,7 @@ export const itemsRouter = createTRPCRouter({
         },
       });
 
-      await syncItemEvents(ctx.prisma, ctx.session.user.id, item);
+      await syncItemEvents(ctx.prisma, ctx.userId, item);
       return item;
     }),
 
@@ -289,7 +289,7 @@ export const itemsRouter = createTRPCRouter({
         },
       });
 
-      await syncItemEvents(ctx.prisma, ctx.session.user.id, item);
+      await syncItemEvents(ctx.prisma, ctx.userId, item);
       return item;
     }),
 
@@ -311,7 +311,7 @@ export const itemsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.userId;
       const item = await ctx.prisma.item.findFirst({
         where: { id: input.itemId, userId },
         include: { category: true, location: true },
@@ -359,7 +359,7 @@ export const itemsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.userId;
       const results: { itemId: string; success: boolean; error?: string }[] = [];
       const updates: Prisma.PrismaPromise<any>[] = [];
       const items = await ctx.prisma.item.findMany({

@@ -1,9 +1,7 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Navigation from "~/components/Navigation";
 import ItemCard from "~/components/ItemCard";
 import ItemForm from "~/components/ItemForm";
@@ -13,8 +11,6 @@ import { Plus, Search, Filter, Download } from "lucide-react";
 import { exportToCSV, exportToJSON } from "~/utils/export";
 
 export default function InventoryPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [selectedLocation, setSelectedLocation] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,22 +33,12 @@ export default function InventoryPage() {
   const { data: categories } = api.categories.getAll.useQuery();
   const { data: locations } = api.locations.getAll.useQuery();
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

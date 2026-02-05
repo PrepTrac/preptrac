@@ -1,16 +1,12 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Navigation from "~/components/Navigation";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function CalendarPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const startDate = startOfMonth(currentMonth);
@@ -38,22 +34,12 @@ export default function CalendarPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   const getEventsForDay = (day: Date) => {

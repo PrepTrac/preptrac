@@ -4,7 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 export const categoriesRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.category.findMany({
-      where: { userId: ctx.session.user.id },
+      where: { userId: ctx.userId },
       orderBy: { name: "asc" },
     });
   }),
@@ -15,7 +15,7 @@ export const categoriesRouter = createTRPCRouter({
       return ctx.prisma.category.findFirst({
         where: {
           id: input.id,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
       });
     }),
@@ -34,7 +34,7 @@ export const categoriesRouter = createTRPCRouter({
       return ctx.prisma.category.create({
         data: {
           ...input,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
       });
     }),

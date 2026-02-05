@@ -1,78 +1,65 @@
-import { type GetServerSidePropsContext } from "next";
-import {
-  getServerSession,
-  type NextAuthOptions,
-  type DefaultSession,
-} from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "~/server/db";
 import bcrypt from "bcryptjs";
-import { env } from "~/env.mjs";
 
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-    } & DefaultSession["user"];
+const DEFAULT_USER_EMAIL = "default@preptrac.local";
+const DEFAULT_USER_PASSWORD = "preptrac-default";
+
+const DEFAULT_CATEGORIES = [
+  { name: "Food", description: "Canned goods, MREs, dried food, etc.", color: "#F59E0B", icon: "utensils" },
+  { name: "Water", description: "Water storage, purification, containers", color: "#3B82F6", icon: "droplet" },
+  { name: "Ammo", description: "Ammunition and reloading supplies", color: "#EF4444", icon: "crosshair" },
+  { name: "Medical", description: "First aid, medications, medical supplies", color: "#10B981", icon: "cross" },
+  { name: "Tools", description: "Knives, multi-tools, equipment", color: "#6B7280", icon: "wrench" },
+  { name: "Clothing", description: "Survival gear, boots, clothing", color: "#8B5CF6", icon: "shirt" },
+  { name: "Shelter", description: "Tents, tarps, sleeping bags", color: "#EC4899", icon: "home" },
+  { name: "Fuel & Energy", description: "Gasoline, batteries, solar panels", color: "#F97316", icon: "zap" },
+  { name: "Communication", description: "Radios, phones, signaling", color: "#06B6D4", icon: "radio" },
+  { name: "Defense", description: "Self-defense items, security", color: "#DC2626", icon: "shield" },
+];
+
+const DEFAULT_LOCATIONS = [
+  { name: "Home", description: "Primary residence" },
+  { name: "Vehicle 1", description: "Primary vehicle" },
+  { name: "Vehicle 2", description: "Secondary vehicle" },
+  { name: "Cabin", description: "Vacation/retreat property" },
+  { name: "Bug-out Bag", description: "Emergency go bag" },
+];
+
+/** Get the single default user, creating with default categories/locations if none exists. */
+export async function getOrCreateDefaultUser(): Promise<{ id: string }> {
+  let user = await prisma.user.findFirst({
+    where: { email: DEFAULT_USER_EMAIL },
+    select: { id: true },
+  });
+  if (user) return user;
+
+  try {
+    const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
+    user = await prisma.user.create({
+      data: {
+        email: DEFAULT_USER_EMAIL,
+        password: hashedPassword,
+        name: "Default User",
+      },
+      select: { id: true },
+    });
+
+    await prisma.category.createMany({
+      data: DEFAULT_CATEGORIES.map((category) => ({ ...category, userId: user!.id })),
+    });
+    await prisma.location.createMany({
+      data: DEFAULT_LOCATIONS.map((location) => ({ ...location, userId: user!.id })),
+    });
+
+    return user;
+  } catch (err: unknown) {
+    // Race: another request already created the default user
+    const existing = await prisma.user.findFirst({
+      where: { email: DEFAULT_USER_EMAIL },
+      select: { id: true },
+    });
+    if (existing) return existing;
+    throw err;
   }
 }
-
-export const authOptions: NextAuthOptions = {
-  callbacks: {
-    session: ({ session, token }) => {
-      if (session.user) {
-        session.user.id = token.sub ?? "";
-      }
-      return session;
-    },
-  },
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user) {
-          return null;
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? undefined,
-        };
-      },
-    }),
-  ],
-  pages: {
-    signIn: "/auth/signin",
-  },
-  session: {
-    strategy: "jwt",
-  },
-  secret: env.NEXTAUTH_SECRET,
-};
-
-export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
-}) => {
-  return getServerSession(ctx.req, ctx.res, authOptions);
-};
 

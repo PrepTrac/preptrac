@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
 import { ThemeToggle } from "./ThemeToggle";
 import {
   Home,
@@ -10,7 +9,6 @@ import {
   Calendar,
   MinusCircle,
   Settings,
-  LogOut,
   Menu,
   X,
 } from "lucide-react";
@@ -26,7 +24,6 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -62,20 +59,6 @@ export default function Navigation() {
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
             <ThemeToggle />
-            {session && (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {session.user?.email}
-                </span>
-                <button
-                  onClick={() => signOut()}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </button>
-              </div>
-            )}
           </div>
           <div className="sm:hidden flex items-center">
             <ThemeToggle />
@@ -114,18 +97,6 @@ export default function Navigation() {
                 </Link>
               );
             })}
-            {session && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  signOut();
-                }}
-                className="flex items-center w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Sign Out
-              </button>
-            )}
           </div>
         </div>
       )}

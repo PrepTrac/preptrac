@@ -1,8 +1,6 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
@@ -10,8 +8,6 @@ import CategoryForm from "~/components/CategoryForm";
 import LocationForm from "~/components/LocationForm";
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"notifications" | "categories" | "locations">(
     "notifications"
   );
@@ -56,12 +52,6 @@ export default function SettingsPage() {
   const emailEnabled = watch("emailEnabled");
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  useEffect(() => {
     if (notificationSettings) {
       reset({
         emailEnabled: notificationSettings.emailEnabled,
@@ -85,18 +75,6 @@ export default function SettingsPage() {
       });
     }
   }, [notificationSettings, reset]);
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
 
   const onSubmit = (data: any) => {
     updateSettings.mutate(data, {

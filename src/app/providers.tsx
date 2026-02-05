@@ -1,6 +1,5 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { api } from "~/utils/api";
 import { useState } from "react";
@@ -33,11 +32,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <SessionProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
-        </SessionProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
       </QueryClientProvider>
     </api.Provider>
   );

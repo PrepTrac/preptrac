@@ -2,7 +2,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.userId;
 
     // Get all items
     const items = await ctx.prisma.item.findMany({

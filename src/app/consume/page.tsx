@@ -1,9 +1,7 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Navigation from "~/components/Navigation";
 import { MinusCircle, Plus, Trash2, History, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { format, subDays, eachDayOfInterval } from "date-fns";
@@ -45,8 +43,6 @@ const emptyRow = (): ConsumeRow => ({
 });
 
 export default function ConsumePage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [rows, setRows] = useState<ConsumeRow[]>([emptyRow()]);
   const [statsDays, setStatsDays] = useState<number>(30);
   const [customDays, setCustomDays] = useState<number>(60);
@@ -74,12 +70,6 @@ export default function ConsumePage() {
   });
 
   const { data: recentConsumption } = api.items.getRecentConsumption.useQuery();
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
 
   const addRow = () => setRows((r) => [...r, emptyRow()]);
   const removeRow = (id: string) =>
@@ -141,16 +131,12 @@ export default function ConsumePage() {
     (r) => r.itemId && r.quantity && Number(r.quantity) > 0
   );
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

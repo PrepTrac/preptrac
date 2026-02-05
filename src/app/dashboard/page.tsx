@@ -1,8 +1,6 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import DashboardMetrics from "~/components/DashboardMetrics";
 import CategoryGoals from "~/components/CategoryGoals";
@@ -10,8 +8,6 @@ import UpcomingEvents from "~/components/UpcomingEvents";
 import Navigation from "~/components/Navigation";
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const utils = api.useUtils();
   const syncFromItems = api.events.syncFromItems.useMutation({
     onSuccess: () => {
@@ -25,22 +21,12 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

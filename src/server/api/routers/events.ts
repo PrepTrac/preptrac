@@ -16,7 +16,7 @@ export const eventsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const where: any = {
-        userId: ctx.session.user.id,
+        userId: ctx.userId,
       };
 
       if (input?.startDate || input?.endDate) {
@@ -53,7 +53,7 @@ export const eventsRouter = createTRPCRouter({
       return ctx.prisma.event.findFirst({
         where: {
           id: input.id,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
         include: {
           item: {
@@ -80,7 +80,7 @@ export const eventsRouter = createTRPCRouter({
       return ctx.prisma.event.create({
         data: {
           ...input,
-          userId: ctx.session.user.id,
+          userId: ctx.userId,
         },
         include: {
           item: {
@@ -164,7 +164,7 @@ export const eventsRouter = createTRPCRouter({
 
   /** Sync calendar events from all items (expiration, maintenance, rotation). Call to backfill existing items. */
   syncFromItems: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+    const userId = ctx.userId;
     const items = await ctx.prisma.item.findMany({
       where: { userId },
       select: {
