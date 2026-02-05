@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { syncItemEvents } from "~/server/syncItemEvents";
 
 export const eventsRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(
       z
         .object({
-          startDate: z.date().optional(),
-          endDate: z.date().optional(),
+          startDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
+          endDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
           type: z.enum(["expiration", "maintenance", "rotation", "battery_replacement"]).optional(),
           completed: z.boolean().optional(),
         })
@@ -71,7 +72,7 @@ export const eventsRouter = createTRPCRouter({
         type: z.enum(["expiration", "maintenance", "rotation", "battery_replacement"]),
         title: z.string().min(1),
         description: z.string().optional(),
-        date: z.date(),
+        date: z.string().transform((val) => new Date(val)),
         itemId: z.string().optional(),
       })
     )
@@ -99,7 +100,7 @@ export const eventsRouter = createTRPCRouter({
         type: z.enum(["expiration", "maintenance", "rotation", "battery_replacement"]).optional(),
         title: z.string().min(1).optional(),
         description: z.string().optional(),
-        date: z.date().optional(),
+        date: z.string().optional().transform((val) => val ? new Date(val) : undefined),
         itemId: z.string().nullable().optional(),
         completed: z.boolean().optional(),
       })
@@ -160,5 +161,28 @@ export const eventsRouter = createTRPCRouter({
         },
       });
     }),
+
+  /** Sync calendar events from all items (expiration, maintenance, rotation). Call to backfill existing items. */
+  syncFromItems: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const items = await ctx.prisma.item.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        expirationDate: true,
+        maintenanceInterval: true,
+        lastMaintenanceDate: true,
+        rotationSchedule: true,
+        lastRotationDate: true,
+      },
+    });
+
+    for (const item of items) {
+      await syncItemEvents(ctx.prisma, userId, item);
+    }
+
+    return { synced: items.length };
+  }),
 });
 

@@ -81,14 +81,14 @@ export const dashboardRouter = createTRPCRouter({
           : null,
       }));
 
-    // Get upcoming events (next 7 days)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    // Get upcoming events (next 3 months)
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
     const upcomingEvents = await ctx.prisma.event.findMany({
       where: {
         userId,
         date: {
-          lte: sevenDaysFromNow,
+          lte: threeMonthsFromNow,
           gte: new Date(),
         },
         completed: false,
@@ -102,7 +102,7 @@ export const dashboardRouter = createTRPCRouter({
         },
       },
       orderBy: { date: "asc" },
-      take: 10,
+      take: 20,
     });
 
     return {

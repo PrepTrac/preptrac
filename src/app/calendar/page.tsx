@@ -17,10 +17,26 @@ export default function CalendarPage() {
   const endDate = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const { data: events, isLoading } = api.events.getAll.useQuery({
-    startDate,
-    endDate,
+  const utils = api.useUtils();
+  const syncFromItems = api.events.syncFromItems.useMutation({
+    onSuccess: () => {
+      void utils.events.getAll.invalidate();
+    },
   });
+
+  const { data: events, isLoading } = api.events.getAll.useQuery(
+    { startDate, endDate },
+    {
+      // Sync events from items on first load (backfills existing inventory)
+      refetchOnMount: "always",
+    }
+  );
+
+  // Sync events from items when calendar loads (backfills existing inventory)
+  useEffect(() => {
+    void syncFromItems.mutateAsync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
