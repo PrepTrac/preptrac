@@ -101,17 +101,18 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        <CategoryNav
-          categories={categories ?? []}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-
-        <LocationNav
-          locations={locations ?? []}
-          selectedLocation={selectedLocation}
-          onSelectLocation={setSelectedLocation}
-        />
+        <div className="flex flex-col gap-4">
+          <CategoryNav
+            categories={categories ?? []}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+          <LocationNav
+            locations={locations ?? []}
+            selectedLocation={selectedLocation}
+            onSelectLocation={setSelectedLocation}
+          />
+        </div>
 
         <div className="mt-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">

@@ -22,6 +22,7 @@ model User {
   categories        Category[]
   locations         Location[]
   events            Event[]
+  consumptionLogs   ConsumptionLog[]
   notificationSettings NotificationSettings?
 }
 
@@ -69,6 +70,7 @@ model Item {
   userId              String
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   events              Event[]
+  consumptionLogs     ConsumptionLog[]
   
   // Optional attributes
   expirationDate      DateTime?
@@ -91,6 +93,21 @@ model Item {
   @@index([locationId])
   @@index([expirationDate])
   @@index([lastMaintenanceDate])
+}
+
+model ConsumptionLog {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quantity  Float    // Amount consumed
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([itemId])
+  @@index([createdAt])
 }
 
 model Event {

@@ -8,6 +8,7 @@ import {
   Home,
   Package,
   Calendar,
+  MinusCircle,
   Settings,
   LogOut,
   Menu,
@@ -18,6 +19,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/inventory", label: "Inventory", icon: Package },
+  { href: "/consume", label: "Consume", icon: MinusCircle },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
