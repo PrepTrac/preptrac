@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { sendWebhook, type WebhookPayload } from "~/utils/webhooks";
+import { env } from "~/env.mjs";
+import * as nodemailer from "nodemailer";
 
 export const notificationsRouter = createTRPCRouter({
   getSettings: protectedProcedure.query(async ({ ctx }) => {
@@ -8,9 +10,19 @@ export const notificationsRouter = createTRPCRouter({
       where: { userId: ctx.session.user.id },
     });
 
+    const hasSmtpConfig = !!(
+      env.SMTP_HOST &&
+      env.SMTP_PORT &&
+      env.SMTP_USER &&
+      env.SMTP_PASSWORD
+    );
+
     if (!settings) {
       settings = await ctx.prisma.notificationSettings.create({
-        data: { userId: ctx.session.user.id },
+        data: {
+          userId: ctx.session.user.id,
+          emailEnabled: hasSmtpConfig,
+        },
       });
     }
 
@@ -27,12 +39,17 @@ export const notificationsRouter = createTRPCRouter({
         emailLowInventory: z.boolean().optional(),
         inAppEnabled: z.boolean().optional(),
         webhookEnabled: z.boolean().optional(),
-        webhookUrl: z.string().url().nullable().optional(),
+        webhookUrl: z.preprocess((val) => val === "" ? null : val, z.string().url().nullable().optional()),
         webhookSecret: z.string().nullable().optional(),
         webhookExpirationDays: z.number().optional(),
         webhookMaintenanceDays: z.number().optional(),
         webhookRotationDays: z.number().optional(),
         webhookLowInventory: z.boolean().optional(),
+        smtpHost: z.string().nullable().optional(),
+        smtpPort: z.preprocess((val) => (val === "" || isNaN(Number(val))) ? null : Number(val), z.number().nullable().optional()),
+        smtpUser: z.string().nullable().optional(),
+        smtpPassword: z.string().nullable().optional(),
+        smtpFrom: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -75,6 +92,47 @@ export const notificationsRouter = createTRPCRouter({
 
       return { success: true, message: "Test webhook sent successfully" };
     }),
+
+  sendTestEmail: protectedProcedure.mutation(async ({ ctx }) => {
+    const settings = await ctx.prisma.notificationSettings.findUnique({
+      where: { userId: ctx.session.user.id },
+    });
+
+    const smtpHost = settings?.smtpHost || env.SMTP_HOST;
+    const smtpPort = settings?.smtpPort || env.SMTP_PORT;
+    const smtpUser = settings?.smtpUser || env.SMTP_USER;
+    const smtpPassword = settings?.smtpPassword || env.SMTP_PASSWORD;
+    const smtpFrom = settings?.smtpFrom || env.SMTP_FROM || smtpUser;
+
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
+      throw new Error("SMTP settings are not fully configured (missing host, port, user, or password)");
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPassword,
+      },
+    });
+
+    try {
+      await transporter.sendMail({
+        from: smtpFrom,
+        to: ctx.session.user.email ?? smtpUser,
+        subject: "PrepTrac Test Email",
+        text: "This is a test email from your PrepTrac installation. Your SMTP settings are working correctly!",
+        html: "<p>This is a test email from your <strong>PrepTrac</strong> installation. Your SMTP settings are working correctly!</p>",
+      });
+
+      return { success: true, message: "Test email sent successfully" };
+    } catch (error: any) {
+      console.error("Failed to send test email:", error);
+      throw new Error(error.message || "Failed to send test email");
+    }
+  }),
 
   getPendingNotifications: protectedProcedure.query(async ({ ctx }) => {
     const settings = await ctx.prisma.notificationSettings.findUnique({

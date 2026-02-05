@@ -148,6 +148,11 @@ model NotificationSettings {
   webhookMaintenanceDays Int     @default(3)  // Notify X days before maintenance
   webhookRotationDays   Int      @default(1)  // Notify X days before rotation
   webhookLowInventory   Boolean  @default(true)
+  smtpHost              String?
+  smtpPort              Int?
+  smtpUser              String?
+  smtpPassword          String?
+  smtpFrom              String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }

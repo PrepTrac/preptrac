@@ -5,6 +5,11 @@ const envSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(1),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
