@@ -9,7 +9,8 @@ import ItemCard from "~/components/ItemCard";
 import ItemForm from "~/components/ItemForm";
 import CategoryNav from "~/components/CategoryNav";
 import LocationNav from "~/components/LocationNav";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, Download } from "lucide-react";
+import { exportToCSV, exportToJSON } from "~/utils/export";
 
 export default function InventoryPage() {
   const { data: session, status } = useSession();
@@ -62,16 +63,42 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Inventory
           </h1>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setShowItemForm(true);
-            }}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                if (items) {
+                  exportToCSV(items, `preptrac-inventory-${new Date().toISOString().split('T')[0]}`);
+                }
+              }}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="Export to CSV"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </button>
+            <button
+              onClick={() => {
+                if (items) {
+                  exportToJSON(items, `preptrac-inventory-${new Date().toISOString().split('T')[0]}`);
+                }
+              }}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="Export to JSON"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              JSON
+            </button>
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setShowItemForm(true);
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </button>
+          </div>
         </div>
 
         <CategoryNav
