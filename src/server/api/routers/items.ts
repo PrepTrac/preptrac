@@ -114,6 +114,110 @@ export const itemsRouter = createTRPCRouter({
       });
     }),
 
+  getRecentConsumption: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.consumptionLog.findMany({
+        where: { userId: ctx.session.user.id },
+        orderBy: { createdAt: "desc" },
+        take: input?.limit ?? 25,
+        include: {
+          item: {
+            select: { id: true, name: true, unit: true },
+          },
+        },
+      });
+    }),
+
+  getConsumptionStats: protectedProcedure
+    .input(
+      z.object({
+        days: z.number().min(1).max(730),
+        categoryIds: z.array(z.string()).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - input.days);
+      startDate.setHours(0, 0, 0, 0);
+
+      const logs = await ctx.prisma.consumptionLog.findMany({
+        where: {
+          userId,
+          createdAt: { gte: startDate },
+          ...(input.categoryIds?.length
+            ? { item: { categoryId: { in: input.categoryIds } } }
+            : {}),
+        },
+        include: {
+          item: {
+            select: {
+              id: true,
+              name: true,
+              unit: true,
+              categoryId: true,
+              category: { select: { name: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      const timeSeriesByDate = new Map<
+        string,
+        { itemId: string; quantity: number }[]
+      >();
+      const totalsByItemId = new Map<
+        string,
+        {
+          itemId: string;
+          itemName: string;
+          unit: string;
+          categoryId: string;
+          categoryName: string;
+          quantity: number;
+        }
+      >();
+
+      for (const log of logs) {
+        const dateKey = new Date(log.createdAt).toISOString().slice(0, 10);
+        if (!timeSeriesByDate.has(dateKey)) {
+          timeSeriesByDate.set(dateKey, []);
+        }
+        const dayItems = timeSeriesByDate.get(dateKey)!;
+        const existing = dayItems.find((i) => i.itemId === log.itemId);
+        if (existing) {
+          existing.quantity += log.quantity;
+        } else {
+          dayItems.push({ itemId: log.itemId, quantity: log.quantity });
+        }
+
+        const cur = totalsByItemId.get(log.itemId);
+        if (cur) {
+          cur.quantity += log.quantity;
+        } else {
+          totalsByItemId.set(log.itemId, {
+            itemId: log.itemId,
+            itemName: log.item.name,
+            unit: log.item.unit,
+            categoryId: log.item.categoryId,
+            categoryName: log.item.category.name,
+            quantity: log.quantity,
+          });
+        }
+      }
+
+      const sortedDates = Array.from(timeSeriesByDate.keys()).sort();
+      const timeSeries = sortedDates.map((date) => ({
+        date,
+        byItem: timeSeriesByDate.get(date) ?? [],
+      }));
+      const totalsByItem = Array.from(totalsByItemId.values());
+
+      return { timeSeries, totalsByItem };
+    }),
+
   create: protectedProcedure
     .input(
       z.object({
@@ -193,6 +297,121 @@ export const itemsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.item.delete({
         where: { id: input.id },
+      });
+    }),
+
+  /** Record consumption of an item: decrement quantity and log the consumption. */
+  consume: protectedProcedure
+    .input(
+      z.object({
+        itemId: z.string(),
+        quantity: z.number().positive(),
+        note: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const item = await ctx.prisma.item.findFirst({
+        where: { id: input.itemId, userId },
+        include: { category: true, location: true },
+      });
+      if (!item) {
+        throw new Error("Item not found");
+      }
+      if (input.quantity > item.quantity) {
+        throw new Error(
+          `Not enough quantity. Available: ${item.quantity} ${item.unit}`
+        );
+      }
+      const newQuantity = item.quantity - input.quantity;
+      await ctx.prisma.$transaction([
+        ctx.prisma.item.update({
+          where: { id: input.itemId },
+          data: { quantity: newQuantity },
+        }),
+        ctx.prisma.consumptionLog.create({
+          data: {
+            itemId: input.itemId,
+            userId,
+            quantity: input.quantity,
+            note: input.note ?? null,
+          },
+        }),
+      ]);
+      return ctx.prisma.item.findFirstOrThrow({
+        where: { id: input.itemId, userId },
+        include: { category: true, location: true },
+      });
+    }),
+
+  /** Record consumption of multiple items in one go (e.g. "range day" log). */
+  consumeMany: protectedProcedure
+    .input(
+      z.object({
+        entries: z.array(
+          z.object({
+            itemId: z.string(),
+            quantity: z.number().positive(),
+            note: z.string().optional(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const results: { itemId: string; success: boolean; error?: string }[] = [];
+      const updates: Promise<unknown>[] = [];
+      const items = await ctx.prisma.item.findMany({
+        where: {
+          id: { in: input.entries.map((e) => e.itemId) },
+          userId,
+        },
+        include: { category: true, location: true },
+      });
+      const itemMap = new Map(items.map((i) => [i.id, i]));
+      for (const entry of input.entries) {
+        const item = itemMap.get(entry.itemId);
+        if (!item) {
+          results.push({ itemId: entry.itemId, success: false, error: "Item not found" });
+          continue;
+        }
+        if (entry.quantity > item.quantity) {
+          results.push({
+            itemId: entry.itemId,
+            success: false,
+            error: `Not enough quantity. Available: ${item.quantity} ${item.unit}`,
+          });
+          continue;
+        }
+        results.push({ itemId: entry.itemId, success: true });
+        const newQuantity = item.quantity - entry.quantity;
+        updates.push(
+          ctx.prisma.item.update({
+            where: { id: entry.itemId },
+            data: { quantity: newQuantity },
+          }),
+          ctx.prisma.consumptionLog.create({
+            data: {
+              itemId: entry.itemId,
+              userId,
+              quantity: entry.quantity,
+              note: entry.note ?? null,
+            },
+          })
+        );
+      }
+      const failed = results.filter((r) => !r.success);
+      if (failed.length > 0) {
+        const messages = failed.map((f) => f.error).filter(Boolean);
+        throw new Error(messages.join("; ") || "Validation failed");
+      }
+      await ctx.prisma.$transaction(updates);
+      return ctx.prisma.item.findMany({
+        where: {
+          id: { in: input.entries.map((e) => e.itemId) },
+          userId,
+        },
+        include: { category: true, location: true },
       });
     }),
 });
