@@ -31,6 +31,7 @@ model Category {
   description String?
   color       String?  // Hex color for UI
   icon        String?  // Icon name
+  targetQuantity Float @default(0)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   items       Item[]
@@ -79,6 +80,7 @@ model Item {
   imageUrl            String?
   qrCode              String?   // QR code data
   minQuantity         Float     @default(0) // Low inventory threshold
+  targetQuantity      Float     @default(0)
   
   // Tracking
   createdAt           DateTime  @default(now())

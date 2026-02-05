@@ -69,9 +69,26 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
       </div>
 
       <div className="mt-3">
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">
-          {item.quantity} <span className="text-sm font-normal">{item.unit}</span>
-        </p>
+        <div className="flex justify-between items-end">
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            {item.quantity} <span className="text-sm font-normal">{item.unit}</span>
+          </p>
+          {item.targetQuantity > 0 && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Goal: {item.targetQuantity} {item.unit}
+            </p>
+          )}
+        </div>
+        {item.targetQuantity > 0 && (
+          <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+            <div
+              className="h-1.5 rounded-full bg-blue-600 transition-all duration-500"
+              style={{
+                width: `${Math.min((item.quantity / item.targetQuantity) * 100, 100)}%`,
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {(isExpiringSoon || needsMaintenance || isLowInventory) && (

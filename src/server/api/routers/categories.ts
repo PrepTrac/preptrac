@@ -27,6 +27,7 @@ export const categoriesRouter = createTRPCRouter({
         description: z.string().optional(),
         color: z.string().optional(),
         icon: z.string().optional(),
+        targetQuantity: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -46,6 +47,7 @@ export const categoriesRouter = createTRPCRouter({
         description: z.string().optional(),
         color: z.string().optional(),
         icon: z.string().optional(),
+        targetQuantity: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
