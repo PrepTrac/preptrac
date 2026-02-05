@@ -11,7 +11,18 @@ import Navigation from "~/components/Navigation";
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const utils = api.useUtils();
+  const syncFromItems = api.events.syncFromItems.useMutation({
+    onSuccess: () => {
+      void utils.dashboard.getStats.invalidate();
+    },
+  });
   const { data: stats, isLoading } = api.dashboard.getStats.useQuery();
+
+  useEffect(() => {
+    void syncFromItems.mutateAsync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { syncItemEvents } from "~/server/syncItemEvents";
 
 export const itemsRouter = createTRPCRouter({
   getAll: protectedProcedure
@@ -134,7 +135,7 @@ export const itemsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.item.create({
+      const item = await ctx.prisma.item.create({
         data: {
           ...input,
           userId: ctx.session.user.id,
@@ -144,6 +145,9 @@ export const itemsRouter = createTRPCRouter({
           location: true,
         },
       });
+
+      await syncItemEvents(ctx.prisma, ctx.session.user.id, item);
+      return item;
     }),
 
   update: protectedProcedure
@@ -169,7 +173,7 @@ export const itemsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      return ctx.prisma.item.update({
+      const item = await ctx.prisma.item.update({
         where: { id },
         data,
         include: {
@@ -177,6 +181,9 @@ export const itemsRouter = createTRPCRouter({
           location: true,
         },
       });
+
+      await syncItemEvents(ctx.prisma, ctx.session.user.id, item);
+      return item;
     }),
 
   delete: protectedProcedure
