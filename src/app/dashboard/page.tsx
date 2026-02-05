@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import DashboardMetrics from "~/components/DashboardMetrics";
+import CategoryGoals from "~/components/CategoryGoals";
 import UpcomingEvents from "~/components/UpcomingEvents";
 import Navigation from "~/components/Navigation";
 
@@ -50,6 +51,7 @@ export default function DashboardPage() {
           Dashboard
         </h1>
         <DashboardMetrics stats={stats} />
+        <CategoryGoals categoryStats={stats?.categoryStats ?? []} />
         <UpcomingEvents events={stats?.upcomingEvents ?? []} />
       </main>
     </div>

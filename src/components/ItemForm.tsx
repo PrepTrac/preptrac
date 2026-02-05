@@ -25,6 +25,7 @@ interface ItemFormData {
   notes?: string;
   imageUrl?: string;
   minQuantity: number;
+  targetQuantity: number;
 }
 
 export default function ItemForm({ itemId, onClose }: ItemFormProps) {
@@ -80,6 +81,7 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
         notes: item.notes ?? "",
         imageUrl: item.imageUrl ?? "",
         minQuantity: item.minQuantity ?? 0,
+        targetQuantity: item.targetQuantity ?? 0,
       });
     }
   }, [item, reset]);
@@ -94,7 +96,8 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
       locationId: data.locationId,
       notes: data.notes,
       imageUrl: data.imageUrl,
-      minQuantity: data.minQuantity,
+      minQuantity: Number(data.minQuantity) || 0,
+      targetQuantity: Number(data.targetQuantity) || 0,
     };
 
     // Only include date fields if they have values
@@ -199,6 +202,21 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
               />
               <p className="mt-1 text-xs text-gray-500">
                 Alert when quantity falls below this value (defaults to 10 if 0)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Target Quantity (Goal)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                {...register("targetQuantity", { valueAsNumber: true })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                The ideal quantity you want to have for this item
               </p>
             </div>
           </div>

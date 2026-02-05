@@ -10,6 +10,7 @@ interface CategoryFormData {
   description?: string;
   color?: string;
   icon?: string;
+  targetQuantity?: number;
 }
 
 export default function CategoryForm() {
@@ -25,9 +26,14 @@ export default function CategoryForm() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormData>();
 
   const onSubmit = (data: CategoryFormData) => {
+    const submitData = {
+      ...data,
+      targetQuantity: Number(data.targetQuantity) || 0,
+    };
+
     if (editingId) {
       updateCategory.mutate(
-        { id: editingId, ...data },
+        { id: editingId, ...submitData },
         {
           onSuccess: () => {
             utils.categories.getAll.invalidate();
@@ -38,7 +44,7 @@ export default function CategoryForm() {
         }
       );
     } else {
-      createCategory.mutate(data, {
+      createCategory.mutate(submitData, {
         onSuccess: () => {
           utils.categories.getAll.invalidate();
           reset();
@@ -55,6 +61,7 @@ export default function CategoryForm() {
       description: category.description ?? "",
       color: category.color ?? "",
       icon: category.icon ?? "",
+      targetQuantity: category.targetQuantity ?? 0,
     });
     setShowForm(true);
   };
@@ -137,6 +144,21 @@ export default function CategoryForm() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Target Quantity (Goal)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                {...register("targetQuantity", { valueAsNumber: true })}
+                placeholder="Total quantity goal for this category"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                If set, this will be used as the goal for the entire category.
+              </p>
             </div>
             <div className="flex justify-end space-x-2">
               <button

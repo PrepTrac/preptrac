@@ -105,6 +105,43 @@ export const dashboardRouter = createTRPCRouter({
       take: 20,
     });
 
+    // Calculate category progress
+    const categoriesWithItems = await ctx.prisma.category.findMany({
+      where: { userId },
+      include: {
+        items: true,
+      },
+    });
+
+    const categoryStats = categoriesWithItems
+      .map((cat) => {
+        const currentQuantity = cat.items.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+
+        // Calculate target: prefer category target, otherwise sum item targets
+        let targetQuantity = cat.targetQuantity;
+        if (!targetQuantity || targetQuantity === 0) {
+          targetQuantity = cat.items.reduce(
+            (sum, item) => sum + (item.targetQuantity || 0),
+            0
+          );
+        }
+
+        return {
+          id: cat.id,
+          name: cat.name,
+          color: cat.color,
+          currentQuantity,
+          targetQuantity: targetQuantity || 0,
+          progress: targetQuantity
+            ? Math.min((currentQuantity / targetQuantity) * 100, 100)
+            : 0,
+        };
+      })
+      .filter((stat) => stat.targetQuantity > 0);
+
     return {
       totalWater,
       totalFoodDays: Math.round(totalFoodDays),
@@ -113,6 +150,7 @@ export const dashboardRouter = createTRPCRouter({
       needsMaintenance,
       upcomingEvents,
       totalItems: items.length,
+      categoryStats,
     };
   }),
 });

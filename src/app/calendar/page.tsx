@@ -25,7 +25,7 @@ export default function CalendarPage() {
   });
 
   const { data: events, isLoading } = api.events.getAll.useQuery(
-    { startDate, endDate },
+    { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
     {
       // Sync events from items on first load (backfills existing inventory)
       refetchOnMount: "always",

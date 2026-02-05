@@ -132,6 +132,7 @@ export const itemsRouter = createTRPCRouter({
         imageUrl: z.string().optional(),
         qrCode: z.string().optional(),
         minQuantity: z.number().default(0),
+        targetQuantity: z.number().default(0),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -169,6 +170,7 @@ export const itemsRouter = createTRPCRouter({
         imageUrl: z.string().nullable().optional(),
         qrCode: z.string().nullable().optional(),
         minQuantity: z.number().optional(),
+        targetQuantity: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
