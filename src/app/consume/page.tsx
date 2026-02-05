@@ -440,7 +440,7 @@ export default function ConsumePage() {
                             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: number, name: string) => [value, name]} />
+                        <Tooltip formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents } from "~/server/syncItemEvents";
 
@@ -360,7 +361,7 @@ export const itemsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const results: { itemId: string; success: boolean; error?: string }[] = [];
-      const updates: Promise<unknown>[] = [];
+      const updates: Prisma.PrismaPromise<any>[] = [];
       const items = await ctx.prisma.item.findMany({
         where: {
           id: { in: input.entries.map((e) => e.itemId) },

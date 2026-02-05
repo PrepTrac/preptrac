@@ -19,14 +19,19 @@ export default function SettingsPage() {
   const { data: notificationSettings } = api.notifications.getSettings.useQuery();
   const updateSettings = api.notifications.updateSettings.useMutation();
   const sendTestWebhook = api.notifications.sendTestWebhook.useMutation();
+  const sendTestEmail = api.notifications.sendTestEmail.useMutation();
   const [testWebhookStatus, setTestWebhookStatus] = useState<{
+    success: boolean;
+    message?: string;
+  } | null>(null);
+  const [testEmailStatus, setTestEmailStatus] = useState<{
     success: boolean;
     message?: string;
   } | null>(null);
 
   const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: {
-      emailEnabled: true,
+      emailEnabled: false,
       emailExpirationDays: 7,
       emailMaintenanceDays: 3,
       emailRotationDays: 1,
@@ -39,10 +44,16 @@ export default function SettingsPage() {
       webhookMaintenanceDays: 3,
       webhookRotationDays: 1,
       webhookLowInventory: true,
+      smtpHost: "",
+      smtpPort: 587,
+      smtpUser: "",
+      smtpPassword: "",
+      smtpFrom: "",
     },
   });
 
   const webhookEnabled = watch("webhookEnabled");
+  const emailEnabled = watch("emailEnabled");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -66,6 +77,11 @@ export default function SettingsPage() {
         webhookMaintenanceDays: notificationSettings.webhookMaintenanceDays ?? 3,
         webhookRotationDays: notificationSettings.webhookRotationDays ?? 1,
         webhookLowInventory: notificationSettings.webhookLowInventory ?? true,
+        smtpHost: notificationSettings.smtpHost ?? "",
+        smtpPort: notificationSettings.smtpPort ?? 587,
+        smtpUser: notificationSettings.smtpUser ?? "",
+        smtpPassword: notificationSettings.smtpPassword ?? "",
+        smtpFrom: notificationSettings.smtpFrom ?? "",
       });
     }
   }, [notificationSettings, reset]);
@@ -99,6 +115,19 @@ export default function SettingsPage() {
       setTestWebhookStatus({
         success: false,
         message: error.message || "Failed to send test webhook",
+      });
+    }
+  };
+
+  const handleTestEmail = async () => {
+    setTestEmailStatus(null);
+    try {
+      const result = await sendTestEmail.mutateAsync();
+      setTestEmailStatus({ success: true, message: result.message });
+    } catch (error: any) {
+      setTestEmailStatus({
+        success: false,
+        message: error.message || "Failed to send test email",
       });
     }
   };
@@ -221,6 +250,100 @@ export default function SettingsPage() {
                         Notify on Low Inventory
                       </span>
                     </label>
+
+                    {emailEnabled && (
+                      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
+                          SMTP Settings (Overrides .env)
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="smtpHost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              SMTP Host
+                            </label>
+                            <input
+                              id="smtpHost"
+                              type="text"
+                              {...register("smtpHost")}
+                              placeholder="smtp.example.com"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="smtpPort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              SMTP Port
+                            </label>
+                            <input
+                              id="smtpPort"
+                              type="number"
+                              {...register("smtpPort", { valueAsNumber: true })}
+                              placeholder="587"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="smtpUser" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              SMTP User
+                            </label>
+                            <input
+                              id="smtpUser"
+                              type="text"
+                              {...register("smtpUser")}
+                              placeholder="user@example.com"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="smtpPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              SMTP Password
+                            </label>
+                            <input
+                              id="smtpPassword"
+                              type="password"
+                              {...register("smtpPassword")}
+                              placeholder="••••••••"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label htmlFor="smtpFrom" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              SMTP From Address
+                            </label>
+                            <input
+                              id="smtpFrom"
+                              type="email"
+                              {...register("smtpFrom")}
+                              placeholder="noreply@example.com"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={handleTestEmail}
+                            disabled={sendTestEmail.isLoading}
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+                          >
+                            {sendTestEmail.isLoading
+                              ? "Sending..."
+                              : "Send Test Email"}
+                          </button>
+                          {testEmailStatus && (
+                            <div
+                              className={`mt-2 p-3 rounded-md text-sm ${
+                                testEmailStatus.success
+                                  ? "bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200"
+                                  : "bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200"
+                              }`}
+                            >
+                              {testEmailStatus.message}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
