@@ -85,25 +85,34 @@ export default function ItemForm({ itemId, onClose }: ItemFormProps) {
   }, [item, reset]);
 
   const onSubmit = (data: ItemFormData) => {
-    const submitData = {
-      ...data,
+    const submitData: any = {
+      name: data.name,
+      description: data.description,
       quantity: Number(data.quantity),
-      expirationDate: data.expirationDate
-        ? new Date(data.expirationDate)
-        : undefined,
-      lastMaintenanceDate: data.lastMaintenanceDate
-        ? new Date(data.lastMaintenanceDate)
-        : undefined,
-      lastRotationDate: data.lastRotationDate
-        ? new Date(data.lastRotationDate)
-        : undefined,
-      maintenanceInterval: data.maintenanceInterval
-        ? Number(data.maintenanceInterval)
-        : undefined,
-      rotationSchedule: data.rotationSchedule
-        ? Number(data.rotationSchedule)
-        : undefined,
+      unit: data.unit,
+      categoryId: data.categoryId,
+      locationId: data.locationId,
+      notes: data.notes,
+      imageUrl: data.imageUrl,
+      minQuantity: data.minQuantity,
     };
+
+    // Only include date fields if they have values
+    if (data.expirationDate) {
+      submitData.expirationDate = new Date(data.expirationDate);
+    }
+    if (data.lastMaintenanceDate) {
+      submitData.lastMaintenanceDate = new Date(data.lastMaintenanceDate);
+    }
+    if (data.lastRotationDate) {
+      submitData.lastRotationDate = new Date(data.lastRotationDate);
+    }
+    if (data.maintenanceInterval) {
+      submitData.maintenanceInterval = Number(data.maintenanceInterval);
+    }
+    if (data.rotationSchedule) {
+      submitData.rotationSchedule = Number(data.rotationSchedule);
+    }
 
     if (itemId) {
       updateItem.mutate({ id: itemId, ...submitData });

@@ -45,20 +45,26 @@ export const itemsRouter = createTRPCRouter({
       }
 
       if (input?.lowInventory) {
-        where.OR = [
-          {
-            AND: [
-              { minQuantity: { gt: 0 } },
-              { quantity: { lte: ctx.prisma.item.fields.minQuantity } }
-            ]
+        // Find items where quantity is less than or equal to minQuantity
+        // Since Prisma can't compare fields within a where clause, we need to fetch and filter
+        const items = await ctx.prisma.item.findMany({
+          where: {
+            userId: ctx.session.user.id,
           },
-          {
-            AND: [
-              { minQuantity: 0 },
-              { quantity: { lte: 10 } }
-            ]
-          }
-        ];
+        });
+
+        const itemIds = items
+          .filter((item) => {
+            if (item.minQuantity > 0) {
+              return item.quantity <= item.minQuantity;
+            } else if (item.minQuantity === 0) {
+              return item.quantity <= 10;
+            }
+            return false;
+          })
+          .map((item) => item.id);
+
+        where.id = { in: itemIds };
       }
 
       if (input?.needsMaintenance) {
@@ -116,11 +122,11 @@ export const itemsRouter = createTRPCRouter({
         unit: z.string().min(1),
         categoryId: z.string(),
         locationId: z.string(),
-        expirationDate: z.date().optional(),
+        expirationDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
         maintenanceInterval: z.number().optional(),
-        lastMaintenanceDate: z.date().optional(),
+        lastMaintenanceDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
         rotationSchedule: z.number().optional(),
-        lastRotationDate: z.date().optional(),
+        lastRotationDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
         notes: z.string().optional(),
         imageUrl: z.string().optional(),
         qrCode: z.string().optional(),
@@ -150,11 +156,11 @@ export const itemsRouter = createTRPCRouter({
         unit: z.string().optional(),
         categoryId: z.string().optional(),
         locationId: z.string().optional(),
-        expirationDate: z.date().nullable().optional(),
+        expirationDate: z.string().nullable().optional().transform((val) => val ? new Date(val) : null),
         maintenanceInterval: z.number().nullable().optional(),
-        lastMaintenanceDate: z.date().nullable().optional(),
+        lastMaintenanceDate: z.string().nullable().optional().transform((val) => val ? new Date(val) : null),
         rotationSchedule: z.number().nullable().optional(),
-        lastRotationDate: z.date().nullable().optional(),
+        lastRotationDate: z.string().nullable().optional().transform((val) => val ? new Date(val) : null),
         notes: z.string().nullable().optional(),
         imageUrl: z.string().nullable().optional(),
         qrCode: z.string().nullable().optional(),
