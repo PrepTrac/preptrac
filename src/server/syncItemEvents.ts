@@ -90,6 +90,7 @@ export async function syncItemEvents(
         itemId: item.id,
         userId,
         type: { in: typesToRemove },
+        completed: false,
       },
     });
   }
