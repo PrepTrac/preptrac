@@ -1,273 +1,173 @@
-# PrepTrac Project Summary
+# PrepTrac — Project Summary (Technical)
 
-## Overview
-
-PrepTrac is a complete, production-ready preparedness inventory application built with the T3 Stack. It provides a comprehensive solution for tracking emergency supplies, managing inventory, and scheduling maintenance.
-
-## What's Included
-
-### ✅ Complete Backend (tRPC + Prisma)
-
-- **7 tRPC Routers**: Items, Categories, Locations, Events, Dashboard, Notifications, Auth
-- **Full CRUD Operations**: Create, Read, Update, Delete for all entities
-- **Advanced Filtering**: Search, category, location, expiration, maintenance filters
-- **Type-Safe API**: End-to-end TypeScript type safety
-- **Authentication**: NextAuth.js with credentials provider
-- **Database Schema**: 6 models with proper relationships and indexes
-
-### ✅ Complete Frontend (Next.js App Router)
-
-- **5 Main Pages**: Dashboard, Inventory, Calendar, Settings, Auth
-- **10+ Reusable Components**: Navigation, Forms, Cards, Metrics, etc.
-- **Dark Mode**: Full dark mode support with theme toggle
-- **Responsive Design**: Mobile-first, works on all screen sizes
-- **Modern UI**: Clean TailwindCSS design
-
-### ✅ Key Features Implemented
-
-1. **Inventory Management**
-   - Add/edit/delete items
-   - Track quantity, units, expiration dates
-   - Maintenance and rotation scheduling
-   - Image support
-   - Notes and descriptions
-
-2. **Organization System**
-   - Custom categories with colors
-   - Multiple storage locations
-   - Category and location filtering
-
-3. **Calendar System**
-   - Monthly calendar view
-   - Event types: expiration, maintenance, rotation, battery replacement
-   - Visual event indicators
-   - Upcoming events list
-
-4. **Dashboard**
-   - Total water (gallons)
-   - Food days estimate
-   - Ammo count
-   - Total items
-   - Upcoming expirations
-   - Items needing maintenance
-   - Upcoming events
-
-5. **Notifications**
-   - In-app notification system
-   - Configurable notification preferences
-   - Email notification framework (ready for SMTP setup)
-
-6. **Search & Filters**
-   - Text search
-   - Category filter
-   - Location filter
-   - Expiring soon filter
-   - Low inventory filter
-   - Needs maintenance filter
-
-7. **QR Code Support**
-   - QR code generation utility
-   - API endpoint for QR codes
-   - Ready for item/location labeling
-
-8. **PWA Support**
-   - Service worker
-   - Web manifest
-   - Offline capabilities
-
-## File Structure
-
-```
-PrepTrac/
-├── prisma/
-│   └── schema.prisma          # Database schema
-├── public/
-│   ├── manifest.json          # PWA manifest
-│   └── sw.js                  # Service worker
-├── src/
-│   ├── app/                   # Next.js App Router pages
-│   │   ├── dashboard/
-│   │   ├── inventory/
-│   │   ├── calendar/
-│   │   ├── settings/
-│   │   ├── auth/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── providers.tsx
-│   ├── components/           # React components
-│   │   ├── Navigation.tsx
-│   │   ├── ItemCard.tsx
-│   │   ├── ItemForm.tsx
-│   │   ├── CategoryNav.tsx
-│   │   ├── DashboardMetrics.tsx
-│   │   └── ...
-│   ├── pages/                 # Next.js Pages Router (API routes)
-│   │   └── api/
-│   │       ├── trpc/
-│   │       └── auth/
-│   ├── server/                # Backend code
-│   │   ├── api/
-│   │   │   └── routers/      # tRPC routers
-│   │   ├── db.ts
-│   │   ├── auth.ts
-│   │   └── trpc/
-│   ├── styles/
-│   │   └── globals.css
-│   └── utils/
-│       ├── api.ts             # tRPC client
-│       └── qrcode.ts
-├── .env.example
-├── package.json
-├── tsconfig.json
-├── tailwind.config.ts
-├── README.md
-├── ARCHITECTURE.md
-├── QUICKSTART.md
-└── PROJECT_SUMMARY.md
-```
-
-## Database Models
-
-1. **User**: Authentication and user management
-2. **Category**: Item categories (Food, Water, Ammo, etc.)
-3. **Location**: Storage locations (Basement, Garage, etc.)
-4. **Item**: Inventory items with all attributes
-5. **Event**: Calendar events (expiration, maintenance, etc.)
-6. **NotificationSettings**: User notification preferences
-
-## API Endpoints (tRPC)
-
-### Items Router
-- `getAll` - Get all items with filters
-- `getById` - Get single item
-- `create` - Create new item
-- `update` - Update item
-- `delete` - Delete item
-
-### Categories Router
-- `getAll` - Get all categories
-- `getById` - Get single category
-- `create` - Create category
-- `update` - Update category
-- `delete` - Delete category
-
-### Locations Router
-- `getAll` - Get all locations
-- `getById` - Get single location
-- `create` - Create location
-- `update` - Update location
-- `delete` - Delete location
-
-### Events Router
-- `getAll` - Get events with date range and filters
-- `getById` - Get single event
-- `create` - Create event
-- `update` - Update event
-- `delete` - Delete event
-- `markComplete` - Mark event as completed
-
-### Dashboard Router
-- `getStats` - Get dashboard statistics and metrics
-
-### Notifications Router
-- `getSettings` - Get notification settings
-- `updateSettings` - Update notification settings
-- `getPendingNotifications` - Get pending notifications
-
-### Auth Router
-- `register` - Register new user
-
-## Setup Instructions
-
-1. **Install dependencies**: `npm install`
-2. **Configure environment**: Copy `.env.example` to `.env` and fill in values
-3. **Initialize database**: `npm run db:push && npm run db:generate`
-4. **Start dev server**: `npm run dev`
-5. **Create account**: Visit http://localhost:3000 and register
-
-See [QUICKSTART.md](./QUICKSTART.md) for detailed setup.
-
-## Deployment
-
-### Options:
-- **Vercel**: Easiest, recommended for most users
-- **Docker**: Self-hosted container deployment
-- **Traditional**: Node.js server with reverse proxy
-
-See [README.md](./README.md) for deployment details.
-
-## Customization Points
-
-### Easy Customizations
-- Add new categories and locations
-- Customize colors and icons
-- Adjust notification preferences
-- Modify dashboard metrics
-
-### Advanced Customizations
-- Add new item fields (update Prisma schema)
-- Create new event types
-- Add custom filters
-- Integrate external APIs
-- Add email notifications (SMTP)
-
-## Extension Ideas
-
-- Barcode scanning
-- Mobile app (React Native)
-- Multi-user support with sharing
-- Export/import (CSV, JSON)
-- Advanced reporting
-- Photo uploads
-- Inventory templates
-- Automated suggestions
-
-## Technology Choices
-
-- **Next.js 14**: Modern React framework with App Router
-- **tRPC**: Type-safe API without code generation
-- **Prisma**: Type-safe database ORM
-- **TailwindCSS**: Utility-first CSS framework
-- **NextAuth.js**: Authentication solution
-- **React Query**: Data fetching and caching
-- **TypeScript**: Type safety throughout
-- **SQLite/PostgreSQL**: Flexible database options
-
-## Code Quality
-
-- ✅ Full TypeScript coverage
-- ✅ Type-safe end-to-end
-- ✅ Modular component structure
-- ✅ Clean separation of concerns
-- ✅ Reusable utilities
-- ✅ Error handling
-- ✅ Input validation with Zod
-- ✅ No linter errors
-
-## Documentation
-
-- **README.md**: Complete documentation
-- **ARCHITECTURE.md**: System architecture details
-- **QUICKSTART.md**: 5-minute setup guide
-- **PROJECT_SUMMARY.md**: This file
-
-## Next Steps
-
-1. **Set up the application** following QUICKSTART.md
-2. **Create your first data** (categories, locations, items)
-3. **Customize** to fit your needs
-4. **Deploy** when ready
-5. **Extend** with additional features as needed
-
-## Support
-
-- Check README.md for troubleshooting
-- Review ARCHITECTURE.md for system understanding
-- Consult Next.js, tRPC, and Prisma docs for framework-specific questions
+Technical reference for developers and deployers. For end-user guidance, see [README.md](./README.md).
 
 ---
 
-**Status**: ✅ Complete and ready for use
+## Overview
 
-All core features are implemented and tested. The application is production-ready and can be deployed immediately after setup.
+PrepTrac is a preparedness inventory application. It provides inventory management, household-based days-of-food calculation, locations, consumption logging, calendar events, and notifications. The app runs without authentication (single default user). Built with the T3 Stack (Next.js, tRPC, Prisma, TailwindCSS, TypeScript).
 
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **API**: tRPC
+- **Database**: Prisma (SQLite or PostgreSQL)
+- **Styling**: TailwindCSS
+- **Forms**: React Hook Form
+- **Icons**: Lucide React
+- **Date handling**: date-fns
+
+No authentication layer: a single default user is created automatically (`getOrCreateDefaultUser` in `src/server/auth.ts`).
+
+---
+
+## Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- SQLite (default) or PostgreSQL
+
+---
+
+## Installation & Setup
+
+1. Clone or copy the project.
+2. **Install dependencies**: `npm install`
+3. **Environment**: `cp .env.example .env`  
+   Set `DATABASE_URL` (e.g. `file:./dev.db` for SQLite). `NEXTAUTH_*` vars are optional (auth not used).
+4. **Database**: `npm run db:push` then `npm run db:generate`
+5. **Run**: `npm run dev` → open http://localhost:3000
+
+---
+
+## Database Schema (Prisma)
+
+- **User** — Single default user (no login).
+- **Category** — Item categories (Food, Water, Ammo, etc.).
+- **Location** — Storage locations.
+- **Item** — Name, quantity, unit, category, location, expiration, maintenance, rotation, `caloriesPerUnit` (optional; required for food for Days of Food).
+- **FamilyMember** — Household: age, weightKg, heightCm, sex (Mifflin-St Jeor for daily calories).
+- **Event** — Calendar events (expiration, maintenance, rotation).
+- **ConsumptionLog** — Per-item consumption (quantity, note, date).
+- **NotificationSettings** — User notification preferences.
+- **TestDataRecord** — Tracks entities created by “Fill test data” for safe removal.
+
+---
+
+## API Structure (tRPC)
+
+Routers under `src/server/api/routers/`:
+
+- **items** — CRUD, filters, consumption logging, consumption stats.
+- **categories** — Category CRUD.
+- **locations** — Location CRUD, `getConsumptionByLocation`.
+- **events** — Event CRUD, sync from items.
+- **dashboard** — `getStats` (water, days of food, ammo, category stats, upcoming events/expirations/maintenance).
+- **household** — Family member CRUD, `getTotalDailyCalories`.
+- **notifications** — Settings, pending notifications, test webhook/email.
+- **settings** — `fillTestData`, `removeTestData`, `hasTestData`.
+- **auth** — Legacy (e.g. register); app uses default user.
+
+---
+
+## Frontend Structure
+
+```
+src/
+├── app/
+│   ├── dashboard/    # Dashboard page
+│   ├── inventory/    # Inventory list
+│   ├── locations/    # Location detail + consumption
+│   ├── consume/      # Log consumption + analytics
+│   ├── household/    # Household profile
+│   ├── calendar/     # Calendar view
+│   ├── settings/     # Notifications, categories, locations, test data
+│   └── auth/         # Legacy (unused)
+├── components/
+├── server/api/routers/
+├── server/db.ts
+├── server/auth.ts    # getOrCreateDefaultUser
+└── utils/
+```
+
+---
+
+## Database Options
+
+### SQLite (default)
+
+- `DATABASE_URL="file:./dev.db"`
+- No extra setup. File is typically under `prisma/dev.db`.
+
+### PostgreSQL
+
+1. Create DB: `CREATE DATABASE preptrac;`
+2. In `prisma/schema.prisma` set `provider = "postgresql"`.
+3. Set `DATABASE_URL` in `.env` to your Postgres URL.
+4. Run `npm run db:push`.
+
+---
+
+## Deployment
+
+### Vercel
+
+Push to GitHub, import in Vercel, set env vars, deploy. Ensure `DATABASE_URL` is set (e.g. Vercel Postgres or external).
+
+### Docker
+
+Use a Node 18 image: install deps, copy source, `npm run build`, `CMD ["npm", "start"]`. Expose 3000. Provide `DATABASE_URL` and any other env.
+
+### Self-hosted
+
+- `npm run build` then `npm start`.
+- Put a reverse proxy (nginx, Caddy) in front for HTTPS and routing.
+
+---
+
+## Development
+
+- **Prisma Studio**: `npm run db:studio` to inspect/edit data.
+- **Types**: Prisma + tRPC + TypeScript give end-to-end type safety.
+- **Linting**: Standard ESLint/TypeScript; fix any reported issues in edited files.
+
+---
+
+## Extending the App
+
+- **New item fields**: Add to `prisma/schema.prisma` (Item model), run `npm run db:push`, update `src/server/api/routers/items.ts` and `ItemForm.tsx`.
+- **New event types**: Extend event type handling in `src/server/api/routers/events.ts` and calendar UI.
+- **Email notifications**: Configure SMTP in `.env` and use the notifications router (e.g. nodemailer) for sending.
+
+---
+
+## Troubleshooting
+
+- **DB connection**: Check `DATABASE_URL` in `.env`. For Postgres, ensure DB exists and credentials work. Run `npm run db:push` to sync schema.
+- **Build errors**: Run `npm run db:generate`. If needed, delete `.next` and rebuild. Use Node 18+.
+- **Empty database**: Delete `prisma/dev.db` (and `prisma/dev.db-journal` if present), run `npm run db:push`, restart app; default user and default categories/locations are recreated on first load.
+
+---
+
+## Security
+
+- No authentication: intended for single-user / local use. Do not expose directly to the internet without access control if the data is sensitive.
+- Use HTTPS in production. Back up the database regularly. Keep dependencies updated.
+
+---
+
+## Roadmap Ideas
+
+- Barcode scanning, mobile app, multi-user/sharing, export/import, advanced reporting, external API integrations, automated suggestions, photo upload, inventory templates.
+
+---
+
+## Documentation
+
+- **README.md** — End-user overview and how to use the product.
+- **QUICKSTART.md** — Short setup and first steps.
+- **PROJECT_SUMMARY.md** — This file (technical reference).
+- **ARCHITECTURE.md** — Deeper system architecture if present.
