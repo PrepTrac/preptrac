@@ -47,7 +47,7 @@ You can either try the app with sample data first, or set up your own data.
 1. Go to **Settings** → **Test data**
 2. Read the disclaimer: the test data tool is for visualizing the app only, not for production
 3. Click **Fill test data**
-4. You’ll get categories, locations, items, and some consumption history. Explore **Dashboard**, **Inventory**, **Locations**, **Consume**, and **Calendar**
+4. You’ll get categories, locations, items (including fuel in gallons and kWh), **four household members** (2 parents, 2 kids), consumption history, and **Goals** (ammo, water, food, fuel gallons / total kWh / battery kWh). Explore **Dashboard** (click Water to toggle gallons/days, Fuel & Energy to cycle gallons → total kWh → battery kWh), **Category Progress** (hover for details and category colors), **Inventory**, **Locations**, **Activity**, and **Calendar**
 5. When you’re ready to use real data, go back to **Settings** → **Test data** and click **Remove test data** (only test data is removed; any real data you added is safe)
 
 ### Option B: Set Up Your Own Data
@@ -56,7 +56,7 @@ You can either try the app with sample data first, or set up your own data.
 
 1. Go to **Settings** → **Categories**
 2. Click **Add Category**
-3. Create categories like: Food, Water, Ammo, Medical, Tools, Fuel
+3. Create categories like: Food, Water, Ammo, Medical, Tools, Fuel & Energy
 
 #### Create Locations
 
@@ -79,13 +79,13 @@ You can either try the app with sample data first, or set up your own data.
 
 ## Step 7: Explore Features
 
-- **Dashboard**: See your inventory metrics and upcoming events
+- **Dashboard**: See water (toggle gallons/days), fuel & energy (cycle gallons → total kWh → battery kWh), days of food, ammo, total items; Category Progress with units and hover tooltips; upcoming events
 - **Inventory**: Browse and filter items; add or edit items; export to CSV or JSON
 - **Import**: Download the CSV template, fill in your items (name, unit, category, location required), then upload to create many items at once
-- **Locations**: Select a location to see what’s stored there and consumption from that location
-- **Consume**: Log consumption (single or multiple items) and view consumption analytics
+- **Locations**: Select a location to see what’s stored there and activity (consumption or additions) from that location
+- **Activity**: Log consumption or additions (single or multiple items) and view activity analytics
 - **Calendar**: View upcoming expirations and maintenance
-- **Settings**: Notifications, Categories, Locations, and Test data (fill/remove sample data)
+- **Settings**: Goals (ammo, water, food, fuel gallons / total kWh / battery kWh), Notifications, Categories, Locations, and Test data (fill/remove sample data)
 
 ## Common First Steps
 
@@ -93,7 +93,7 @@ You can either try the app with sample data first, or set up your own data.
 2. ✅ Create 5-10 categories (or use the ones from test data)
 3. ✅ Create 3-5 locations
 4. ✅ Add 10-20 items (from Inventory, from **Import** with a filled CSV, or from Locations → Add item here)
-5. ✅ Log consumption from **Consume** and check **Locations** for per-location history
+5. ✅ Log consumption or additions from **Activity** and check **Locations** for per-location history
 6. ✅ Set expiration dates for perishables
 7. ✅ Configure notification preferences in Settings → Notifications
 

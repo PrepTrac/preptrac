@@ -272,6 +272,7 @@ export const settingsRouter = createTRPCRouter({
           userId,
           itemId: item.id,
           quantity: e.quantity,
+          type: "consumption",
           note: e.note,
           createdAt,
         },
@@ -282,6 +283,50 @@ export const settingsRouter = createTRPCRouter({
         data: { quantity: item.quantity - e.quantity },
       });
       consumptionCount++;
+    }
+
+    // Addition logs (e.g. refuel, restock) — demonstrates Activity "Add" feature
+    const additionEntries: Array<{ itemName: string; quantity: number; note: string; daysAgo: number }> = [
+      { itemName: "Gas cans (stored)", quantity: 5, note: "Filled cans at station", daysAgo: 3 },
+      { itemName: "Gas cans (stored)", quantity: 5, note: "Refuel", daysAgo: 45 },
+      { itemName: "Water jugs (5 gal)", quantity: 2, note: "Refilled jugs", daysAgo: 12 },
+      { itemName: "Water bottles", quantity: 12, note: "Bulk buy", daysAgo: 18 },
+      { itemName: "5.56 NATO", quantity: 20, note: "Restock after range", daysAgo: 10 },
+      { itemName: "9mm", quantity: 50, note: "Ammo run", daysAgo: 50 },
+      { itemName: "AA batteries", quantity: 12, note: "Stock up", daysAgo: 22 },
+      { itemName: "Canned beans", quantity: 6, note: "Restock pantry", daysAgo: 8 },
+      { itemName: "Rice (long grain)", quantity: 5, note: "Bulk restock", daysAgo: 35 },
+      { itemName: "Bandages (assorted)", quantity: 2, note: "First aid restock", daysAgo: 65 },
+    ];
+
+    let additionCount = 0;
+    const itemsByNameAfterConsumption = await prisma.item.findMany({
+      where: { userId, id: { in: createdItemIds } },
+      select: { id: true, name: true, quantity: true },
+    });
+    const byNameAfter = new Map(itemsByNameAfterConsumption.map((i) => [i.name, i]));
+    for (const e of additionEntries) {
+      const item = byNameAfter.get(e.itemName);
+      if (!item) continue;
+      const createdAt = subDays(now, e.daysAgo);
+      createdAt.setHours(12 + Math.floor(Math.random() * 6), 0, 0, 0);
+      const log = await prisma.consumptionLog.create({
+        data: {
+          userId,
+          itemId: item.id,
+          quantity: e.quantity,
+          type: "addition",
+          note: e.note,
+          createdAt,
+        },
+      });
+      await recordTestData(prisma, userId, log.id, "consumption_log");
+      await prisma.item.update({
+        where: { id: item.id },
+        data: { quantity: item.quantity + e.quantity },
+      });
+      additionCount++;
+      byNameAfter.set(e.itemName, { ...item, quantity: item.quantity + e.quantity });
     }
 
     // Set user activity level if not set (so Days of Food and food goal use household + activity)
@@ -315,6 +360,7 @@ export const settingsRouter = createTRPCRouter({
       locations: locationNames.length,
       items: itemDefs.length,
       consumptionLogs: consumptionCount,
+      additionLogs: additionCount,
       familyMembers: familyMembersCreated,
       activityLevelSet,
       goalsSet: true,

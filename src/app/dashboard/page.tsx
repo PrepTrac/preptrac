@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import DashboardMetrics from "~/components/DashboardMetrics";
 import CategoryGoals from "~/components/CategoryGoals";
 import UpcomingEvents from "~/components/UpcomingEvents";
+import RecentActivityList from "~/components/RecentActivityList";
 import Navigation from "~/components/Navigation";
 
 export default function DashboardPage() {
@@ -44,6 +45,14 @@ export default function DashboardPage() {
           waterBreakdown={stats?.waterBreakdown}
         />
         <UpcomingEvents events={stats?.upcomingEvents ?? []} />
+        <div className="mt-10">
+            <RecentActivityList
+            defaultPageSize={10}
+            showTitle={true}
+            compact={true}
+            activityPageHref="/activity"
+          />
+        </div>
       </main>
     </div>
   );

@@ -840,6 +840,7 @@ function FillTestDataButton() {
       void utils.dashboard.getStats.invalidate();
       void utils.items.getConsumptionStats.invalidate();
       void utils.items.getRecentConsumption.invalidate();
+      void utils.items.getRecentActivity.invalidate();
       void utils.locations.getConsumptionByLocation.invalidate();
       void utils.household.getAll.invalidate();
       void utils.household.getTotalDailyCalories.invalidate();
@@ -861,8 +862,8 @@ function FillTestDataButton() {
         <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm space-y-1">
           <p>
             Done. Created {fillTestData.data.categories} categories, {fillTestData.data.locations}{" "}
-            locations, {fillTestData.data.items} items, and {fillTestData.data.consumptionLogs}{" "}
-            consumption log entries.
+            locations, {fillTestData.data.items} items, and{" "}
+            {fillTestData.data.consumptionLogs} consumption + {fillTestData.data.additionLogs ?? 0} addition activity log entries.
           </p>
           {fillTestData.data.familyMembers != null && fillTestData.data.familyMembers > 0 && (
             <p>Added {fillTestData.data.familyMembers} household members (2 parents, 2 kids) so &ldquo;Days of Food&rdquo; and water days use your household profile.</p>
@@ -897,6 +898,7 @@ function RemoveTestDataButton() {
       void utils.dashboard.getStats.invalidate();
       void utils.items.getConsumptionStats.invalidate();
       void utils.items.getRecentConsumption.invalidate();
+      void utils.items.getRecentActivity.invalidate();
       void utils.locations.getConsumptionByLocation.invalidate();
       void utils.household.getAll.invalidate();
       void utils.household.getTotalDailyCalories.invalidate();

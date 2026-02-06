@@ -43,7 +43,7 @@ export default function LocationsPage() {
           Locations
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Select a location to see what you have stored there and what has been consumed from it.
+          Select a location to see what you have stored there and activity (consumption or additions) from it.
         </p>
 
         {/* Location selector */}
@@ -146,19 +146,19 @@ export default function LocationsPage() {
               )}
             </section>
 
-            {/* Consumption from this location */}
+            {/* Activity from this location */}
             <section>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                 <History className="h-5 w-5 text-amber-500" />
-                Consumed from this location
+                Activity from this location
               </h3>
 
               {consumptionLoading ? (
-                <div className="text-gray-500 dark:text-gray-400 py-8">Loading consumption...</div>
+                <div className="text-gray-500 dark:text-gray-400 py-8">Loading activity...</div>
               ) : consumption?.length === 0 ? (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
                   <p className="text-gray-500 dark:text-gray-400">
-                    No consumption recorded from this location yet.
+                    No consumption or additions recorded from this location yet.
                   </p>
                 </div>
               ) : (
@@ -175,6 +175,15 @@ export default function LocationsPage() {
                           </span>
                           <span className="text-gray-600 dark:text-gray-400 ml-2">
                             {log.quantity} {log.item.unit}
+                          </span>
+                          <span
+                            className={`ml-2 text-xs font-medium px-2 py-0.5 rounded ${
+                              log.type === "addition"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                            }`}
+                          >
+                            {log.type === "addition" ? "Added" : "Used"}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">

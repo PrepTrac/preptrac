@@ -8,14 +8,14 @@ PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more
 
 ## What You Can Do
 
-- **Dashboard** — See total water, **days of food** (based on your household’s calorie needs), ammo count, and upcoming expirations or maintenance.
+- **Dashboard** — See total water (click to toggle gallons/days), **fuel & energy** (click to cycle: gallons → total kWh → battery kWh), **days of food** (based on your household’s calorie needs), ammo count, total items, and upcoming expirations or maintenance. **Category Progress** shows goal progress for water, food, ammo, and fuel/energy with units (gallons, days, rounds, kWh) and hover tooltips with category colors. A **Recent activity** section shows consumption and additions with configurable rows (5, 10, 25), pagination, and filters (type and category); use **View all** to open the full Activity page.
 - **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (all item fields included).
 - **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name or ID.
 - **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover.
 - **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and what’s been consumed from that spot.
-- **Consume** — Log when you use something. Your totals update and you can review consumption over time with simple charts.
+- **Activity** — Log when you use something (consume) or add to inventory (e.g. refuel). Your totals update and you can review consumption and additions over time with charts. The **Recent activity** list supports configurable rows per page (5, 10, 25), pagination, and filters by type (All / Used / Added) and category.
 - **Calendar** — Expiration dates, maintenance, and rotations appear automatically so you don’t miss a beat.
-- **Settings** — Manage categories, locations, and notifications. Use **Test data** to load sample inventory and a sample household so you can try the app before adding your own data.
+- **Settings** — Manage **Goals** (ammo rounds, water gallons, food days, and fuel: fuel gallons, total kWh, battery kWh), categories, locations, and notifications. Use **Test data** to load sample inventory and a sample household (2 parents, 2 kids) so you can try the app before adding your own data.
 
 No sign-in required. Open the app and start using it.
 
@@ -43,7 +43,7 @@ No sign-in required. Open the app and start using it.
 
 ### Dashboard
 
-Your at-a-glance view: total water, **Days of Food** (when you’ve set up household and food calories), ammo count, total items, and lists of what’s expiring or needs maintenance. When Days of Food is based on your household, it will say “Based on your household.”
+Your at-a-glance view: **Water** (click to switch between gallons and days), **Fuel / Energy** (click to cycle: gallons → total kWh → battery kWh), **Days of Food** (when you’ve set up household and food calories), ammo count, total items, and lists of what’s expiring or needs maintenance. When Days of Food is based on your household, it will say “Based on your household.” Below the metrics, **Category Progress** shows progress toward your goals (Settings → Goals) for each category, with units (gallons, rounds, days, kWh) and hover tooltips that use each category’s color.
 
 ### Adding Items
 
@@ -57,9 +57,9 @@ In **Household**, add each family member (name optional, age, sex, weight in kg,
 
 In **Locations**, choose a place from the dropdown. You’ll see all items there and their quantities, plus a history of what was consumed from that location. You can add a new item and assign it to that location with **Add item here**.
 
-### Logging Consumption
+### Logging Activity (Consume or Add)
 
-In **Consume**, pick one or more items, enter how much you used, add an optional note, and click **Record consumption**. Quantities update and the log is saved. Use the analytics section to see consumption over a chosen time range.
+In **Activity**, choose **Consume** or **Add**, pick one or more items, enter the amount, add an optional note, and submit. Quantities update and the log is saved. The analytics section shows both consumption and additions over a chosen time range (bar chart and pie charts by item). The **Recent activity** list below lets you choose how many rows to show (5, 10, or 25), page through results, and filter by type (All / Used / Added) or by category. The same recent-activity list appears on the **Dashboard** with a **View all** link to the Activity page.
 
 ### Calendar
 
@@ -74,9 +74,13 @@ Expirations, maintenance due dates, and rotation schedules from your items show 
 
 Under **Settings → Notifications** you can turn on in-app or email alerts for expirations, maintenance, and low inventory, and choose how many days in advance to be reminded.
 
+### Goals (Settings → Goals)
+
+Set overall targets for ammo (rounds), water (gallons), food (days), and fuel/energy. Fuel has three optional goals: **Fuel (gallons)**, **Total kWh** (generator + battery; generator uses 6 kWh per gallon), and **Battery kWh only** (items with unit “kWh”, e.g. portable power stations). When a goal is set, the dashboard Category Progress uses it and item-level targets for that category/unit are disabled so Settings is the single place to manage those goals.
+
 ### Test Data
 
-Under **Settings → Test data**, **Fill test data** adds sample categories, locations, items (with calories), and sample household members so you can try the app. **Remove test data** removes only that sample data and leaves anything you added yourself. This is for trying the product, not for production use.
+Under **Settings → Test data**, **Fill test data** adds sample categories, locations, items (food with calories, water in gallons/bottles, ammo, fuel in gallons and kWh, and more), **four household members** (2 parents, 2 kids: Dad 35, Mom 32, and two children), **consumption and addition** activity history (so you can see both “Used” and “Added” in Activity and on the dashboard), and sets your **Goals** (ammo, water, food, and all three fuel goals) so you can see the full dashboard and Category Progress. Item-level targets are not set for goal-covered items (e.g. Canned beans, Water jugs, 5.56 NATO) so goals come from Settings only. **Remove test data** removes only that sample data and leaves anything you added yourself. This is for trying the product, not for production use.
 
 ---
 

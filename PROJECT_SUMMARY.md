@@ -6,7 +6,7 @@ Technical reference for developers and deployers. For end-user guidance, see [RE
 
 ## Overview
 
-PrepTrac is a preparedness inventory application. It provides inventory management, household-based days-of-food calculation, locations, consumption logging, calendar events, and notifications. The app runs without authentication (single default user). Built with the T3 Stack (Next.js, tRPC, Prisma, TailwindCSS, TypeScript).
+PrepTrac is a preparedness inventory application. It provides inventory management, dashboard metrics (water, fuel/energy in gallons and kWh, days of food, ammo), category progress goals (water, food, ammo, fuel with three goals: gallons, total kWh, battery kWh), household-based days-of-food calculation, locations, consumption logging, calendar events, and notifications. The app runs without authentication (single default user). Built with the T3 Stack (Next.js, tRPC, Prisma, TailwindCSS, TypeScript).
 
 ---
 
@@ -45,13 +45,13 @@ No authentication layer: a single default user is created automatically (`getOrC
 
 ## Database Schema (Prisma)
 
-- **User** — Single default user (no login).
-- **Category** — Item categories (Food, Water, Ammo, etc.).
+- **User** — Single default user (no login). Goals: `ammoGoalRounds`, `waterGoalGallons`, `foodGoalDays`, `fuelGoalGallons`, `fuelGoalKwh`, `fuelGoalBatteryKwh` (all optional).
+- **Category** — Item categories (Food, Water, Ammo, Fuel & Energy, etc.).
 - **Location** — Storage locations.
-- **Item** — Name, quantity, unit, category, location, expiration, maintenance, rotation, `caloriesPerUnit` (optional; required for food for Days of Food).
+- **Item** — Name, quantity, unit, category, location, expiration, maintenance, rotation, `caloriesPerUnit` (optional; required for food for Days of Food). When a Settings goal exists for that category/unit, item-level target is ignored.
 - **FamilyMember** — Household: age, weightKg, heightCm, sex (Mifflin-St Jeor for daily calories).
 - **Event** — Calendar events (expiration, maintenance, rotation).
-- **ConsumptionLog** — Per-item consumption (quantity, note, date).
+- **ConsumptionLog** — Per-item activity: consumption or addition (quantity, type, note, date).
 - **NotificationSettings** — User notification preferences.
 - **TestDataRecord** — Tracks entities created by “Fill test data” for safe removal.
 
@@ -61,14 +61,14 @@ No authentication layer: a single default user is created automatically (`getOrC
 
 Routers under `src/server/api/routers/`:
 
-- **items** — CRUD, filters, consumption logging, consumption stats, **importFromCSV** (parse CSV and create items; category/location by name or ID).
+- **items** — CRUD, filters, activity logging (consume/add), activity stats (consumption + additions), **importFromCSV** (parse CSV and create items; category/location by name or ID).
 - **categories** — Category CRUD.
-- **locations** — Location CRUD, `getConsumptionByLocation`.
+- **locations** — Location CRUD, `getConsumptionByLocation` (returns logs with type).
 - **events** — Event CRUD, sync from items.
-- **dashboard** — `getStats` (water, days of food, ammo, category stats, upcoming events/expirations/maintenance).
+- **dashboard** — `getStats` (total water, water days, total fuel gallons, total kWh, battery kWh, days of food, ammo, category stats with optional `fuelSubProgresses` and `displayUnit`, upcoming events/expirations/maintenance).
 - **household** — Family member CRUD, `getTotalDailyCalories`.
 - **notifications** — Settings, pending notifications, test webhook/email.
-- **settings** — `fillTestData`, `removeTestData`, `hasTestData`.
+- **settings** — `getGoals` / `updateGoals` (ammo, water, food, fuel gallons, fuel total kWh, fuel battery kWh), `fillTestData` (categories, locations, items including fuel in kWh, household members, consumption logs, goals), `removeTestData`, `hasTestData`.
 - **auth** — Legacy (e.g. register); app uses default user.
 
 ---
@@ -82,7 +82,7 @@ src/
 │   ├── inventory/    # Inventory list (CSV/JSON export)
 │   ├── import/       # CSV template download + upload import
 │   ├── locations/    # Location detail + consumption
-│   ├── consume/      # Log consumption + analytics
+│   ├── activity/     # Log consumption or additions + activity analytics
 │   ├── household/    # Household profile
 │   ├── calendar/     # Calendar view
 │   ├── settings/     # Notifications, categories, locations, test data

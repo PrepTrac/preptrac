@@ -185,6 +185,48 @@ export const itemsRouter = createTRPCRouter({
       });
     }),
 
+  /** Paginated recent activity (consumption + addition) with filters. */
+  getRecentActivity: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).default(10),
+        page: z.number().min(1).default(1),
+        type: z.enum(["all", "consumption", "addition"]).default("all"),
+        categoryIds: z.array(z.string()).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.userId;
+      const where: Prisma.ConsumptionLogWhereInput = {
+        userId,
+        ...(input.type !== "all" && { type: input.type }),
+        ...(input.categoryIds?.length
+          ? { item: { categoryId: { in: input.categoryIds } } }
+          : {}),
+      };
+      const [logs, totalCount] = await Promise.all([
+        ctx.prisma.consumptionLog.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (input.page - 1) * input.limit,
+          take: input.limit,
+          include: {
+            item: {
+              select: {
+                id: true,
+                name: true,
+                unit: true,
+                categoryId: true,
+                category: { select: { name: true } },
+              },
+            },
+          },
+        }),
+        ctx.prisma.consumptionLog.count({ where }),
+      ]);
+      return { logs, totalCount };
+    }),
+
   getConsumptionStats: protectedProcedure
     .input(
       z.object({
@@ -222,7 +264,7 @@ export const itemsRouter = createTRPCRouter({
 
       const timeSeriesByDate = new Map<
         string,
-        { itemId: string; quantity: number }[]
+        { itemId: string; consumption: number; addition: number }[]
       >();
       const totalsByItemId = new Map<
         string,
@@ -232,26 +274,34 @@ export const itemsRouter = createTRPCRouter({
           unit: string;
           categoryId: string;
           categoryName: string;
-          quantity: number;
+          consumption: number;
+          addition: number;
         }
       >();
 
       for (const log of logs) {
         const dateKey = new Date(log.createdAt).toISOString().slice(0, 10);
+        const isAddition = log.type === "addition";
         if (!timeSeriesByDate.has(dateKey)) {
           timeSeriesByDate.set(dateKey, []);
         }
         const dayItems = timeSeriesByDate.get(dateKey)!;
         const existing = dayItems.find((i) => i.itemId === log.itemId);
         if (existing) {
-          existing.quantity += log.quantity;
+          if (isAddition) existing.addition += log.quantity;
+          else existing.consumption += log.quantity;
         } else {
-          dayItems.push({ itemId: log.itemId, quantity: log.quantity });
+          dayItems.push({
+            itemId: log.itemId,
+            consumption: isAddition ? 0 : log.quantity,
+            addition: isAddition ? log.quantity : 0,
+          });
         }
 
         const cur = totalsByItemId.get(log.itemId);
         if (cur) {
-          cur.quantity += log.quantity;
+          if (isAddition) cur.addition += log.quantity;
+          else cur.consumption += log.quantity;
         } else {
           totalsByItemId.set(log.itemId, {
             itemId: log.itemId,
@@ -259,7 +309,8 @@ export const itemsRouter = createTRPCRouter({
             unit: log.item.unit,
             categoryId: log.item.categoryId,
             categoryName: log.item.category.name,
-            quantity: log.quantity,
+            consumption: isAddition ? 0 : log.quantity,
+            addition: isAddition ? log.quantity : 0,
           });
         }
       }
@@ -402,10 +453,11 @@ export const itemsRouter = createTRPCRouter({
       });
     }),
 
-  /** Record consumption of multiple items in one go (e.g. "range day" log). */
+  /** Record activity (consumption or addition) for multiple items in one go. */
   consumeMany: protectedProcedure
     .input(
       z.object({
+        activityType: z.enum(["consumption", "addition"]).default("consumption"),
         entries: z.array(
           z.object({
             itemId: z.string(),
@@ -417,6 +469,7 @@ export const itemsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId;
+      const isAddition = input.activityType === "addition";
       const results: { itemId: string; success: boolean; error?: string }[] = [];
       const updates: Prisma.PrismaPromise<any>[] = [];
       const items = await ctx.prisma.item.findMany({
@@ -433,7 +486,7 @@ export const itemsRouter = createTRPCRouter({
           results.push({ itemId: entry.itemId, success: false, error: "Item not found" });
           continue;
         }
-        if (entry.quantity > item.quantity) {
+        if (!isAddition && entry.quantity > item.quantity) {
           results.push({
             itemId: entry.itemId,
             success: false,
@@ -442,7 +495,9 @@ export const itemsRouter = createTRPCRouter({
           continue;
         }
         results.push({ itemId: entry.itemId, success: true });
-        const newQuantity = item.quantity - entry.quantity;
+        const newQuantity = isAddition
+          ? item.quantity + entry.quantity
+          : item.quantity - entry.quantity;
         updates.push(
           ctx.prisma.item.update({
             where: { id: entry.itemId },
@@ -453,6 +508,7 @@ export const itemsRouter = createTRPCRouter({
               itemId: entry.itemId,
               userId,
               quantity: entry.quantity,
+              type: input.activityType,
               note: entry.note ?? null,
             },
           })

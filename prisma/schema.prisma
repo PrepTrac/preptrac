@@ -137,7 +137,8 @@ model ConsumptionLog {
   item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quantity  Float    // Amount consumed
+  quantity  Float    // Amount consumed or added
+  type      String   @default("consumption") // "consumption" | "addition"
   note      String?
   createdAt DateTime @default(now())
 
