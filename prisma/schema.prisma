@@ -16,6 +16,7 @@ model User {
   email             String    @unique
   password          String
   name              String?
+  activityLevel     String?  // "moderate" | "very_active" | "extra_active" | null = sedentary
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   items             Item[]

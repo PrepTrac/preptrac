@@ -1,17 +1,37 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
+/** Activity level multipliers for calories (BMR × factor) and water (oz per lb body weight). */
+const ACTIVITY_CALORIE_FACTOR: Record<string, number> = {
+  moderate: 1.55,
+  very_active: 1.725,
+  extra_active: 1.9,
+};
+const ACTIVITY_WATER_OZ_PER_LB: Record<string, number> = {
+  moderate: 0.65,
+  very_active: 0.75,
+  extra_active: 0.85,
+};
+const DEFAULT_WATER_OZ_PER_LB = 0.5;
+
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.userId;
 
-    // Get all items and household (used for water days and food days)
-    const [items, familyMembers] = await Promise.all([
+    // Get all items, household, and user activity level
+    const [items, familyMembers, user] = await Promise.all([
       ctx.prisma.item.findMany({
         where: { userId },
         include: { category: true },
       }),
       ctx.prisma.familyMember.findMany({ where: { userId } }),
+      ctx.prisma.user.findUnique({
+        where: { id: userId },
+        select: { activityLevel: true },
+      }),
     ]);
+    const activityLevel = user?.activityLevel ?? null;
+    const calorieFactor = activityLevel ? (ACTIVITY_CALORIE_FACTOR[activityLevel] ?? 1) : 1;
+    const waterOzPerLb = activityLevel ? (ACTIVITY_WATER_OZ_PER_LB[activityLevel] ?? DEFAULT_WATER_OZ_PER_LB) : DEFAULT_WATER_OZ_PER_LB;
 
     // Water: only count items in water category with unit "gallon(s)" or "bottle(s)"
     // Bottles = 16.9 fl oz standard; 1 gallon = 128 fl oz → 1 bottle = 16.9/128 gal
@@ -41,9 +61,9 @@ export const dashboardRouter = createTRPCRouter({
       };
     });
 
-    // Water days: 0.5 oz water per pound body weight per day (from household)
+    // Water days: oz per lb by activity level (from household)
     const totalWeightLbs = familyMembers.reduce((sum, m) => sum + m.weightKg * 2.20462, 0);
-    const dailyWaterOz = totalWeightLbs * 0.5;
+    const dailyWaterOz = totalWeightLbs * waterOzPerLb;
     const dailyWaterGallons = dailyWaterOz / 128;
     const totalWaterDays =
       dailyWaterGallons > 0 && totalWater > 0 ? totalWater / dailyWaterGallons : undefined;
@@ -62,16 +82,17 @@ export const dashboardRouter = createTRPCRouter({
       item.category.name.toLowerCase().includes("food")
     );
 
-    // Household total daily calories (Mifflin-St Jeor BMR sum)
+    // Household total daily calories (Mifflin-St Jeor BMR × activity factor)
     const getTotalDailyCalories = () => {
       const base = (w: number, h: number, a: number, s: string) => {
         const b = 10 * w + 6.25 * h - 5 * a;
         return s.toLowerCase() === "female" ? b - 161 : b + 5;
       };
-      return familyMembers.reduce(
+      const bmrSum = familyMembers.reduce(
         (sum, m) => sum + Math.max(0, Math.round(base(m.weightKg, m.heightCm, m.age, m.sex))),
         0
       );
+      return Math.round(bmrSum * calorieFactor);
     };
     const totalDailyCalories = getTotalDailyCalories();
 

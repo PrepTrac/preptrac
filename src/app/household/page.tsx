@@ -11,7 +11,17 @@ export default function HouseholdPage() {
 
   const { data: members, isLoading } = api.household.getAll.useQuery();
   const { data: totalCal } = api.household.getTotalDailyCalories.useQuery();
+  const { data: activityData } = api.household.getActivityLevel.useQuery();
   const utils = api.useUtils();
+
+  const setActivityLevel = api.household.setActivityLevel.useMutation({
+    onSuccess: () => {
+      void utils.household.getActivityLevel.invalidate();
+      void utils.household.getTotalDailyCalories.invalidate();
+      void utils.household.getAll.invalidate();
+      void utils.dashboard.getStats.invalidate();
+    },
+  });
 
   const deleteMember = api.household.delete.useMutation({
     onSuccess: () => {
@@ -54,6 +64,67 @@ export default function HouseholdPage() {
             </div>
           </div>
         )}
+
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Activity level</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Adjusts calorie and water estimates. The base calculation (Mifflin-St Jeor) is for maintaining at rest; these options add a multiplier for higher activity. This is not 100% accurate but helps be conservative when planning for strenuous activity.
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+              <input
+                type="radio"
+                name="activityLevel"
+                checked={activityData?.activityLevel === null || activityData?.activityLevel === undefined}
+                onChange={() => setActivityLevel.mutate({ activityLevel: null })}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <span className="font-medium text-gray-900 dark:text-white">Base (sedentary)</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">BMR only; 0.5 oz water per lb. Default if no activity level is set.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+              <input
+                type="radio"
+                name="activityLevel"
+                checked={activityData?.activityLevel === "moderate"}
+                onChange={() => setActivityLevel.mutate({ activityLevel: "moderate" })}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <span className="font-medium text-gray-900 dark:text-white">Moderately active</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">3–5 exercise days per week. Food: BMR × 1.55 · Water: 0.65 oz per lb.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+              <input
+                type="radio"
+                name="activityLevel"
+                checked={activityData?.activityLevel === "very_active"}
+                onChange={() => setActivityLevel.mutate({ activityLevel: "very_active" })}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <span className="font-medium text-gray-900 dark:text-white">Very active</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Hard exercise 6–7 days per week. Food: BMR × 1.725 · Water: 0.75 oz per lb.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+              <input
+                type="radio"
+                name="activityLevel"
+                checked={activityData?.activityLevel === "extra_active"}
+                onChange={() => setActivityLevel.mutate({ activityLevel: "extra_active" })}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <span className="font-medium text-gray-900 dark:text-white">Extra active</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Very hard exercise &amp; physical job. Food: BMR × 1.9 · Water: 0.85 oz per lb.</p>
+              </div>
+            </label>
+          </div>
+        </section>
 
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Family members</h2>

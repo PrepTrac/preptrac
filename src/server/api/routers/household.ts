@@ -2,33 +2,76 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 /** Mifflin-St Jeor equation: BMR (basal metabolic rate) in kcal/day */
-function dailyCaloriesNeeded(weightKg: number, heightCm: number, age: number, sex: string): number {
+function bmr(weightKg: number, heightCm: number, age: number, sex: string): number {
   const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
-  const bmr = sex.toLowerCase() === "female" ? base - 161 : base + 5;
-  return Math.max(0, Math.round(bmr));
+  const b = sex.toLowerCase() === "female" ? base - 161 : base + 5;
+  return Math.max(0, Math.round(b));
 }
 
+const ACTIVITY_CALORIE_FACTOR: Record<string, number> = {
+  moderate: 1.55,
+  very_active: 1.725,
+  extra_active: 1.9,
+};
+
 export const householdRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const members = await ctx.prisma.familyMember.findMany({
-      where: { userId: ctx.userId },
-      orderBy: { createdAt: "asc" },
+  getActivityLevel: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.userId },
+      select: { activityLevel: true },
     });
-    return members.map((m) => ({
-      ...m,
-      dailyCalories: dailyCaloriesNeeded(m.weightKg, m.heightCm, m.age, m.sex),
-    }));
+    return { activityLevel: user?.activityLevel ?? null };
+  }),
+
+  setActivityLevel: protectedProcedure
+    .input(
+      z.object({
+        activityLevel: z.enum(["moderate", "very_active", "extra_active"]).nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.user.update({
+        where: { id: ctx.userId },
+        data: { activityLevel: input.activityLevel },
+      });
+      return { activityLevel: input.activityLevel };
+    }),
+
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    const [members, user] = await Promise.all([
+      ctx.prisma.familyMember.findMany({
+        where: { userId: ctx.userId },
+        orderBy: { createdAt: "asc" },
+      }),
+      ctx.prisma.user.findUnique({
+        where: { id: ctx.userId },
+        select: { activityLevel: true },
+      }),
+    ]);
+    const factor = user?.activityLevel ? (ACTIVITY_CALORIE_FACTOR[user.activityLevel] ?? 1) : 1;
+    return members.map((m) => {
+      const bmrVal = bmr(m.weightKg, m.heightCm, m.age, m.sex);
+      return {
+        ...m,
+        dailyCalories: Math.round(bmrVal * factor),
+      };
+    });
   }),
 
   getTotalDailyCalories: protectedProcedure.query(async ({ ctx }) => {
-    const members = await ctx.prisma.familyMember.findMany({
-      where: { userId: ctx.userId },
-    });
+    const [members, user] = await Promise.all([
+      ctx.prisma.familyMember.findMany({ where: { userId: ctx.userId } }),
+      ctx.prisma.user.findUnique({
+        where: { id: ctx.userId },
+        select: { activityLevel: true },
+      }),
+    ]);
+    const factor = user?.activityLevel ? (ACTIVITY_CALORIE_FACTOR[user.activityLevel] ?? 1) : 1;
     const total = members.reduce(
-      (sum, m) => sum + dailyCaloriesNeeded(m.weightKg, m.heightCm, m.age, m.sex),
+      (sum, m) => sum + bmr(m.weightKg, m.heightCm, m.age, m.sex) * factor,
       0
     );
-    return { totalDailyCalories: total };
+    return { totalDailyCalories: Math.round(total) };
   }),
 
   create: protectedProcedure
