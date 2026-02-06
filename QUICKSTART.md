@@ -8,7 +8,7 @@ Get PrepTrac up and running in a few minutes!
    ```bash
    docker compose up -d
    ```
-2. Open **http://localhost:3000** in your browser.
+2. Open **http://localhost:8008** in your browser.
 3. To stop: `docker compose down`. Data is kept in a Docker volume.
 
 ## Option B: Local development (Node.js 18+)

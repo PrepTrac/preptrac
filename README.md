@@ -29,7 +29,7 @@ No sign-in required. Open the app and start using it.
 docker compose up -d
 ```
 
-Then open [http://localhost:3000](http://localhost:3000). To stop: `docker compose down`.
+Then open [http://localhost:8008](http://localhost:8008). To stop: `docker compose down`.
 
 **Or run locally** (Node.js 18+):
 
