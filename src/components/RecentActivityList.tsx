@@ -36,7 +36,9 @@ export default function RecentActivityList({
   const [categoryIds, setCategoryIds] = useState<string[] | undefined>(undefined);
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
 
-  const { data: categories } = api.categories.getAll.useQuery();
+  const { data: categories } = api.categories.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const { data, isLoading } = api.items.getRecentActivity.useQuery({
     limit: pageSize,
     page,

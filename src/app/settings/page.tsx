@@ -205,7 +205,9 @@ export default function SettingsPage() {
     if (tab && isSettingsTab(tab)) setActiveTab(tab);
   }, [searchParams]);
 
-  const { data: goals } = api.settings.getGoals.useQuery();
+  const { data: goals } = api.settings.getGoals.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const updateGoalsMutation = api.settings.updateGoals.useMutation({
     onSuccess: () => utils.settings.getGoals.invalidate(),
   });

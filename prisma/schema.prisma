@@ -166,6 +166,7 @@ model Event {
   @@index([date])
   @@index([type])
   @@index([completed])
+  @@index([itemId, userId, type])
 }
 
 model NotificationSettings {

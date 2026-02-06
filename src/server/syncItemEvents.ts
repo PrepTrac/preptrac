@@ -1,5 +1,55 @@
 import type { PrismaClient } from "@prisma/client";
 
+const EVENT_TYPES = ["expiration", "maintenance", "rotation"] as const;
+
+type EventInput = {
+  type: string;
+  title: string;
+  date: Date;
+};
+
+/** Build list of events to create/update from item fields */
+function buildEventsToCreate(item: {
+  name: string;
+  expirationDate: Date | null;
+  maintenanceInterval: number | null;
+  lastMaintenanceDate: Date | null;
+  rotationSchedule: number | null;
+  lastRotationDate: Date | null;
+}): EventInput[] {
+  const eventsToCreate: EventInput[] = [];
+
+  if (item.expirationDate) {
+    eventsToCreate.push({
+      type: "expiration",
+      title: `${item.name} expires`,
+      date: item.expirationDate,
+    });
+  }
+
+  if (item.maintenanceInterval && item.lastMaintenanceDate) {
+    const nextMaintenance = new Date(item.lastMaintenanceDate);
+    nextMaintenance.setDate(nextMaintenance.getDate() + item.maintenanceInterval);
+    eventsToCreate.push({
+      type: "maintenance",
+      title: `${item.name} maintenance`,
+      date: nextMaintenance,
+    });
+  }
+
+  if (item.rotationSchedule && item.lastRotationDate) {
+    const nextRotation = new Date(item.lastRotationDate);
+    nextRotation.setDate(nextRotation.getDate() + item.rotationSchedule);
+    eventsToCreate.push({
+      type: "rotation",
+      title: `${item.name} rotation`,
+      date: nextRotation,
+    });
+  }
+
+  return eventsToCreate;
+}
+
 /** Sync calendar events from an item's expiration, maintenance, and rotation dates */
 export async function syncItemEvents(
   prisma: PrismaClient,
@@ -14,84 +64,154 @@ export async function syncItemEvents(
     lastRotationDate: Date | null;
   }
 ) {
-  const eventsToCreate: { type: string; title: string; date: Date }[] = [];
+  const eventsToCreate = buildEventsToCreate(item);
+  const typesWeWant = new Set(eventsToCreate.map((e) => e.type));
+  const typesToRemove = EVENT_TYPES.filter((t) => !typesWeWant.has(t));
 
-  // Expiration event
-  if (item.expirationDate) {
-    eventsToCreate.push({
-      type: "expiration",
-      title: `${item.name} expires`,
-      date: item.expirationDate,
-    });
-  }
+  const existingEvents = await prisma.event.findMany({
+    where: {
+      itemId: item.id,
+      userId,
+      type: { in: [...EVENT_TYPES] },
+    },
+  });
 
-  // Next maintenance event
-  if (item.maintenanceInterval && item.lastMaintenanceDate) {
-    const nextMaintenance = new Date(item.lastMaintenanceDate);
-    nextMaintenance.setDate(nextMaintenance.getDate() + item.maintenanceInterval);
-    eventsToCreate.push({
-      type: "maintenance",
-      title: `${item.name} maintenance`,
-      date: nextMaintenance,
-    });
-  }
-
-  // Next rotation event
-  if (item.rotationSchedule && item.lastRotationDate) {
-    const nextRotation = new Date(item.lastRotationDate);
-    nextRotation.setDate(nextRotation.getDate() + item.rotationSchedule);
-    eventsToCreate.push({
-      type: "rotation",
-      title: `${item.name} rotation`,
-      date: nextRotation,
-    });
-  }
+  const toUpdate: { id: string; title: string; date: Date }[] = [];
+  const toCreate: EventInput[] = [];
 
   for (const event of eventsToCreate) {
-    const existing = await prisma.event.findFirst({
-      where: {
-        itemId: item.id,
-        userId,
-        type: event.type,
-      },
-    });
-
-    if (existing?.completed) {
-      // Don't modify completed events
-      continue;
-    }
-
+    const existing = existingEvents.find((e) => e.type === event.type);
+    if (existing?.completed) continue;
     if (existing) {
-      await prisma.event.update({
-        where: { id: existing.id },
-        data: { title: event.title, date: event.date },
-      });
+      toUpdate.push({ id: existing.id, title: event.title, date: event.date });
     } else {
-      await prisma.event.create({
+      toCreate.push(event);
+    }
+  }
+
+  await prisma.$transaction([
+    ...(typesToRemove.length > 0
+      ? [
+          prisma.event.deleteMany({
+            where: {
+              itemId: item.id,
+              userId,
+              type: { in: typesToRemove },
+              completed: false,
+            },
+          }),
+        ]
+      : []),
+    ...toUpdate.map((u) =>
+      prisma.event.update({
+        where: { id: u.id },
+        data: { title: u.title, date: u.date },
+      })
+    ),
+    ...toCreate.map((e) =>
+      prisma.event.create({
         data: {
-          type: event.type,
-          title: event.title,
-          date: event.date,
+          type: e.type,
+          title: e.title,
+          date: e.date,
           itemId: item.id,
           userId,
         },
-      });
+      })
+    ),
+  ]);
+}
+
+type BulkItem = {
+  id: string;
+  name: string;
+  expirationDate: Date | null;
+  maintenanceInterval: number | null;
+  lastMaintenanceDate: Date | null;
+  rotationSchedule: number | null;
+  lastRotationDate: Date | null;
+};
+
+/** Sync calendar events for multiple items in bulk (e.g. after CSV import). */
+export async function syncItemEventsBulk(
+  prisma: PrismaClient,
+  userId: string,
+  items: BulkItem[]
+) {
+  if (items.length === 0) return;
+
+  const itemIds = items.map((i) => i.id);
+  const existingEvents = await prisma.event.findMany({
+    where: {
+      itemId: { in: itemIds },
+      userId,
+      type: { in: [...EVENT_TYPES] },
+    },
+  });
+  const existingByItemAndType = new Map<string, { id: string; completed: boolean }>();
+  for (const e of existingEvents) {
+    if (e.itemId) existingByItemAndType.set(`${e.itemId}:${e.type}`, { id: e.id, completed: e.completed });
+  }
+
+  const toDelete: { itemId: string; types: string[] }[] = [];
+  const toUpdate: { id: string; title: string; date: Date }[] = [];
+  const toCreate: { itemId: string; type: string; title: string; date: Date }[] = [];
+
+  for (const item of items) {
+    const eventsToCreate = buildEventsToCreate(item);
+    const typesWeWant = new Set(eventsToCreate.map((e) => e.type));
+    const typesToRemove = EVENT_TYPES.filter((t) => !typesWeWant.has(t));
+    if (typesToRemove.length > 0) {
+      toDelete.push({ itemId: item.id, types: typesToRemove });
+    }
+    for (const event of eventsToCreate) {
+      const key = `${item.id}:${event.type}`;
+      const existing = existingByItemAndType.get(key);
+      if (existing?.completed) continue;
+      if (existing) {
+        toUpdate.push({ id: existing.id, title: event.title, date: event.date });
+      } else {
+        toCreate.push({
+          itemId: item.id,
+          type: event.type,
+          title: event.title,
+          date: event.date,
+        });
+      }
     }
   }
 
-  // Remove events for types no longer applicable (e.g. expirationDate was cleared)
-  const eventTypes = ["expiration", "maintenance", "rotation"] as const;
-  const typesWeWant = new Set(eventsToCreate.map((e) => e.type));
-  const typesToRemove = eventTypes.filter((t) => !typesWeWant.has(t));
-
-  if (typesToRemove.length > 0) {
-    await prisma.event.deleteMany({
-      where: {
-        itemId: item.id,
-        userId,
-        type: { in: typesToRemove },
-        completed: false,
-      },
-    });
-  }
+  await prisma.$transaction([
+    ...toDelete.flatMap((d) =>
+      d.types.length > 0
+        ? [
+            prisma.event.deleteMany({
+              where: {
+                itemId: d.itemId,
+                userId,
+                type: { in: d.types },
+                completed: false,
+              },
+            }),
+          ]
+        : []
+    ),
+    ...toUpdate.map((u) =>
+      prisma.event.update({
+        where: { id: u.id },
+        data: { title: u.title, date: u.date },
+      })
+    ),
+    ...toCreate.map((e) =>
+      prisma.event.create({
+        data: {
+          type: e.type,
+          title: e.title,
+          date: e.date,
+          itemId: e.itemId,
+          userId,
+        },
+      })
+    ),
+  ]);
 }

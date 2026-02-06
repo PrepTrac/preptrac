@@ -17,12 +17,83 @@ export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.userId;
 
-    // Get all items, household, and user activity level
-    const [items, familyMembers, user] = await Promise.all([
+    // Targeted item queries and user/household (no full-item fetch)
+    const [
+      waterItems,
+      foodItems,
+      ammoItems,
+      fuelItems,
+      itemsWithCalories,
+      totalItemsCount,
+      familyMembers,
+      user,
+    ] = await Promise.all([
       ctx.prisma.item.findMany({
-        where: { userId },
-        include: { category: true },
+        where: {
+          userId,
+          category: { name: { contains: "Water" } },
+        },
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          unit: true,
+          category: { select: { name: true } },
+        },
       }),
+      ctx.prisma.item.findMany({
+        where: {
+          userId,
+          category: { name: { contains: "Food" } },
+        },
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          unit: true,
+          caloriesPerUnit: true,
+          category: { select: { name: true } },
+        },
+      }),
+      ctx.prisma.item.findMany({
+        where: {
+          userId,
+          category: { name: { contains: "Ammo" } },
+        },
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          unit: true,
+          category: { select: { name: true } },
+        },
+      }),
+      ctx.prisma.item.findMany({
+        where: {
+          userId,
+          category: {
+            OR: [
+              { name: { contains: "Fuel" } },
+              { name: { contains: "Energy" } },
+            ],
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          unit: true,
+          category: { select: { name: true } },
+        },
+      }),
+      ctx.prisma.item.findMany({
+        where: {
+          userId,
+          caloriesPerUnit: { not: null },
+        },
+        select: { quantity: true, caloriesPerUnit: true },
+      }),
+      ctx.prisma.item.count({ where: { userId } }),
       ctx.prisma.familyMember.findMany({ where: { userId } }),
       ctx.prisma.user.findUnique({
         where: { id: userId },
@@ -46,18 +117,16 @@ export const dashboardRouter = createTRPCRouter({
     const GALLONS_PER_BOTTLE = 16.9 / 128;
     const isGallon = (u: string) => /gallon(s)?/i.test(u);
     const isBottle = (u: string) => /bottle(s)?/i.test(u);
-    const waterItems = items.filter(
-      (item) =>
-        item.category.name.toLowerCase().includes("water") &&
-        (isGallon(item.unit) || isBottle(item.unit))
+    const waterItemsFiltered = waterItems.filter(
+      (item) => isGallon(item.unit) || isBottle(item.unit)
     );
-    const totalWater = waterItems.reduce((sum, item) => {
+    const totalWater = waterItemsFiltered.reduce((sum, item) => {
       if (isBottle(item.unit)) {
         return sum + item.quantity * GALLONS_PER_BOTTLE;
       }
       return sum + item.quantity;
     }, 0);
-    const waterBreakdown = waterItems.map((item) => {
+    const waterBreakdown = waterItemsFiltered.map((item) => {
       const gallonsEquivalent = isBottle(item.unit)
         ? item.quantity * GALLONS_PER_BOTTLE
         : item.quantity;
@@ -77,17 +146,13 @@ export const dashboardRouter = createTRPCRouter({
       dailyWaterGallons > 0 && totalWater > 0 ? totalWater / dailyWaterGallons : undefined;
     const useHouseholdForWater = totalWeightLbs > 0 && totalWaterDays != null;
 
-    // Total inventory calories: sum over ALL items that have caloriesPerUnit set
-    const totalInventoryCalories = items.reduce((sum, item) => {
-      const caloriesPerUnit = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
-      if (caloriesPerUnit != null && caloriesPerUnit > 0) {
-        return sum + item.quantity * caloriesPerUnit;
-      }
-      return sum;
-    }, 0);
-
-    const foodItems = items.filter((item) =>
-      item.category.name.toLowerCase().includes("food")
+    // Total inventory calories: sum over items that have caloriesPerUnit set
+    const totalInventoryCalories = itemsWithCalories.reduce(
+      (sum, item) =>
+        item.caloriesPerUnit != null && item.caloriesPerUnit > 0
+          ? sum + item.quantity * item.caloriesPerUnit
+          : sum,
+      0
     );
 
     // Household total daily calories (Mifflin-St Jeor BMR × activity factor)
@@ -111,13 +176,12 @@ export const dashboardRouter = createTRPCRouter({
       totalFoodDays = totalInventoryCalories / totalDailyCalories;
       useHouseholdCalculation = true;
     } else {
-      // Fallback: generic estimate (same as before)
       totalFoodDays = foodItems.reduce((sum, item) => sum + item.quantity, 0) / 3;
     }
 
     // Food breakdown by item: name, quantity, unit, optional days contribution
     const foodBreakdown = foodItems.map((item) => {
-      const caloriesPerUnit = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
+      const caloriesPerUnit = item.caloriesPerUnit;
       const itemCalories = caloriesPerUnit != null && caloriesPerUnit > 0 ? item.quantity * caloriesPerUnit : 0;
       const contributionDays =
         totalDailyCalories > 0 && itemCalories > 0 ? itemCalories / totalDailyCalories : undefined;
@@ -129,10 +193,6 @@ export const dashboardRouter = createTRPCRouter({
       };
     });
 
-    // Calculate ammo counts and per-type breakdown
-    const ammoItems = items.filter((item) =>
-      item.category.name.toLowerCase().includes("ammo")
-    );
     const totalAmmo = ammoItems.reduce((sum, item) => sum + item.quantity, 0);
     const ammoBreakdown = ammoItems.map((item) => ({
       name: item.name,
@@ -142,11 +202,6 @@ export const dashboardRouter = createTRPCRouter({
 
     // Fuel/energy: gallons (generator fuel), kWh from battery (unit "kwh"), total kWh = 6 kWh/gal × gallons + battery kWh
     const KWH_PER_GALLON = 6;
-    const isFuelEnergyCat = (name: string) => {
-      const n = name.toLowerCase();
-      return n.includes("fuel") || n.includes("energy");
-    };
-    const fuelItems = items.filter((item) => isFuelEnergyCat(item.category.name));
     const isGallonUnit = (u: string) => /gallon(s)?/i.test(u);
     const isKwhUnit = (u: string) => /kwh/i.test(u);
     const totalFuelGallons = fuelItems
@@ -158,31 +213,61 @@ export const dashboardRouter = createTRPCRouter({
     const generatorKwh = totalFuelGallons * KWH_PER_GALLON;
     const totalKwh = generatorKwh + batteryKwh;
 
-    // Get upcoming expirations (next 30 days)
+    // Run second wave of queries in parallel
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const upcomingExpirations = await ctx.prisma.item.findMany({
-      where: {
-        userId,
-        expirationDate: {
-          lte: thirtyDaysFromNow,
-          gte: new Date(),
-        },
-      },
-      include: { category: true, location: true },
-      orderBy: { expirationDate: "asc" },
-      take: 10,
-    });
-
-    // Get items needing maintenance
-    const allItemsWithMaintenance = await ctx.prisma.item.findMany({
-      where: {
-        userId,
-        maintenanceInterval: { not: null },
-      },
-    });
-
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
     const now = new Date();
+
+    const [upcomingExpirations, allItemsWithMaintenance, upcomingEvents, categoriesWithItems] =
+      await Promise.all([
+        ctx.prisma.item.findMany({
+          where: {
+            userId,
+            expirationDate: {
+              lte: thirtyDaysFromNow,
+              gte: now,
+            },
+          },
+          include: { category: true, location: true },
+          orderBy: { expirationDate: "asc" },
+          take: 10,
+        }),
+        ctx.prisma.item.findMany({
+          where: {
+            userId,
+            maintenanceInterval: { not: null },
+          },
+        }),
+        ctx.prisma.event.findMany({
+          where: {
+            userId,
+            date: {
+              lte: threeMonthsFromNow,
+              gte: now,
+            },
+            completed: false,
+          },
+          include: {
+            item: {
+              include: {
+                category: true,
+                location: true,
+              },
+            },
+          },
+          orderBy: { date: "asc" },
+          take: 20,
+        }),
+        ctx.prisma.category.findMany({
+          where: { userId },
+          include: {
+            items: true,
+          },
+        }),
+      ]);
+
     const needsMaintenance = allItemsWithMaintenance
       .filter((item) => {
         if (!item.maintenanceInterval || !item.lastMaintenanceDate) return false;
@@ -200,38 +285,6 @@ export const dashboardRouter = createTRPCRouter({
             )
           : null,
       }));
-
-    // Get upcoming events (next 3 months)
-    const threeMonthsFromNow = new Date();
-    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-    const upcomingEvents = await ctx.prisma.event.findMany({
-      where: {
-        userId,
-        date: {
-          lte: threeMonthsFromNow,
-          gte: new Date(),
-        },
-        completed: false,
-      },
-      include: {
-        item: {
-          include: {
-            category: true,
-            location: true,
-          },
-        },
-      },
-      orderBy: { date: "asc" },
-      take: 20,
-    });
-
-    // Calculate category progress (goals from Settings take precedence when set)
-    const categoriesWithItems = await ctx.prisma.category.findMany({
-      where: { userId },
-      include: {
-        items: true,
-      },
-    });
 
     const catNameLower = (name: string) => name.toLowerCase();
     const isAmmoCat = (name: string) => catNameLower(name).includes("ammo");
@@ -394,7 +447,7 @@ export const dashboardRouter = createTRPCRouter({
       upcomingExpirations,
       needsMaintenance,
       upcomingEvents,
-      totalItems: items.length,
+      totalItems: totalItemsCount,
       categoryStats,
     };
   }),

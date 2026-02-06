@@ -13,7 +13,9 @@ export default function LocationsPage() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
-  const { data: locations, isLoading: locationsLoading } = api.locations.getAll.useQuery();
+  const { data: locations, isLoading: locationsLoading } = api.locations.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const { data: items, isLoading: itemsLoading } = api.items.getAll.useQuery(
     { locationId: selectedLocationId ?? undefined },
     { enabled: !!selectedLocationId }

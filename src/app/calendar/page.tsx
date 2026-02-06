@@ -6,6 +6,9 @@ import Navigation from "~/components/Navigation";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+const SYNC_STORAGE_KEY = "preptrac_events_last_sync";
+const SYNC_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+
 export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -16,21 +19,24 @@ export default function CalendarPage() {
   const utils = api.useUtils();
   const syncFromItems = api.events.syncFromItems.useMutation({
     onSuccess: () => {
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem(SYNC_STORAGE_KEY, String(Date.now()));
+      }
       void utils.events.getAll.invalidate();
     },
   });
 
   const { data: events, isLoading } = api.events.getAll.useQuery(
-    { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
-    {
-      // Sync events from items on first load (backfills existing inventory)
-      refetchOnMount: "always",
-    }
+    { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
   );
 
-  // Sync events from items when calendar loads (backfills existing inventory)
   useEffect(() => {
-    void syncFromItems.mutateAsync();
+    if (typeof sessionStorage === "undefined") return;
+    const lastSync = sessionStorage.getItem(SYNC_STORAGE_KEY);
+    const lastSyncAt = lastSync ? Number(lastSync) : 0;
+    if (Date.now() - lastSyncAt >= SYNC_COOLDOWN_MS) {
+      void syncFromItems.mutateAsync();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

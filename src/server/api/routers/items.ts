@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { syncItemEvents } from "~/server/syncItemEvents";
+import { syncItemEvents, syncItemEventsBulk } from "~/server/syncItemEvents";
 
 /** Parse a single CSV line with quoted fields ("" for escaped quote). */
 function parseCSVLine(line: string): string[] {
@@ -58,6 +58,21 @@ function parseCSV(csvContent: string): Record<string, string>[] {
 }
 
 export const itemsRouter = createTRPCRouter({
+  /** Lightweight list for dropdowns (id, name, unit, quantity, category name). */
+  getList: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.item.findMany({
+      where: { userId: ctx.userId },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        quantity: true,
+        category: { select: { name: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+  }),
+
   getAll: protectedProcedure
     .input(
       z
@@ -101,48 +116,49 @@ export const itemsRouter = createTRPCRouter({
         };
       }
 
+      let lowInventoryIds: string[] | undefined;
+      let needsMaintenanceIds: string[] | undefined;
+
       if (input?.lowInventory) {
-        // Find items where quantity is less than or equal to minQuantity
-        // Since Prisma can't compare fields within a where clause, we need to fetch and filter
-        const items = await ctx.prisma.item.findMany({
-          where: {
-            userId: ctx.userId,
-          },
-        });
-
-        const itemIds = items
-          .filter((item) => {
-            if (item.minQuantity > 0) {
-              return item.quantity <= item.minQuantity;
-            } else if (item.minQuantity === 0) {
-              return item.quantity <= 10;
-            }
-            return false;
-          })
-          .map((item) => item.id);
-
-        where.id = { in: itemIds };
+        const [lowWithThreshold, lowDefault] = await Promise.all([
+          ctx.prisma.$queryRaw<[{ id: string }]>`
+            SELECT id FROM Item WHERE userId = ${ctx.userId} AND minQuantity > 0 AND quantity <= minQuantity
+          `,
+          ctx.prisma.item.findMany({
+            where: {
+              userId: ctx.userId,
+              minQuantity: 0,
+              quantity: { lte: 10 },
+            },
+            select: { id: true },
+          }),
+        ]);
+        lowInventoryIds = [
+          ...lowWithThreshold.map((r) => r.id),
+          ...lowDefault.map((r) => r.id),
+        ];
       }
 
       if (input?.needsMaintenance) {
-        const items = await ctx.prisma.item.findMany({
-          where: {
-            userId: ctx.userId,
-            maintenanceInterval: { not: null },
-          },
-        });
+        const rows = await ctx.prisma.$queryRaw<[{ id: string }]>`
+          SELECT id FROM Item
+          WHERE userId = ${ctx.userId}
+            AND maintenanceInterval IS NOT NULL
+            AND lastMaintenanceDate IS NOT NULL
+            AND datetime(lastMaintenanceDate, '+' || maintenanceInterval || ' days') <= datetime('now')
+        `;
+        needsMaintenanceIds = rows.map((r) => r.id);
+      }
 
-        const now = new Date();
-        const itemIds = items
-          .filter((item) => {
-            if (!item.maintenanceInterval || !item.lastMaintenanceDate) return false;
-            const nextMaintenance = new Date(item.lastMaintenanceDate);
-            nextMaintenance.setDate(nextMaintenance.getDate() + item.maintenanceInterval);
-            return nextMaintenance <= now;
-          })
-          .map((item) => item.id);
-
-        where.id = { in: itemIds };
+      if (lowInventoryIds !== undefined || needsMaintenanceIds !== undefined) {
+        let itemIds: string[];
+        if (lowInventoryIds !== undefined && needsMaintenanceIds !== undefined) {
+          const set = new Set(needsMaintenanceIds);
+          itemIds = lowInventoryIds.filter((id) => set.has(id));
+        } else {
+          itemIds = (lowInventoryIds ?? needsMaintenanceIds)!;
+        }
+        where.id = itemIds.length > 0 ? { in: itemIds } : { in: ["__none__"] };
       }
 
       return ctx.prisma.item.findMany({
@@ -550,6 +566,15 @@ export const itemsRouter = createTRPCRouter({
 
       const errors: { row: number; message: string }[] = [];
       let created = 0;
+      const createdItems: {
+        id: string;
+        name: string;
+        expirationDate: Date | null;
+        maintenanceInterval: number | null;
+        lastMaintenanceDate: Date | null;
+        rotationSchedule: number | null;
+        lastRotationDate: Date | null;
+      }[] = [];
 
       for (let r = 0; r < rows.length; r++) {
         const row = rows[r]!;
@@ -630,11 +655,23 @@ export const itemsRouter = createTRPCRouter({
             },
             include: { category: true, location: true },
           });
-          await syncItemEvents(ctx.prisma, userId, item);
+          createdItems.push({
+            id: item.id,
+            name: item.name,
+            expirationDate: item.expirationDate,
+            maintenanceInterval: item.maintenanceInterval,
+            lastMaintenanceDate: item.lastMaintenanceDate,
+            rotationSchedule: item.rotationSchedule,
+            lastRotationDate: item.lastRotationDate,
+          });
           created++;
         } catch (e) {
           errors.push({ row: rowNum, message: e instanceof Error ? e.message : "Failed to create item." });
         }
+      }
+
+      if (createdItems.length > 0) {
+        await syncItemEventsBulk(ctx.prisma, userId, createdItems);
       }
 
       return { created, errors };

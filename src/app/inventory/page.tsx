@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "~/components/Navigation";
 import ItemCard from "~/components/ItemCard";
 import ItemForm from "~/components/ItemForm";
@@ -10,10 +10,22 @@ import LocationNav from "~/components/LocationNav";
 import { Plus, Search, Filter, Download } from "lucide-react";
 import { exportToCSV, exportToJSON } from "~/utils/export";
 
+const DEBOUNCE_MS = 300;
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debouncedValue;
+}
+
 export default function InventoryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [selectedLocation, setSelectedLocation] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery, DEBOUNCE_MS);
   const [showFilters, setShowFilters] = useState(false);
   const [expiringSoon, setExpiringSoon] = useState(false);
   const [lowInventory, setLowInventory] = useState(false);
@@ -24,14 +36,18 @@ export default function InventoryPage() {
   const { data: items, isLoading, isFetching } = api.items.getAll.useQuery({
     categoryId: selectedCategory,
     locationId: selectedLocation,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     expiringSoon: expiringSoon || undefined,
     lowInventory: lowInventory || undefined,
     needsMaintenance: needsMaintenance || undefined,
   });
 
-  const { data: categories } = api.categories.getAll.useQuery();
-  const { data: locations } = api.locations.getAll.useQuery();
+  const { data: categories } = api.categories.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: locations } = api.locations.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

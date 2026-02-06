@@ -53,8 +53,10 @@ export default function ActivityPage() {
   const effectiveDays = useCustomDays ? customDays : statsDays;
   const clampedDays = Math.min(730, Math.max(1, effectiveDays));
 
-  const { data: items, isLoading } = api.items.getAll.useQuery();
-  const { data: categories } = api.categories.getAll.useQuery();
+  const { data: items, isLoading } = api.items.getList.useQuery();
+  const { data: categories } = api.categories.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const { data: stats, isLoading: statsLoading } = api.items.getConsumptionStats.useQuery(
     { days: clampedDays, categoryIds: categoryFilterIds ?? undefined },
     { enabled: clampedDays >= 1 }
@@ -63,7 +65,7 @@ export default function ActivityPage() {
   const utils = api.useUtils();
   const recordActivity = api.items.consumeMany.useMutation({
     onSuccess: () => {
-      void utils.items.getAll.invalidate();
+      void utils.items.getList.invalidate();
       void utils.items.getRecentConsumption.invalidate();
       void utils.items.getRecentActivity.invalidate();
       void utils.items.getConsumptionStats.invalidate();

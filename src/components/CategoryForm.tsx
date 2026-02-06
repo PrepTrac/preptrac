@@ -14,7 +14,9 @@ interface CategoryFormData {
 }
 
 export default function CategoryForm() {
-  const { data: categories, isLoading } = api.categories.getAll.useQuery();
+  const { data: categories, isLoading } = api.categories.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const createCategory = api.categories.create.useMutation();
   const updateCategory = api.categories.update.useMutation();
   const deleteCategory = api.categories.delete.useMutation();

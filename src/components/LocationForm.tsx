@@ -11,7 +11,9 @@ interface LocationFormData {
 }
 
 export default function LocationForm() {
-  const { data: locations, isLoading } = api.locations.getAll.useQuery();
+  const { data: locations, isLoading } = api.locations.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const createLocation = api.locations.create.useMutation();
   const updateLocation = api.locations.update.useMutation();
   const deleteLocation = api.locations.delete.useMutation();

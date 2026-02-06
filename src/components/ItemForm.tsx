@@ -35,9 +35,15 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
     { id: itemId! },
     { enabled: !!itemId }
   );
-  const { data: categories } = api.categories.getAll.useQuery();
-  const { data: locations } = api.locations.getAll.useQuery();
-  const { data: goals } = api.settings.getGoals.useQuery();
+  const { data: categories } = api.categories.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: locations } = api.locations.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: goals } = api.settings.getGoals.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
   const utils = api.useUtils();
 
   const createItem = api.items.create.useMutation({
