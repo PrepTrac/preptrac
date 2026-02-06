@@ -839,7 +839,7 @@ function FillTestDataButton() {
       void utils.items.getAll.invalidate();
       void utils.categories.getAll.invalidate();
       void utils.locations.getAll.invalidate();
-      void utils.events.getUpcoming.invalidate();
+      void utils.events.getAll.invalidate();
       void utils.dashboard.getStats.invalidate();
       void utils.items.getConsumptionStats.invalidate();
       void utils.items.getRecentConsumption.invalidate();
@@ -897,7 +897,7 @@ function RemoveTestDataButton() {
       void utils.items.getAll.invalidate();
       void utils.categories.getAll.invalidate();
       void utils.locations.getAll.invalidate();
-      void utils.events.getUpcoming.invalidate();
+      void utils.events.getAll.invalidate();
       void utils.dashboard.getStats.invalidate();
       void utils.items.getConsumptionStats.invalidate();
       void utils.items.getRecentConsumption.invalidate();
