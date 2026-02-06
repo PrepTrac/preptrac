@@ -1,0 +1,17 @@
+services:
+  preptrac:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=file:/app/data/dev.db
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-me-in-production}
+    volumes:
+      - preptrac-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  preptrac-data:

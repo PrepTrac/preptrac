@@ -34,10 +34,16 @@ No authentication layer: a single default user is created automatically (`getOrC
 
 ## Installation & Setup
 
+**Docker (recommended):**
+```bash
+docker compose up -d
+```
+Opens at http://localhost:3000. Database is stored in a Docker volume. Stop with `docker compose down`.
+
+**Local development:**
 1. Clone or copy the project.
 2. **Install dependencies**: `npm install`
-3. **Environment**: `cp .env.example .env`  
-   Set `DATABASE_URL` (e.g. `file:./dev.db` for SQLite). `NEXTAUTH_*` vars are optional (auth not used).
+3. **Environment**: `cp .env.example .env` — set `DATABASE_URL` (e.g. `file:./dev.db` for SQLite). `NEXTAUTH_*` vars are optional (auth not used).
 4. **Database**: `npm run db:push` then `npm run db:generate`
 5. **Run**: `npm run dev` → open http://localhost:3000
 
@@ -121,23 +127,26 @@ Push to GitHub, import in Vercel, set env vars, deploy. Ensure `DATABASE_URL` is
 
 ### Docker
 
-Use a Node 18 image: install deps, copy source, `npm run build`, `CMD ["npm", "start"]`. Expose 3000. Provide `DATABASE_URL` and any other env.
+From the project root:
+```bash
+docker compose up -d
+```
+The Dockerfile builds the Next.js standalone output, runs Prisma migrations on startup, and serves the app on port 3000. SQLite data is stored in a named volume (`preptrac-data`). Override `NEXTAUTH_SECRET` via env or `.env` for production.
 
-### Self-hosted
+To build and run the image manually:
+```bash
+docker build -t preptrac .
+docker run -p 3000:3000 -v preptrac-data:/app/data preptrac
+```
 
-- `npm run build` then `npm start`.
+### Self-hosted (without Docker)
+
+- `npm run build` then `npm start` (or run the built app with `node .next/standalone/server.js` after copying `.next/static` and `public` into the standalone folder).
 - Put a reverse proxy (nginx, Caddy) in front for HTTPS and routing.
 
-### Raspberry Pi (and low-memory hosts)
+### Raspberry Pi and low-memory hosts
 
-The app is tuned to run on Raspberry Pi (4/5, 64-bit) and similar low-RAM devices:
-
-- **Use production mode**: Run `npm run build` once, then `./start-prod.sh` (or `NODE_OPTIONS=--max-old-space-size=512 npm start`). Do not use `npm run dev` on the Pi; it uses more CPU and memory.
-- **Memory limit**: `start-prod.sh` sets `NODE_OPTIONS=--max-old-space-size=512` by default so Node.js does not exhaust RAM. On a Pi with 2GB or more you can override, e.g. `NODE_OPTIONS=--max-old-space-size=768 ./start-prod.sh`.
-- **Standalone build**: `next.config.js` uses `output: "standalone"`, producing a smaller deploy under `.next/standalone` if you want to copy only that plus `.next/static` and `public` to the Pi.
-- **SQLite**: Keep `DATABASE_URL="file:./dev.db"` so no separate database process runs.
-- **Charts**: The Activity page loads the chart library (Recharts) only when you open that page, reducing initial load and memory use.
-- Put nginx or Caddy in front for HTTPS and to serve static assets if desired.
+Run PrepTrac in Docker: `docker compose up -d`. The container uses the standalone build and a single Node process. For very low RAM you can add to the compose service: `mem_limit: 512m`. Use nginx or Caddy in front for HTTPS.
 
 ---
 

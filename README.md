@@ -23,14 +23,24 @@ No sign-in required. Open the app and start using it.
 
 ## Get Started
 
-1. **Install and run** (you need Node.js 18+ installed):
-   ```bash
-   npm install
-   cp .env.example .env
-   npm run db:push
-   npm run dev
-   ```
-2. **Open** [http://localhost:3000](http://localhost:3000) in your browser. You’ll land on the Dashboard.
+**Docker (recommended)** — one command to run PrepTrac with a persistent database:
+
+```bash
+docker compose up -d
+```
+
+Then open [http://localhost:3000](http://localhost:3000). To stop: `docker compose down`.
+
+**Or run locally** (Node.js 18+):
+
+```bash
+npm install
+cp .env.example .env
+npm run db:push
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll land on the Dashboard.
 
 **First time?**
 
@@ -88,7 +98,6 @@ Under **Settings → Test data**, **Fill test data** adds sample categories, loc
 
 - **Quick setup** — See [QUICKSTART.md](./QUICKSTART.md) for a short step-by-step.
 - **Technical details** — Setup options, database, deployment, and development info are in [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md).
-- **Raspberry Pi** — For running on a Pi or other low-memory device, use production build and `./start-prod.sh`; see [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md#raspberry-pi-and-low-memory-hosts).
 
 ---
 

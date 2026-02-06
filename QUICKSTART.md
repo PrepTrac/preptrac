@@ -1,42 +1,27 @@
 # Quick Start Guide
 
-Get PrepTrac up and running in 5 minutes!
+Get PrepTrac up and running in a few minutes!
 
-## Step 1: Install Dependencies
+## Option A: Docker (simplest)
 
-```bash
-npm install
-```
+1. **Start the app** (builds the image and runs the server with a persistent SQLite DB):
+   ```bash
+   docker compose up -d
+   ```
+2. Open **http://localhost:3000** in your browser.
+3. To stop: `docker compose down`. Data is kept in a Docker volume.
 
-## Step 2: Configure Environment
+## Option B: Local development (Node.js 18+)
 
-Create a `.env` file:
+1. **Install dependencies**: `npm install`
+2. **Environment**: `cp .env.example .env` (optional; defaults work for SQLite)
+3. **Database**: `npm run db:push` then `npm run db:generate`
+4. **Start**: `npm run dev`
+5. Open **http://localhost:3000**
 
-```bash
-cp .env.example .env
-```
+## Open the App
 
-Edit `.env` and set:
-- `DATABASE_URL="file:./dev.db"` (SQLite - no setup needed)
-- `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are optional (the app has no authentication)
-
-## Step 3: Initialize Database
-
-```bash
-npm run db:push
-npm run db:generate
-```
-
-## Step 4: Start Development Server
-
-```bash
-npm run dev
-```
-
-## Step 5: Open the App
-
-1. Open http://localhost:3000
-2. You’re taken straight to the **Dashboard** — there is no sign-in or registration
+You’re taken straight to the **Dashboard** — there is no sign-in or registration.
 
 ## Step 6: Set Up Your First Data
 
@@ -99,12 +84,17 @@ You can either try the app with sample data first, or set up your own data.
 
 ## Troubleshooting
 
-**Database errors?**
+**Docker**
+- First run: `docker compose up -d` (builds then starts). Later runs start quickly.
+- View logs: `docker compose logs -f preptrac`
+- Reset data: `docker compose down -v` then `docker compose up -d` (removes the data volume)
+
+**Local — database errors?**
 ```bash
 npm run db:push
 ```
 
-**Build errors?**
+**Local — build errors?**
 ```bash
 rm -rf .next node_modules
 npm install
@@ -112,9 +102,8 @@ npm run db:generate
 ```
 
 **Want to start over with no data?**
-- Delete `prisma/dev.db` (and `prisma/dev.db-journal` if it exists)
-- Run `npm run db:push`
-- Restart the app; the default user and default categories/locations are created automatically
+- **Docker**: `docker compose down -v` then `docker compose up -d`
+- **Local**: Delete `prisma/dev.db` (and `prisma/dev.db-journal` if it exists), run `npm run db:push`, restart the app
 
 ## Next Steps
 
