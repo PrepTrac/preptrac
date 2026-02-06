@@ -5,7 +5,7 @@ import type { RouterOutputs } from "~/utils/api";
 
 type CategoryStat = NonNullable<RouterOutputs["dashboard"]["getStats"]["categoryStats"]>[number];
 type AmmoBreakdownItem = { name: string; quantity: number; unit: string };
-type FoodBreakdownItem = { name: string; quantity: number; unit: string; contributionDays?: number };
+type FoodBreakdownItem = { name: string; quantity: number; unit: string; calories?: number; contributionDays?: number };
 type WaterBreakdownItem = { name: string; quantity: number; unit: string; gallonsEquivalent: number };
 
 interface CategoryGoalsProps {
@@ -222,15 +222,21 @@ function CategoryRowTooltip({
       {show && (() => {
         const total = isWater && breakdown[0] && "gallonsEquivalent" in breakdown[0]
           ? breakdown.reduce((s, i) => s + (i as WaterBreakdownItem).gallonsEquivalent, 0)
-          : breakdown.reduce((s, i) => s + i.quantity, 0);
+          : isFood && breakdown[0] && "calories" in breakdown[0]
+            ? breakdown.reduce((s, i) => s + ((i as FoodBreakdownItem).calories ?? 0), 0)
+            : breakdown.reduce((s, i) => s + i.quantity, 0);
         return (
           <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-600 dark:bg-gray-800">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-              {isFood ? "By food item" : isWater ? "By source" : "By type"}
+              {isFood ? "By calories" : isWater ? "By source" : "By type"}
             </div>
             <ul className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
               {breakdown.map((item, i) => {
-                const barVal = isWater && "gallonsEquivalent" in item ? item.gallonsEquivalent : item.quantity;
+                const barVal = isWater && "gallonsEquivalent" in item
+                  ? item.gallonsEquivalent
+                  : isFood && "calories" in item
+                    ? (item as FoodBreakdownItem).calories ?? 0
+                    : item.quantity;
                 const pct = total > 0 ? (barVal / total) * 100 : 0;
                 return (
                   <li key={i}>

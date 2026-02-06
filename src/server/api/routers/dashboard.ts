@@ -179,7 +179,7 @@ export const dashboardRouter = createTRPCRouter({
       totalFoodDays = foodItems.reduce((sum, item) => sum + item.quantity, 0) / 3;
     }
 
-    // Food breakdown by item: name, quantity, unit, optional days contribution
+    // Food breakdown by item: name, quantity, unit, calories (for bar), optional days contribution
     const foodBreakdown = foodItems.map((item) => {
       const caloriesPerUnit = item.caloriesPerUnit;
       const itemCalories = caloriesPerUnit != null && caloriesPerUnit > 0 ? item.quantity * caloriesPerUnit : 0;
@@ -189,6 +189,7 @@ export const dashboardRouter = createTRPCRouter({
         name: item.name,
         quantity: item.quantity,
         unit: item.unit,
+        calories: itemCalories,
         contributionDays: contributionDays != null ? Math.round(contributionDays * 10) / 10 : undefined,
       };
     });

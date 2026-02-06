@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Droplet, UtensilsCrossed, Target, Package, Flame } from "lucide-react";
 
 type AmmoBreakdownItem = { name: string; quantity: number; unit: string };
-type FoodBreakdownItem = { name: string; quantity: number; unit: string; contributionDays?: number };
+type FoodBreakdownItem = { name: string; quantity: number; unit: string; calories?: number; contributionDays?: number };
 type WaterBreakdownItem = { name: string; quantity: number; unit: string; gallonsEquivalent: number };
 
 interface DashboardMetricsProps {
@@ -305,8 +305,9 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
           return (
             <BreakdownTooltip
               key={metric.name}
-              title={isFood ? "By food item" : "By type"}
+              title={isFood ? "By calories" : "By type"}
               items={metric.breakdown}
+              getBarTotal={isFood ? (item: FoodBreakdownItem) => item.calories ?? item.quantity : undefined}
               barColorClass={metric.color}
               renderItem={isFood ? (item: FoodBreakdownItem) => (
                 <>
