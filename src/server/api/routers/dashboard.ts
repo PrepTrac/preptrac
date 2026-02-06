@@ -4,26 +4,50 @@ export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.userId;
 
-    // Get all items
-    const items = await ctx.prisma.item.findMany({
-      where: { userId },
-      include: { category: true },
-    });
+    // Get all items and household (used for water days and food days)
+    const [items, familyMembers] = await Promise.all([
+      ctx.prisma.item.findMany({
+        where: { userId },
+        include: { category: true },
+      }),
+      ctx.prisma.familyMember.findMany({ where: { userId } }),
+    ]);
 
-    // Calculate total water (assuming water category or items with "gallon" unit)
+    // Water: only count items in water category with unit "gallon(s)" or "bottle(s)"
+    // Bottles = 16.9 fl oz standard; 1 gallon = 128 fl oz → 1 bottle = 16.9/128 gal
+    const GALLONS_PER_BOTTLE = 16.9 / 128;
+    const isGallon = (u: string) => /gallon(s)?/i.test(u);
+    const isBottle = (u: string) => /bottle(s)?/i.test(u);
     const waterItems = items.filter(
       (item) =>
-        item.category.name.toLowerCase().includes("water") ||
-        item.unit.toLowerCase().includes("gallon") ||
-        item.unit.toLowerCase().includes("liter")
+        item.category.name.toLowerCase().includes("water") &&
+        (isGallon(item.unit) || isBottle(item.unit))
     );
     const totalWater = waterItems.reduce((sum, item) => {
-      // Convert to gallons if needed
-      if (item.unit.toLowerCase().includes("liter")) {
-        return sum + item.quantity * 0.264172;
+      if (isBottle(item.unit)) {
+        return sum + item.quantity * GALLONS_PER_BOTTLE;
       }
       return sum + item.quantity;
     }, 0);
+    const waterBreakdown = waterItems.map((item) => {
+      const gallonsEquivalent = isBottle(item.unit)
+        ? item.quantity * GALLONS_PER_BOTTLE
+        : item.quantity;
+      return {
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        gallonsEquivalent: Math.round(gallonsEquivalent * 100) / 100,
+      };
+    });
+
+    // Water days: 0.5 oz water per pound body weight per day (from household)
+    const totalWeightLbs = familyMembers.reduce((sum, m) => sum + m.weightKg * 2.20462, 0);
+    const dailyWaterOz = totalWeightLbs * 0.5;
+    const dailyWaterGallons = dailyWaterOz / 128;
+    const totalWaterDays =
+      dailyWaterGallons > 0 && totalWater > 0 ? totalWater / dailyWaterGallons : undefined;
+    const useHouseholdForWater = totalWeightLbs > 0 && totalWaterDays != null;
 
     // Total inventory calories: sum over ALL items that have caloriesPerUnit set
     const totalInventoryCalories = items.reduce((sum, item) => {
@@ -39,9 +63,6 @@ export const dashboardRouter = createTRPCRouter({
     );
 
     // Household total daily calories (Mifflin-St Jeor BMR sum)
-    const familyMembers = await ctx.prisma.familyMember.findMany({
-      where: { userId },
-    });
     const getTotalDailyCalories = () => {
       const base = (w: number, h: number, a: number, s: string) => {
         const b = 10 * w + 6.25 * h - 5 * a;
@@ -65,11 +86,30 @@ export const dashboardRouter = createTRPCRouter({
       totalFoodDays = foodItems.reduce((sum, item) => sum + item.quantity, 0) / 3;
     }
 
-    // Calculate ammo counts
+    // Food breakdown by item: name, quantity, unit, optional days contribution
+    const foodBreakdown = foodItems.map((item) => {
+      const caloriesPerUnit = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
+      const itemCalories = caloriesPerUnit != null && caloriesPerUnit > 0 ? item.quantity * caloriesPerUnit : 0;
+      const contributionDays =
+        totalDailyCalories > 0 && itemCalories > 0 ? itemCalories / totalDailyCalories : undefined;
+      return {
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        contributionDays: contributionDays != null ? Math.round(contributionDays * 10) / 10 : undefined,
+      };
+    });
+
+    // Calculate ammo counts and per-type breakdown
     const ammoItems = items.filter((item) =>
       item.category.name.toLowerCase().includes("ammo")
     );
     const totalAmmo = ammoItems.reduce((sum, item) => sum + item.quantity, 0);
+    const ammoBreakdown = ammoItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+    }));
 
     // Get upcoming expirations (next 30 days)
     const thirtyDaysFromNow = new Date();
@@ -176,12 +216,18 @@ export const dashboardRouter = createTRPCRouter({
       .filter((stat) => stat.targetQuantity > 0);
 
     return {
-      totalWater,
+      totalWater: Math.round(totalWater * 100) / 100,
+      waterBreakdown,
+      totalWaterDays:
+        totalWaterDays != null ? Math.round(totalWaterDays * 10) / 10 : undefined,
+      useHouseholdForWater: !!useHouseholdForWater,
       totalFoodDays: Math.round(totalFoodDays * 10) / 10,
       totalInventoryCalories: Math.round(totalInventoryCalories),
       householdDailyCalories: totalDailyCalories,
       useHouseholdCalculation,
       totalAmmo,
+      ammoBreakdown,
+      foodBreakdown,
       upcomingExpirations,
       needsMaintenance,
       upcomingEvents,

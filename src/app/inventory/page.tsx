@@ -21,7 +21,7 @@ export default function InventoryPage() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
-  const { data: items, isLoading } = api.items.getAll.useQuery({
+  const { data: items, isLoading, isFetching } = api.items.getAll.useQuery({
     categoryId: selectedCategory,
     locationId: selectedLocation,
     search: searchQuery || undefined,
@@ -32,14 +32,6 @@ export default function InventoryPage() {
 
   const { data: categories } = api.categories.getAll.useQuery();
   const { data: locations } = api.locations.getAll.useQuery();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -190,25 +182,33 @@ export default function InventoryPage() {
             />
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {items?.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                onEdit={() => {
-                  setEditingItem(item.id);
-                  setShowItemForm(true);
-                }}
-              />
-            ))}
-          </div>
-
-          {items?.length === 0 && (
+          {isLoading && items === undefined ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400">
-                No items found. Add your first item to get started!
-              </p>
+              <p className="text-gray-500 dark:text-gray-400">Loading...</p>
             </div>
+          ) : (
+            <>
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 transition-opacity ${isFetching ? "opacity-70" : ""}`}>
+                {items?.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={() => {
+                      setEditingItem(item.id);
+                      setShowItemForm(true);
+                    }}
+                  />
+                ))}
+              </div>
+
+              {items?.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No items found. Add your first item to get started!
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

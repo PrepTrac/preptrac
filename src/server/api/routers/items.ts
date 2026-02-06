@@ -85,9 +85,10 @@ export const itemsRouter = createTRPCRouter({
       }
 
       if (input?.search) {
+        // SQLite does not support mode: "insensitive"; use contains only (case-sensitive)
         where.OR = [
-          { name: { contains: input.search, mode: "insensitive" } },
-          { description: { contains: input.search, mode: "insensitive" } },
+          { name: { contains: input.search } },
+          { description: { contains: input.search } },
         ];
       }
 

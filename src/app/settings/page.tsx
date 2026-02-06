@@ -1,22 +1,44 @@
 "use client";
 
 import { api } from "~/utils/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
 import CategoryForm from "~/components/CategoryForm";
 import LocationForm from "~/components/LocationForm";
-import { FlaskConical, Trash2 } from "lucide-react";
+import { FlaskConical, Trash2, Download, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { downloadCSVTemplate } from "~/utils/export";
+
+const SETTINGS_TABS = ["notifications", "categories", "locations", "import", "testdata"] as const;
+type SettingsTab = (typeof SETTINGS_TABS)[number];
+
+function isSettingsTab(t: string): t is SettingsTab {
+  return SETTINGS_TABS.includes(t as SettingsTab);
+}
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"notifications" | "categories" | "locations" | "testdata">(
-    "notifications"
-  );
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("notifications");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && isSettingsTab(tab)) setActiveTab(tab);
+  }, [searchParams]);
 
   const { data: notificationSettings } = api.notifications.getSettings.useQuery();
   const updateSettings = api.notifications.updateSettings.useMutation();
   const sendTestWebhook = api.notifications.sendTestWebhook.useMutation();
   const sendTestEmail = api.notifications.sendTestEmail.useMutation();
+  const importFromCSV = api.items.importFromCSV.useMutation({
+    onSuccess: (data) => setImportResult(data),
+    onError: (err) => setImportResult({ created: 0, errors: [{ row: 0, message: err.message }] }),
+  });
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    errors: { row: number; message: string }[];
+  } | null>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
   const [testWebhookStatus, setTestWebhookStatus] = useState<{
     success: boolean;
     message?: string;
@@ -151,6 +173,16 @@ export default function SettingsPage() {
                 }`}
               >
                 Locations
+              </button>
+              <button
+                onClick={() => setActiveTab("import")}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === "import"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                }`}
+              >
+                Import
               </button>
               <button
                 onClick={() => setActiveTab("testdata")}
@@ -478,6 +510,81 @@ export default function SettingsPage() {
 
             {activeTab === "categories" && <CategoryForm />}
             {activeTab === "locations" && <LocationForm />}
+
+            {activeTab === "import" && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Import inventory from CSV
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Download the template, fill in your items (name, unit, category, and location are required), then upload the CSV here.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => downloadCSVTemplate()}
+                    className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <Download className="h-5 w-5 mr-2" />
+                    Download template
+                  </button>
+                  <input
+                    ref={importFileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setImportResult(null);
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const text = ev.target?.result;
+                        if (typeof text === "string") importFromCSV.mutate({ csvContent: text });
+                      };
+                      reader.readAsText(file, "UTF-8");
+                      e.target.value = "";
+                    }}
+                    className="hidden"
+                    aria-label="Choose CSV file"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => importFileInputRef.current?.click()}
+                    disabled={importFromCSV.isPending}
+                    className="inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="h-5 w-5 mr-2" />
+                    {importFromCSV.isPending ? "Importing…" : "Upload CSV"}
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4 flex-shrink-0" />
+                  Use the same category and location names as in Settings. You can also use categoryId and locationId from an export.
+                </p>
+                {importResult && (
+                  <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <p className="font-medium text-gray-900 dark:text-white mb-2">
+                      {importResult.created} item{importResult.created !== 1 ? "s" : ""} created.
+                    </p>
+                    {importResult.errors.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-2">
+                          <AlertCircle className="h-4 w-4" />
+                          Row errors
+                        </p>
+                        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc list-inside">
+                          {importResult.errors.map((e, i) => (
+                            <li key={i}>
+                              Row {e.row}: {e.message}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {activeTab === "testdata" && (
               <div className="space-y-6">

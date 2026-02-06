@@ -13,14 +13,12 @@ import {
   X,
   MapPin,
   Users,
-  Upload,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/inventory", label: "Inventory", icon: Package },
-  { href: "/import", label: "Import", icon: Upload },
   { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/consume", label: "Consume", icon: MinusCircle },
   { href: "/household", label: "Household", icon: Users },

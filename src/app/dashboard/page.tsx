@@ -37,7 +37,12 @@ export default function DashboardPage() {
           Dashboard
         </h1>
         <DashboardMetrics stats={stats} />
-        <CategoryGoals categoryStats={stats?.categoryStats ?? []} />
+        <CategoryGoals
+          categoryStats={stats?.categoryStats ?? []}
+          ammoBreakdown={stats?.ammoBreakdown}
+          foodBreakdown={stats?.foodBreakdown}
+          waterBreakdown={stats?.waterBreakdown}
+        />
         <UpcomingEvents events={stats?.upcomingEvents ?? []} />
       </main>
     </div>
