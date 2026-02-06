@@ -22,6 +22,8 @@ type GoalsData = {
   waterGoalGallons: number | null;
   foodGoalDays: number | null;
   fuelGoalGallons: number | null;
+  fuelGoalKwh: number | null;
+  fuelGoalBatteryKwh: number | null;
 };
 
 function GoalsSection({
@@ -36,14 +38,18 @@ function GoalsSection({
   const [ammo, setAmmo] = useState("");
   const [water, setWater] = useState("");
   const [food, setFood] = useState("");
-  const [fuel, setFuel] = useState("");
+  const [fuelGallons, setFuelGallons] = useState("");
+  const [fuelKwh, setFuelKwh] = useState("");
+  const [fuelBatteryKwh, setFuelBatteryKwh] = useState("");
 
   useEffect(() => {
     if (goals) {
       setAmmo(goals.ammoGoalRounds != null ? String(goals.ammoGoalRounds) : "");
       setWater(goals.waterGoalGallons != null ? String(goals.waterGoalGallons) : "");
       setFood(goals.foodGoalDays != null ? String(goals.foodGoalDays) : "");
-      setFuel(goals.fuelGoalGallons != null ? String(goals.fuelGoalGallons) : "");
+      setFuelGallons(goals.fuelGoalGallons != null ? String(goals.fuelGoalGallons) : "");
+      setFuelKwh(goals.fuelGoalKwh != null ? String(goals.fuelGoalKwh) : "");
+      setFuelBatteryKwh(goals.fuelGoalBatteryKwh != null ? String(goals.fuelGoalBatteryKwh) : "");
     }
   }, [goals]);
 
@@ -53,7 +59,9 @@ function GoalsSection({
       ammoGoalRounds: ammo === "" ? null : Number(ammo) || null,
       waterGoalGallons: water === "" ? null : Number(water) || null,
       foodGoalDays: food === "" ? null : Number(food) || null,
-      fuelGoalGallons: fuel === "" ? null : Number(fuel) || null,
+      fuelGoalGallons: fuelGallons === "" ? null : Number(fuelGallons) || null,
+      fuelGoalKwh: fuelKwh === "" ? null : Number(fuelKwh) || null,
+      fuelGoalBatteryKwh: fuelBatteryKwh === "" ? null : Number(fuelBatteryKwh) || null,
     });
   };
 
@@ -120,23 +128,61 @@ function GoalsSection({
             Target is based on your household and activity level (Settings / profile). Goal = daily calories × days.
           </p>
         </div>
-        <div>
-          <label htmlFor="goals-fuel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Fuel / energy (gallons)
-          </label>
-          <input
-            id="goals-fuel"
-            type="number"
-            min={0}
-            step={0.1}
-            value={fuel}
-            onChange={(e) => setFuel(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="e.g. 15"
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Only items in the Fuel &amp; Energy category with unit &quot;gallons&quot; are counted.
+        <div className="space-y-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Fuel / energy goals
           </p>
+          <div>
+            <label htmlFor="goals-fuel-gal" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Fuel (gallons)
+            </label>
+            <input
+              id="goals-fuel-gal"
+              type="number"
+              min={0}
+              step={0.1}
+              value={fuelGallons}
+              onChange={(e) => setFuelGallons(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="e.g. 10"
+            />
+          </div>
+          <div>
+            <label htmlFor="goals-fuel-kwh" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Total kWh
+            </label>
+            <input
+              id="goals-fuel-kwh"
+              type="number"
+              min={0}
+              step={0.1}
+              value={fuelKwh}
+              onChange={(e) => setFuelKwh(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="e.g. 100"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Generator (6 kWh/gal × fuel gallons) + battery kWh.
+            </p>
+          </div>
+          <div>
+            <label htmlFor="goals-fuel-battery" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Battery kWh only
+            </label>
+            <input
+              id="goals-fuel-battery"
+              type="number"
+              min={0}
+              step={0.1}
+              value={fuelBatteryKwh}
+              onChange={(e) => setFuelBatteryKwh(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="e.g. 50"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Items in Fuel &amp; Energy with unit &quot;kWh&quot; (e.g. portable battery banks).
+            </p>
+          </div>
         </div>
         <button
           type="submit"
@@ -819,13 +865,13 @@ function FillTestDataButton() {
             consumption log entries.
           </p>
           {fillTestData.data.familyMembers != null && fillTestData.data.familyMembers > 0 && (
-            <p>Added {fillTestData.data.familyMembers} household members so &ldquo;Days of Food&rdquo; uses your household profile.</p>
+            <p>Added {fillTestData.data.familyMembers} household members (2 parents, 2 kids) so &ldquo;Days of Food&rdquo; and water days use your household profile.</p>
           )}
           {fillTestData.data.activityLevelSet && (
             <p>Set activity level to <strong>Moderate</strong> so Days of Food and food goals use it (change in Household).</p>
           )}
           {fillTestData.data.goalsSet && (
-            <p>Set inventory goals (Ammo 1500 rounds, Water 30 gal, Food 90 days, Fuel 20 gal) in Settings → Goals so the dashboard Category Progress shows goal-based progress.</p>
+            <p>Set inventory goals (Ammo 1500 rounds, Water 30 gal, Food 90 days, Fuel 20 gal / 100 kWh / 50 kWh battery) in Settings → Goals so the dashboard Category Progress shows goal-based progress.</p>
           )}
         </div>
       )}

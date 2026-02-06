@@ -22,6 +22,8 @@ model User {
   waterGoalGallons  Float?
   foodGoalDays      Float?   // Days of food; target calories = household daily calories × this
   fuelGoalGallons   Float?
+  fuelGoalKwh       Float?   // Total kWh (generator + battery)
+  fuelGoalBatteryKwh Float?  // Battery storage only (kWh)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   items             Item[]

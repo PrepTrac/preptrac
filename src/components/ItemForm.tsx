@@ -73,11 +73,13 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   const unitIsRounds = /round(s)?/i.test(selectedUnit ?? "");
   const unitIsGallons = /gallon(s)?/i.test(selectedUnit ?? "");
   const unitIsBottles = /bottle(s)?/i.test(selectedUnit ?? "");
+  const unitIsKwh = /kwh/i.test(selectedUnit ?? "");
   const targetDisabledByGoal =
     (isAmmoCategory && unitIsRounds && goals?.ammoGoalRounds != null && goals.ammoGoalRounds > 0) ||
     (isWaterCategory && (unitIsGallons || unitIsBottles) && goals?.waterGoalGallons != null && goals.waterGoalGallons > 0) ||
     (isFoodCategory && goals?.foodGoalDays != null && goals.foodGoalDays > 0) ||
-    (isFuelCategory && unitIsGallons && goals?.fuelGoalGallons != null && goals.fuelGoalGallons > 0);
+    (isFuelCategory && unitIsGallons && goals?.fuelGoalGallons != null && goals.fuelGoalGallons > 0) ||
+    (isFuelCategory && unitIsKwh && ((goals?.fuelGoalKwh != null && goals.fuelGoalKwh > 0) || (goals?.fuelGoalBatteryKwh != null && goals.fuelGoalBatteryKwh > 0)));
 
   useEffect(() => {
     if (item) {

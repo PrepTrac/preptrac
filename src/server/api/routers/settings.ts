@@ -30,6 +30,8 @@ const goalsInputSchema = z.object({
   waterGoalGallons: z.number().min(0).optional().nullable(),
   foodGoalDays: z.number().min(0).optional().nullable(),
   fuelGoalGallons: z.number().min(0).optional().nullable(),
+  fuelGoalKwh: z.number().min(0).optional().nullable(),
+  fuelGoalBatteryKwh: z.number().min(0).optional().nullable(),
 });
 
 export const settingsRouter = createTRPCRouter({
@@ -41,6 +43,8 @@ export const settingsRouter = createTRPCRouter({
         waterGoalGallons: true,
         foodGoalDays: true,
         fuelGoalGallons: true,
+        fuelGoalKwh: true,
+        fuelGoalBatteryKwh: true,
       },
     });
     return {
@@ -48,6 +52,8 @@ export const settingsRouter = createTRPCRouter({
       waterGoalGallons: user?.waterGoalGallons ?? null,
       foodGoalDays: user?.foodGoalDays ?? null,
       fuelGoalGallons: user?.fuelGoalGallons ?? null,
+      fuelGoalKwh: user?.fuelGoalKwh ?? null,
+      fuelGoalBatteryKwh: user?.fuelGoalBatteryKwh ?? null,
     };
   }),
 
@@ -61,6 +67,8 @@ export const settingsRouter = createTRPCRouter({
           ...(input.waterGoalGallons !== undefined && { waterGoalGallons: input.waterGoalGallons }),
           ...(input.foodGoalDays !== undefined && { foodGoalDays: input.foodGoalDays }),
           ...(input.fuelGoalGallons !== undefined && { fuelGoalGallons: input.fuelGoalGallons }),
+          ...(input.fuelGoalKwh !== undefined && { fuelGoalKwh: input.fuelGoalKwh }),
+          ...(input.fuelGoalBatteryKwh !== undefined && { fuelGoalBatteryKwh: input.fuelGoalBatteryKwh }),
         },
       });
       return { ok: true };
@@ -137,16 +145,16 @@ export const settingsRouter = createTRPCRouter({
       targetQuantity?: number;
       caloriesPerUnit?: number;
     }> = [
-      { name: "Canned beans", quantity: 24, unit: "cans", category: "Food", location: "Home", expirationDate: addDays(now, 120), minQuantity: 6, targetQuantity: 30, caloriesPerUnit: 200 },
+      { name: "Canned beans", quantity: 24, unit: "cans", category: "Food", location: "Home", expirationDate: addDays(now, 120), minQuantity: 6, caloriesPerUnit: 200 },
       { name: "Rice (long grain)", quantity: 20, unit: "lbs", category: "Food", location: "Home", expirationDate: addDays(now, 150), minQuantity: 5, caloriesPerUnit: 1700 },
       { name: "MREs", quantity: 12, unit: "meals", category: "Food", location: "Bug-out Bag", expirationDate: addDays(now, 90), minQuantity: 4, caloriesPerUnit: 1200 },
       { name: "Canned soup", quantity: 18, unit: "cans", category: "Food", location: "Home", expirationDate: addDays(now, 100), minQuantity: 6, caloriesPerUnit: 250 },
       { name: "Peanut butter", quantity: 6, unit: "jars", category: "Food", location: "Home", expirationDate: addDays(now, 60), minQuantity: 2, caloriesPerUnit: 3100 },
       { name: "Oatmeal packets", quantity: 30, unit: "packets", category: "Food", location: "Home", minQuantity: 10, caloriesPerUnit: 150 },
-      { name: "Water jugs (5 gal)", quantity: 8, unit: "gallons", category: "Water", location: "Home", minQuantity: 4, targetQuantity: 20 },
+      { name: "Water jugs (5 gal)", quantity: 8, unit: "gallons", category: "Water", location: "Home", minQuantity: 4, rotationSchedule: 90, lastRotationDate: subDays(now, 45) },
       { name: "Water bottles", quantity: 24, unit: "bottles", category: "Water", location: "Vehicle", minQuantity: 12 },
       { name: "Water purification tablets", quantity: 100, unit: "tablets", category: "Water", location: "Bug-out Bag", minQuantity: 50 },
-      { name: "5.56 NATO", quantity: 420, unit: "rounds", category: "Ammo", location: "Home", minQuantity: 200, targetQuantity: 500 },
+      { name: "5.56 NATO", quantity: 420, unit: "rounds", category: "Ammo", location: "Home", minQuantity: 200 },
       { name: "9mm", quantity: 180, unit: "rounds", category: "Ammo", location: "Vehicle", minQuantity: 50 },
       { name: ".22 LR", quantity: 500, unit: "rounds", category: "Ammo", location: "Home", minQuantity: 200 },
       { name: "12 gauge shells", quantity: 75, unit: "rounds", category: "Ammo", location: "Garage", minQuantity: 25 },
@@ -164,6 +172,8 @@ export const settingsRouter = createTRPCRouter({
       { name: "Tarps", quantity: 3, unit: "units", category: "Shelter", location: "Cabin", minQuantity: 1 },
       { name: "Emergency blanket", quantity: 5, unit: "sheets", category: "Shelter", location: "Bug-out Bag" },
       { name: "Gas cans (stored)", quantity: 10, unit: "gallons", category: "Fuel & Energy", location: "Garage", minQuantity: 5 },
+      { name: "Portable power station", quantity: 2.5, unit: "kWh", category: "Fuel & Energy", location: "Home", minQuantity: 0 },
+      { name: "Power bank (large)", quantity: 1, unit: "kWh", category: "Fuel & Energy", location: "Bug-out Bag", minQuantity: 0 },
       { name: "AA batteries", quantity: 36, unit: "count", category: "Fuel & Energy", location: "Home", minQuantity: 12 },
       { name: "Propane tanks", quantity: 4, unit: "tanks", category: "Fuel & Energy", location: "Garage", minQuantity: 2 },
       { name: "Hand-crank radio", quantity: 1, unit: "unit", category: "Communication", location: "Bug-out Bag" },
@@ -210,15 +220,15 @@ export const settingsRouter = createTRPCRouter({
       await recordTestData(prisma, userId, ev.id, "event");
     }
 
-    // Household: add sample family members if user has none (so Days of Food uses household)
+    // Household: add sample family members if user has none (2 parents, 2 kids — so Days of Food/Water use household)
     const existingHousehold = await prisma.familyMember.count({ where: { userId } });
     let familyMembersCreated = 0;
     if (existingHousehold === 0) {
       const familyDefs = [
-        { name: "Adult 1", age: 35, weightKg: 80, heightCm: 175, sex: "male" as const },
-        { name: "Adult 2", age: 33, weightKg: 65, heightCm: 165, sex: "female" as const },
-        { name: "Child 1", age: 10, weightKg: 35, heightCm: 140, sex: "male" as const },
-        { name: "Child 2", age: 8, weightKg: 28, heightCm: 130, sex: "female" as const },
+        { name: "Dad", age: 35, weightKg: 82, heightCm: 178, sex: "male" as const },
+        { name: "Mom", age: 32, weightKg: 65, heightCm: 165, sex: "female" as const },
+        { name: "Alex", age: 10, weightKg: 35, heightCm: 140, sex: "male" as const },
+        { name: "Sam", age: 7, weightKg: 25, heightCm: 122, sex: "female" as const },
       ];
       for (const f of familyDefs) {
         const member = await prisma.familyMember.create({
@@ -295,6 +305,8 @@ export const settingsRouter = createTRPCRouter({
         waterGoalGallons: 30,
         foodGoalDays: 90,
         fuelGoalGallons: 20,
+        fuelGoalKwh: 100,
+        fuelGoalBatteryKwh: 50,
       },
     });
 

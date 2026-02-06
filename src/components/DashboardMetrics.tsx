@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Droplet, UtensilsCrossed, Target, Package } from "lucide-react";
+import { Droplet, UtensilsCrossed, Target, Package, Flame } from "lucide-react";
 
 type AmmoBreakdownItem = { name: string; quantity: number; unit: string };
 type FoodBreakdownItem = { name: string; quantity: number; unit: string; contributionDays?: number };
@@ -13,6 +13,9 @@ interface DashboardMetricsProps {
     waterBreakdown?: WaterBreakdownItem[];
     totalWaterDays?: number;
     useHouseholdForWater?: boolean;
+    totalFuelGallons?: number;
+    totalKwh?: number;
+    batteryKwh?: number;
     totalFoodDays?: number;
     totalAmmo?: number;
     totalItems?: number;
@@ -28,6 +31,7 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   items,
   renderItem,
   getBarTotal,
+  barColorClass = "bg-gray-500 dark:bg-gray-400",
 }: {
   children: React.ReactNode;
   title: string;
@@ -35,6 +39,8 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   renderItem?: (item: T) => React.ReactNode;
   /** If set, use this to get the value for the bar percentage (e.g. gallonsEquivalent for water). */
   getBarTotal?: (item: T) => number;
+  /** Tailwind class for the progress bar fill (e.g. bg-blue-500). Uses category color when set. */
+  barColorClass?: string;
 }) {
   const [show, setShow] = useState(false);
   if (!items || items.length === 0) return <>{children}</>;
@@ -69,7 +75,7 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                     <div
-                      className="h-1.5 rounded-full bg-gray-500 dark:bg-gray-400"
+                      className={`h-1.5 rounded-full ${barColorClass}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -83,8 +89,28 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   );
 }
 
+type FuelDisplayMode = 0 | 1 | 2; // 0 = gallons, 1 = kWh total, 2 = kWh battery only
+
 export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
   const [waterDisplayGallons, setWaterDisplayGallons] = useState(true);
+  const [fuelDisplayMode, setFuelDisplayMode] = useState<FuelDisplayMode>(0);
+
+  const cycleFuelDisplay = () =>
+    setFuelDisplayMode((m) => ((m + 1) % 3) as FuelDisplayMode);
+
+  const fuelValue =
+    fuelDisplayMode === 0
+      ? (stats?.totalFuelGallons?.toFixed(1) ?? "0")
+      : fuelDisplayMode === 1
+        ? (stats?.totalKwh?.toFixed(1) ?? "0")
+        : (stats?.batteryKwh?.toFixed(1) ?? "0");
+  const fuelUnit =
+    fuelDisplayMode === 0 ? "gallons" : "kWh";
+  const fuelSubtitle =
+    fuelDisplayMode === 1 ? "generator + battery" : fuelDisplayMode === 2 ? "battery only" : undefined;
+  const fuelAriaNext =
+    fuelDisplayMode === 0 ? "kWh total" : fuelDisplayMode === 1 ? "kWh battery only" : "gallons";
+
   const foodDaysValue =
     typeof stats?.totalFoodDays === "number"
       ? Number.isInteger(stats.totalFoodDays)
@@ -139,6 +165,46 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
     </div>
   );
 
+  const fuelCard = (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={cycleFuelDisplay}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          cycleFuelDisplay();
+        }
+      }}
+      className="h-full bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg cursor-pointer hover:ring-2 hover:ring-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+      aria-label={`Fuel/energy: ${fuelValue} ${fuelUnit}. Click to switch to ${fuelAriaNext}.`}
+    >
+      <div className="p-5">
+        <div className="flex items-center">
+          <div className="flex-shrink-0 bg-amber-500 rounded-md p-3">
+            <Flame className="h-6 w-6 text-white" />
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                Fuel / Energy
+              </dt>
+              <dd className="flex items-baseline">
+                <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {fuelValue}
+                </div>
+                <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">{fuelUnit}</div>
+              </dd>
+              {fuelSubtitle && (
+                <dd className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{fuelSubtitle}</dd>
+              )}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const metrics = [
     {
       name: "Food Days",
@@ -172,12 +238,13 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
       {stats?.waterBreakdown && stats.waterBreakdown.length > 0 ? (
         <BreakdownTooltip
           title="By source"
           items={stats.waterBreakdown}
           getBarTotal={(item: WaterBreakdownItem) => item.gallonsEquivalent}
+          barColorClass="bg-blue-500"
           renderItem={(item: WaterBreakdownItem) => (
             <>
               <span className="truncate">{item.name}</span>
@@ -195,6 +262,7 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
       ) : (
         waterCard
       )}
+      {fuelCard}
       {metrics.map((metric) => {
         const Icon = metric.icon;
         const card = (
@@ -239,6 +307,7 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
               key={metric.name}
               title={isFood ? "By food item" : "By type"}
               items={metric.breakdown}
+              barColorClass={metric.color}
               renderItem={isFood ? (item: FoodBreakdownItem) => (
                 <>
                   <span className="truncate">{item.name}</span>

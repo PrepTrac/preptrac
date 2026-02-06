@@ -32,6 +32,8 @@ export const dashboardRouter = createTRPCRouter({
           waterGoalGallons: true,
           foodGoalDays: true,
           fuelGoalGallons: true,
+          fuelGoalKwh: true,
+          fuelGoalBatteryKwh: true,
         },
       }),
     ]);
@@ -138,6 +140,24 @@ export const dashboardRouter = createTRPCRouter({
       unit: item.unit,
     }));
 
+    // Fuel/energy: gallons (generator fuel), kWh from battery (unit "kwh"), total kWh = 6 kWh/gal × gallons + battery kWh
+    const KWH_PER_GALLON = 6;
+    const isFuelEnergyCat = (name: string) => {
+      const n = name.toLowerCase();
+      return n.includes("fuel") || n.includes("energy");
+    };
+    const fuelItems = items.filter((item) => isFuelEnergyCat(item.category.name));
+    const isGallonUnit = (u: string) => /gallon(s)?/i.test(u);
+    const isKwhUnit = (u: string) => /kwh/i.test(u);
+    const totalFuelGallons = fuelItems
+      .filter((item) => isGallonUnit(item.unit))
+      .reduce((sum, item) => sum + item.quantity, 0);
+    const batteryKwh = fuelItems
+      .filter((item) => isKwhUnit(item.unit))
+      .reduce((sum, item) => sum + item.quantity, 0);
+    const generatorKwh = totalFuelGallons * KWH_PER_GALLON;
+    const totalKwh = generatorKwh + batteryKwh;
+
     // Get upcoming expirations (next 30 days)
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
@@ -224,6 +244,14 @@ export const dashboardRouter = createTRPCRouter({
       .map((cat) => {
         let currentQuantity: number;
         let targetQuantity: number;
+        let fuelSubProgresses:
+          | {
+              fuelGallons?: { current: number; target: number; progress: number };
+              totalKwh?: { current: number; target: number; progress: number };
+              batteryKwh?: { current: number; target: number; progress: number };
+            }
+          | undefined;
+        let fuelDisplayUnit: string | undefined;
 
         if (isAmmoCat(cat.name) && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0) {
           currentQuantity = cat.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -236,19 +264,80 @@ export const dashboardRouter = createTRPCRouter({
               return sum + item.quantity;
             }, 0);
           targetQuantity = user.waterGoalGallons;
-        } else if (isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0 && totalDailyCalories > 0) {
+        } else if (isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0) {
           const totalFoodCalories = cat.items.reduce((sum, item) => {
             const cal = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
             if (cal != null && cal > 0) return sum + item.quantity * cal;
             return sum;
           }, 0);
-          currentQuantity = totalFoodCalories / totalDailyCalories;
+          currentQuantity = totalDailyCalories > 0 ? totalFoodCalories / totalDailyCalories : 0;
           targetQuantity = user.foodGoalDays;
-        } else if (isFuelCat(cat.name) && user?.fuelGoalGallons != null && user.fuelGoalGallons > 0) {
-          currentQuantity = cat.items
-            .filter((item) => isGallon(item.unit))
+        } else if (isFuelCat(cat.name)) {
+          // Fuel/energy: per-category gallons, total kWh, battery kWh
+          const catFuelGallons = cat.items
+            .filter((item) => isGallonUnit(item.unit))
             .reduce((sum, item) => sum + item.quantity, 0);
-          targetQuantity = user.fuelGoalGallons;
+          const catBatteryKwh = cat.items
+            .filter((item) => isKwhUnit(item.unit))
+            .reduce((sum, item) => sum + item.quantity, 0);
+          const catGeneratorKwh = catFuelGallons * KWH_PER_GALLON;
+          const catTotalKwh = catGeneratorKwh + catBatteryKwh;
+
+          const fuelGoalGallons = user?.fuelGoalGallons ?? 0;
+          const fuelGoalKwh = user?.fuelGoalKwh ?? 0;
+          const fuelGoalBatteryKwh = user?.fuelGoalBatteryKwh ?? 0;
+          const hasAnyFuelGoal = fuelGoalGallons > 0 || fuelGoalKwh > 0 || fuelGoalBatteryKwh > 0;
+
+          if (hasAnyFuelGoal) {
+            // Primary bar uses total kWh (generator + battery) when set, else gallons, else battery
+            if (fuelGoalKwh > 0) {
+              currentQuantity = catTotalKwh;
+              targetQuantity = fuelGoalKwh;
+              fuelDisplayUnit = "kWh";
+            } else if (fuelGoalGallons > 0) {
+              currentQuantity = catFuelGallons;
+              targetQuantity = fuelGoalGallons;
+              fuelDisplayUnit = "gal";
+            } else {
+              currentQuantity = catBatteryKwh;
+              targetQuantity = fuelGoalBatteryKwh;
+              fuelDisplayUnit = "kWh";
+            }
+            fuelSubProgresses = {};
+            if (fuelGoalGallons > 0) {
+              const progress = (catFuelGallons / fuelGoalGallons) * 100;
+              fuelSubProgresses.fuelGallons = {
+                current: Math.round(catFuelGallons * 100) / 100,
+                target: fuelGoalGallons,
+                progress: Math.min(progress, 100),
+              };
+            }
+            if (fuelGoalKwh > 0) {
+              const progress = (catTotalKwh / fuelGoalKwh) * 100;
+              fuelSubProgresses.totalKwh = {
+                current: Math.round(catTotalKwh * 10) / 10,
+                target: fuelGoalKwh,
+                progress: Math.min(progress, 100),
+              };
+            }
+            if (fuelGoalBatteryKwh > 0) {
+              const progress = (catBatteryKwh / fuelGoalBatteryKwh) * 100;
+              fuelSubProgresses.batteryKwh = {
+                current: Math.round(catBatteryKwh * 10) / 10,
+                target: fuelGoalBatteryKwh,
+                progress: Math.min(progress, 100),
+              };
+            }
+          } else {
+            currentQuantity = cat.items.reduce((sum, item) => sum + item.quantity, 0);
+            targetQuantity = cat.targetQuantity ?? 0;
+            if (!targetQuantity || targetQuantity === 0) {
+              targetQuantity = cat.items.reduce(
+                (sum, item) => sum + (item.targetQuantity || 0),
+                0
+              );
+            }
+          }
         } else {
           currentQuantity = cat.items.reduce(
             (sum, item) => sum + item.quantity,
@@ -264,7 +353,13 @@ export const dashboardRouter = createTRPCRouter({
         }
 
         const displayUnit =
-          isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0 ? "days" : undefined;
+          isAmmoCat(cat.name) && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0
+            ? "rounds"
+            : isWaterCat(cat.name) && user?.waterGoalGallons != null && user.waterGoalGallons > 0
+              ? "gallons"
+              : isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0
+                ? "days"
+                : fuelDisplayUnit;
         return {
           id: cat.id,
           name: cat.name,
@@ -275,6 +370,7 @@ export const dashboardRouter = createTRPCRouter({
             ? Math.min((currentQuantity / targetQuantity) * 100, 100)
             : 0,
           displayUnit,
+          ...(fuelSubProgresses && Object.keys(fuelSubProgresses).length > 0 && { fuelSubProgresses }),
         };
       })
       .filter((stat) => stat.targetQuantity > 0);
@@ -285,6 +381,9 @@ export const dashboardRouter = createTRPCRouter({
       totalWaterDays:
         totalWaterDays != null ? Math.round(totalWaterDays * 10) / 10 : undefined,
       useHouseholdForWater: !!useHouseholdForWater,
+      totalFuelGallons: Math.round(totalFuelGallons * 100) / 100,
+      totalKwh: Math.round(totalKwh * 10) / 10,
+      batteryKwh: Math.round(batteryKwh * 10) / 10,
       totalFoodDays: Math.round(totalFoodDays * 10) / 10,
       totalInventoryCalories: Math.round(totalInventoryCalories),
       householdDailyCalories: totalDailyCalories,
