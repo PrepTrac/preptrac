@@ -1,5 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents } from "~/server/syncItemEvents";
+import { z } from "zod";
 
 const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
 
@@ -24,7 +25,47 @@ async function recordTestData(
   });
 }
 
+const goalsInputSchema = z.object({
+  ammoGoalRounds: z.number().min(0).optional().nullable(),
+  waterGoalGallons: z.number().min(0).optional().nullable(),
+  foodGoalDays: z.number().min(0).optional().nullable(),
+  fuelGoalGallons: z.number().min(0).optional().nullable(),
+});
+
 export const settingsRouter = createTRPCRouter({
+  getGoals: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.userId },
+      select: {
+        ammoGoalRounds: true,
+        waterGoalGallons: true,
+        foodGoalDays: true,
+        fuelGoalGallons: true,
+      },
+    });
+    return {
+      ammoGoalRounds: user?.ammoGoalRounds ?? null,
+      waterGoalGallons: user?.waterGoalGallons ?? null,
+      foodGoalDays: user?.foodGoalDays ?? null,
+      fuelGoalGallons: user?.fuelGoalGallons ?? null,
+    };
+  }),
+
+  updateGoals: protectedProcedure
+    .input(goalsInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.user.update({
+        where: { id: ctx.userId },
+        data: {
+          ...(input.ammoGoalRounds !== undefined && { ammoGoalRounds: input.ammoGoalRounds }),
+          ...(input.waterGoalGallons !== undefined && { waterGoalGallons: input.waterGoalGallons }),
+          ...(input.foodGoalDays !== undefined && { foodGoalDays: input.foodGoalDays }),
+          ...(input.fuelGoalGallons !== undefined && { fuelGoalGallons: input.fuelGoalGallons }),
+        },
+      });
+      return { ok: true };
+    }),
+
   fillTestData: protectedProcedure.mutation(async ({ ctx }) => {
     const prisma = ctx.prisma;
     const userId = ctx.userId;

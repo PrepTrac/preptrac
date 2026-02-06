@@ -37,6 +37,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   );
   const { data: categories } = api.categories.getAll.useQuery();
   const { data: locations } = api.locations.getAll.useQuery();
+  const { data: goals } = api.settings.getGoals.useQuery();
   const utils = api.useUtils();
 
   const createItem = api.items.create.useMutation({
@@ -62,8 +63,21 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   } = useForm<ItemFormData>();
 
   const selectedCategoryId = watch("categoryId");
-  const isFoodCategory =
-    categories?.find((c) => c.id === selectedCategoryId)?.name.toLowerCase().includes("food") ?? false;
+  const selectedUnit = watch("unit");
+  const category = categories?.find((c) => c.id === selectedCategoryId);
+  const categoryNameLower = category?.name.toLowerCase() ?? "";
+  const isFoodCategory = categoryNameLower.includes("food");
+  const isAmmoCategory = categoryNameLower.includes("ammo");
+  const isWaterCategory = categoryNameLower.includes("water");
+  const isFuelCategory = categoryNameLower.includes("fuel") || categoryNameLower.includes("energy");
+  const unitIsRounds = /round(s)?/i.test(selectedUnit ?? "");
+  const unitIsGallons = /gallon(s)?/i.test(selectedUnit ?? "");
+  const unitIsBottles = /bottle(s)?/i.test(selectedUnit ?? "");
+  const targetDisabledByGoal =
+    (isAmmoCategory && unitIsRounds && goals?.ammoGoalRounds != null && goals.ammoGoalRounds > 0) ||
+    (isWaterCategory && (unitIsGallons || unitIsBottles) && goals?.waterGoalGallons != null && goals.waterGoalGallons > 0) ||
+    (isFoodCategory && goals?.foodGoalDays != null && goals.foodGoalDays > 0) ||
+    (isFuelCategory && unitIsGallons && goals?.fuelGoalGallons != null && goals.fuelGoalGallons > 0);
 
   useEffect(() => {
     if (item) {
@@ -75,6 +89,8 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
         unit: item.unit,
         categoryId: item.categoryId,
         locationId: item.locationId,
+        minQuantity: item.minQuantity ?? 0,
+        targetQuantity: item.targetQuantity ?? 0,
         caloriesPerUnit: itemWithCal.caloriesPerUnit ?? undefined,
       });
     } else if (defaultLocationId) {
@@ -110,7 +126,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
       notes: data.notes,
       imageUrl: data.imageUrl,
       minQuantity: Number(data.minQuantity) || 0,
-      targetQuantity: Number(data.targetQuantity) || 0,
+      targetQuantity: targetDisabledByGoal ? (item?.targetQuantity ?? 0) : Number(data.targetQuantity) || 0,
     };
     const cal = data.caloriesPerUnit;
     if (cal != null && !Number.isNaN(cal) && cal > 0) {
@@ -225,17 +241,24 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className={`block text-sm font-medium mb-1 ${targetDisabledByGoal ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-300"}`}>
                 Target Quantity (Goal)
               </label>
               <input
                 type="number"
                 step="0.01"
                 {...register("targetQuantity", { valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                disabled={targetDisabledByGoal}
+                className={`w-full px-3 py-2 border rounded-md ${
+                  targetDisabledByGoal
+                    ? "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                }`}
               />
               <p className="mt-1 text-xs text-gray-500">
-                The ideal quantity you want to have for this item
+                {targetDisabledByGoal
+                  ? "Goal is set in Settings → Goals for this category/unit."
+                  : "The ideal quantity you want to have for this item"}
               </p>
             </div>
           </div>

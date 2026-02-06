@@ -7,25 +7,163 @@ import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
 import CategoryForm from "~/components/CategoryForm";
 import LocationForm from "~/components/LocationForm";
-import { FlaskConical, Trash2, Download, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { FlaskConical, Trash2, Download, Upload, FileSpreadsheet, AlertCircle, Target } from "lucide-react";
 import { downloadCSVTemplate } from "~/utils/export";
 
-const SETTINGS_TABS = ["notifications", "categories", "locations", "import", "testdata"] as const;
+const SETTINGS_TABS = ["goals", "notifications", "categories", "locations", "import", "testdata"] as const;
 type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 function isSettingsTab(t: string): t is SettingsTab {
   return SETTINGS_TABS.includes(t as SettingsTab);
 }
 
+type GoalsData = {
+  ammoGoalRounds: number | null;
+  waterGoalGallons: number | null;
+  foodGoalDays: number | null;
+  fuelGoalGallons: number | null;
+};
+
+function GoalsSection({
+  goals,
+  onSave,
+  isSaving,
+}: {
+  goals: GoalsData | undefined;
+  onSave: (data: GoalsData) => void;
+  isSaving: boolean;
+}) {
+  const [ammo, setAmmo] = useState("");
+  const [water, setWater] = useState("");
+  const [food, setFood] = useState("");
+  const [fuel, setFuel] = useState("");
+
+  useEffect(() => {
+    if (goals) {
+      setAmmo(goals.ammoGoalRounds != null ? String(goals.ammoGoalRounds) : "");
+      setWater(goals.waterGoalGallons != null ? String(goals.waterGoalGallons) : "");
+      setFood(goals.foodGoalDays != null ? String(goals.foodGoalDays) : "");
+      setFuel(goals.fuelGoalGallons != null ? String(goals.fuelGoalGallons) : "");
+    }
+  }, [goals]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      ammoGoalRounds: ammo === "" ? null : Number(ammo) || null,
+      waterGoalGallons: water === "" ? null : Number(water) || null,
+      foodGoalDays: food === "" ? null : Number(food) || null,
+      fuelGoalGallons: fuel === "" ? null : Number(fuel) || null,
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Target className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+          Inventory goals
+        </h3>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        Set overall targets here. When a goal is set, the dashboard uses it for that category. Item-level target (goal) fields for matching units are disabled so this page is the single place to manage those goals.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+        <div>
+          <label htmlFor="goals-ammo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Ammo (rounds)
+          </label>
+          <input
+            id="goals-ammo"
+            type="number"
+            min={0}
+            step={1}
+            value={ammo}
+            onChange={(e) => setAmmo(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g. 1000"
+          />
+        </div>
+        <div>
+          <label htmlFor="goals-water" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Water (gallons)
+          </label>
+          <input
+            id="goals-water"
+            type="number"
+            min={0}
+            step={0.1}
+            value={water}
+            onChange={(e) => setWater(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g. 20"
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Items in gallons or bottles are counted (bottles converted to gallons).
+          </p>
+        </div>
+        <div>
+          <label htmlFor="goals-food" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Food (days)
+          </label>
+          <input
+            id="goals-food"
+            type="number"
+            min={0}
+            step={1}
+            value={food}
+            onChange={(e) => setFood(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g. 30"
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Target is based on your household and activity level (Settings / profile). Goal = daily calories × days.
+          </p>
+        </div>
+        <div>
+          <label htmlFor="goals-fuel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Fuel / energy (gallons)
+          </label>
+          <input
+            id="goals-fuel"
+            type="number"
+            min={0}
+            step={0.1}
+            value={fuel}
+            onChange={(e) => setFuel(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g. 15"
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Only items in the Fuel &amp; Energy category with unit &quot;gallons&quot; are counted.
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+        >
+          {isSaving ? "Saving…" : "Save goals"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("notifications");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("goals");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab && isSettingsTab(tab)) setActiveTab(tab);
   }, [searchParams]);
 
+  const { data: goals } = api.settings.getGoals.useQuery();
+  const updateGoalsMutation = api.settings.updateGoals.useMutation({
+    onSuccess: () => utils.settings.getGoals.invalidate(),
+  });
+  const utils = api.useUtils();
   const { data: notificationSettings } = api.notifications.getSettings.useQuery();
   const updateSettings = api.notifications.updateSettings.useMutation();
   const sendTestWebhook = api.notifications.sendTestWebhook.useMutation();
@@ -145,6 +283,16 @@ export default function SettingsPage() {
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
+                onClick={() => setActiveTab("goals")}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === "goals"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                }`}
+              >
+                Goals
+              </button>
+              <button
                 onClick={() => setActiveTab("notifications")}
                 className={`py-4 px-6 text-sm font-medium border-b-2 ${
                   activeTab === "notifications"
@@ -198,6 +346,10 @@ export default function SettingsPage() {
           </div>
 
           <div className="p-6">
+            {activeTab === "goals" && (
+              <GoalsSection goals={goals} onSave={updateGoalsMutation.mutate} isSaving={updateGoalsMutation.isPending} />
+            )}
+
             {activeTab === "notifications" && (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>

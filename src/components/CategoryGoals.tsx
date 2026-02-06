@@ -57,6 +57,7 @@ export default function CategoryGoals({ categoryStats, ammoBreakdown = [], foodB
                   </div>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {stat.currentQuantity.toFixed(1)} / {stat.targetQuantity.toFixed(1)}
+                    {"displayUnit" in stat && stat.displayUnit ? ` ${stat.displayUnit}` : ""}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">

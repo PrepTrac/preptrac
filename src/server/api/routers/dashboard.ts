@@ -26,7 +26,13 @@ export const dashboardRouter = createTRPCRouter({
       ctx.prisma.familyMember.findMany({ where: { userId } }),
       ctx.prisma.user.findUnique({
         where: { id: userId },
-        select: { activityLevel: true },
+        select: {
+          activityLevel: true,
+          ammoGoalRounds: true,
+          waterGoalGallons: true,
+          foodGoalDays: true,
+          fuelGoalGallons: true,
+        },
       }),
     ]);
     const activityLevel = user?.activityLevel ?? null;
@@ -199,7 +205,7 @@ export const dashboardRouter = createTRPCRouter({
       take: 20,
     });
 
-    // Calculate category progress
+    // Calculate category progress (goals from Settings take precedence when set)
     const categoriesWithItems = await ctx.prisma.category.findMany({
       where: { userId },
       include: {
@@ -207,22 +213,58 @@ export const dashboardRouter = createTRPCRouter({
       },
     });
 
+    const catNameLower = (name: string) => name.toLowerCase();
+    const isAmmoCat = (name: string) => catNameLower(name).includes("ammo");
+    const isWaterCat = (name: string) => catNameLower(name).includes("water");
+    const isFoodCat = (name: string) => catNameLower(name).includes("food");
+    const isFuelCat = (name: string) =>
+      catNameLower(name).includes("fuel") || catNameLower(name).includes("energy");
+
     const categoryStats = categoriesWithItems
       .map((cat) => {
-        const currentQuantity = cat.items.reduce(
-          (sum, item) => sum + item.quantity,
-          0
-        );
+        let currentQuantity: number;
+        let targetQuantity: number;
 
-        // Calculate target: prefer category target, otherwise sum item targets
-        let targetQuantity = cat.targetQuantity;
-        if (!targetQuantity || targetQuantity === 0) {
-          targetQuantity = cat.items.reduce(
-            (sum, item) => sum + (item.targetQuantity || 0),
+        if (isAmmoCat(cat.name) && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0) {
+          currentQuantity = cat.items.reduce((sum, item) => sum + item.quantity, 0);
+          targetQuantity = user.ammoGoalRounds;
+        } else if (isWaterCat(cat.name) && user?.waterGoalGallons != null && user.waterGoalGallons > 0) {
+          currentQuantity = cat.items
+            .filter((item) => isGallon(item.unit) || isBottle(item.unit))
+            .reduce((sum, item) => {
+              if (isBottle(item.unit)) return sum + item.quantity * GALLONS_PER_BOTTLE;
+              return sum + item.quantity;
+            }, 0);
+          targetQuantity = user.waterGoalGallons;
+        } else if (isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0 && totalDailyCalories > 0) {
+          const totalFoodCalories = cat.items.reduce((sum, item) => {
+            const cal = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
+            if (cal != null && cal > 0) return sum + item.quantity * cal;
+            return sum;
+          }, 0);
+          currentQuantity = totalFoodCalories / totalDailyCalories;
+          targetQuantity = user.foodGoalDays;
+        } else if (isFuelCat(cat.name) && user?.fuelGoalGallons != null && user.fuelGoalGallons > 0) {
+          currentQuantity = cat.items
+            .filter((item) => isGallon(item.unit))
+            .reduce((sum, item) => sum + item.quantity, 0);
+          targetQuantity = user.fuelGoalGallons;
+        } else {
+          currentQuantity = cat.items.reduce(
+            (sum, item) => sum + item.quantity,
             0
           );
+          targetQuantity = cat.targetQuantity ?? 0;
+          if (!targetQuantity || targetQuantity === 0) {
+            targetQuantity = cat.items.reduce(
+              (sum, item) => sum + (item.targetQuantity || 0),
+              0
+            );
+          }
         }
 
+        const displayUnit =
+          isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0 ? "days" : undefined;
         return {
           id: cat.id,
           name: cat.name,
@@ -232,6 +274,7 @@ export const dashboardRouter = createTRPCRouter({
           progress: targetQuantity
             ? Math.min((currentQuantity / targetQuantity) * 100, 100)
             : 0,
+          displayUnit,
         };
       })
       .filter((stat) => stat.targetQuantity > 0);

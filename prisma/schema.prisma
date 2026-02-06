@@ -17,6 +17,11 @@ model User {
   password          String
   name              String?
   activityLevel     String?  // "moderate" | "very_active" | "extra_active" | null = sedentary
+  // Goals (main source for dashboard progress; when set, item-level targets for matching units are disabled)
+  ammoGoalRounds    Float?
+  waterGoalGallons  Float?
+  foodGoalDays      Float?   // Days of food; target calories = household daily calories × this
+  fuelGoalGallons   Float?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   items             Item[]
