@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "~/utils/api";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { api } from "~/utils/api";
 import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
 import CategoryForm from "~/components/CategoryForm";
@@ -196,7 +196,7 @@ function GoalsSection({
   );
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>("goals");
 
@@ -828,6 +828,26 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function SettingsPageFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navigation />
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+      </main>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsPageFallback />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
 
