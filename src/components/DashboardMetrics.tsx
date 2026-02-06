@@ -299,22 +299,26 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
 
         if (metric.breakdown && metric.breakdown.length > 0) {
           const isFood = metric.name === "Food Days";
+          const breakdownItems = metric.breakdown as Array<{ name: string; quantity: number; unit: string }>;
           return (
             <BreakdownTooltip
               key={metric.name}
               title={isFood ? "By calories" : "By type"}
-              items={metric.breakdown}
-              getBarTotal={isFood ? (item: FoodBreakdownItem) => item.calories ?? item.quantity : undefined}
+              items={breakdownItems}
+              getBarTotal={isFood ? (item) => (item as FoodBreakdownItem).calories ?? item.quantity : undefined}
               barColorClass={metric.color}
-              renderItem={isFood ? (item: FoodBreakdownItem) => (
-                <>
-                  <span className="truncate">{item.name}</span>
-                  <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
-                    {item.quantity} {item.unit}
-                    {item.contributionDays != null ? ` (~${item.contributionDays} days)` : ""}
-                  </span>
-                </>
-              ) : undefined}
+              renderItem={isFood ? (item) => {
+                const food = item as FoodBreakdownItem;
+                return (
+                  <>
+                    <span className="truncate">{food.name}</span>
+                    <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
+                      {food.quantity} {food.unit}
+                      {food.contributionDays != null ? ` (~${food.contributionDays} days)` : ""}
+                    </span>
+                  </>
+                );
+              } : undefined}
             >
               {card}
             </BreakdownTooltip>
