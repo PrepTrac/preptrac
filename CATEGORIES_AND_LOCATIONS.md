@@ -1,18 +1,18 @@
 # Categories and Locations Guide
 
-## Default Categories (Auto-created for new users)
+## Default Categories
 
-When a new user registers, these 10 categories are automatically created:
+**Fill test data** (Settings → Test data) creates these 10 categories if they don’t exist:
 
 1. **Food** - Orange (#F59E0B) - Canned goods, MREs, dried food, etc.
 2. **Water** - Blue (#3B82F6) - Water storage, purification, containers
 3. **Ammo** - Red (#EF4444) - Ammunition and reloading supplies
 4. **Medical** - Green (#10B981) - First aid, medications, medical supplies
 5. **Tools** - Gray (#6B7280) - Knives, multi-tools, equipment
-6. **Clothing** - Purple (#8B5CF6) - Survival gear, boots, clothing
-7. **Shelter** - Pink (#EC4899) - Tents, tarps, sleeping bags
-8. **Fuel & Energy** - Orange (#F97316) - Gasoline, batteries, solar panels
-9. **Communication** - Cyan (#06B6D4) - Radios, phones, signaling
+6. **Shelter** - Pink (#EC4899) - Tents, tarps, sleeping bags
+7. **Fuel & Energy** - Orange (#F97316) - Gasoline, batteries, solar, portable power (gallons and kWh)
+8. **Communication** - Cyan (#06B6D4) - Radios, phones, signaling
+9. **Hygiene** - Purple (#8B5CF6) - Soap, toiletries
 10. **Defense** - Dark Red (#DC2626) - Self-defense items, security
 
 Each category has:
@@ -23,13 +23,13 @@ Each category has:
 
 ## Default Locations (Auto-created for new users)
 
-When a new user registers, these 5 locations are automatically created:
+When a new user registers, default locations are created. **Fill test data** (Settings → Test data) creates these 5 locations if they don’t exist:
 
 1. **Home** - Primary residence
-2. **Vehicle 1** - Primary vehicle
-3. **Vehicle 2** - Secondary vehicle
-4. **Cabin** - Vacation/retreat property
-5. **Bug-out Bag** - Emergency go bag
+2. **Vehicle** - Primary vehicle
+3. **Bug-out Bag** - Emergency go bag
+4. **Cabin** - Retreat property
+5. **Garage** - Garage storage
 
 Each location has:
 - **Name** (required)
@@ -102,10 +102,10 @@ You can combine multiple filters:
 2. Click the **Food** category button (blue)
 3. View all food items across all locations
 
-### Scenario 2: Check what's in Vehicle 1
+### Scenario 2: Check what's in Vehicle
 1. Go to Inventory page
-2. Click the **Vehicle 1** location button (green)
-3. View all items in Vehicle 1
+2. Click the **Vehicle** location button (green)
+3. View all items in the vehicle
 
 ### Scenario 3: Check medical supplies in the cabin
 1. Go to Inventory page

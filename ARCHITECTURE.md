@@ -50,7 +50,8 @@
 components/
 ├── Navigation.tsx          # Main navigation bar
 ├── ThemeToggle.tsx         # Dark mode toggle
-├── DashboardMetrics.tsx     # Dashboard statistics cards
+├── DashboardMetrics.tsx     # Dashboard metric cards (water, fuel/energy, food days, ammo, total items); click to cycle water (gallons/days), fuel (gallons → total kWh → battery kWh)
+├── CategoryGoals.tsx       # Category Progress section: goal progress bars with units; hover tooltips (breakdown or fuel sub-goals) using category colors
 ├── UpcomingEvents.tsx      # Event list component
 ├── CategoryNav.tsx          # Category filter navigation
 ├── ItemCard.tsx            # Individual item display card
@@ -66,7 +67,7 @@ app/
 ├── layout.tsx              # Root layout with providers
 ├── page.tsx                # Home/redirect page
 ├── dashboard/
-│   └── page.tsx           # Dashboard with metrics
+│   └── page.tsx           # Dashboard: metrics (water, fuel/energy, food, ammo, items), Category Progress (goals), upcoming events
 ├── inventory/
 │   └── page.tsx           # Inventory list with filters, CSV/JSON export
 ├── import/
@@ -74,7 +75,7 @@ app/
 ├── calendar/
 │   └── page.tsx           # Calendar view
 ├── settings/
-│   └── page.tsx           # Settings page
+│   └── page.tsx           # Settings: Goals (ammo, water, food, fuel gal/kWh/battery), Notifications, Categories, Locations, Import, Test data
 └── auth/
     ├── signin/
     │   └── page.tsx       # Sign in page
