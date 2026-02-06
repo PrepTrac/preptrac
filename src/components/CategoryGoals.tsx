@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { RouterOutputs } from "~/utils/api";
+import type { RouterOutputs, AmmoBreakdownItem, FoodBreakdownItem, WaterBreakdownItem } from "~/utils/api";
 
 type CategoryStat = NonNullable<RouterOutputs["dashboard"]["getStats"]["categoryStats"]>[number];
-type AmmoBreakdownItem = { name: string; quantity: number; unit: string };
-type FoodBreakdownItem = { name: string; quantity: number; unit: string; calories?: number; contributionDays?: number };
-type WaterBreakdownItem = { name: string; quantity: number; unit: string; gallonsEquivalent: number };
 
 interface CategoryGoalsProps {
   categoryStats: CategoryStat[];

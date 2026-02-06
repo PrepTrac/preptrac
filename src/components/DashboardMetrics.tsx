@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { Droplet, UtensilsCrossed, Target, Package, Flame } from "lucide-react";
-
-type AmmoBreakdownItem = { name: string; quantity: number; unit: string };
-type FoodBreakdownItem = { name: string; quantity: number; unit: string; calories?: number; contributionDays?: number };
-type WaterBreakdownItem = { name: string; quantity: number; unit: string; gallonsEquivalent: number };
+import type { AmmoBreakdownItem, FoodBreakdownItem, WaterBreakdownItem } from "~/utils/api";
 
 interface DashboardMetricsProps {
   stats: {

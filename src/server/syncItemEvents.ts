@@ -8,8 +8,8 @@ type EventInput = {
   date: Date;
 };
 
-/** Build list of events to create/update from item fields */
-function buildEventsToCreate(item: {
+/** Build list of events to create/update from item fields (exported for unit tests). */
+export function buildEventsToCreate(item: {
   name: string;
   expirationDate: Date | null;
   maintenanceInterval: number | null;
