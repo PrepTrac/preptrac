@@ -83,4 +83,4 @@ Under **Settings → Test data**, **Fill test data** adds sample categories, loc
 
 ## License
 
-This project is provided as-is for personal use. Use and modify it as you like.
+PrepTrac is licensed under the [GNU Affero General Public License v3.0](./LICENSE). You may use, modify, and distribute it under the terms of that license.
