@@ -274,12 +274,38 @@ export const settingsRouter = createTRPCRouter({
       consumptionCount++;
     }
 
+    // Set user activity level if not set (so Days of Food and food goal use household + activity)
+    const userBefore = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { activityLevel: true },
+    });
+    const activityLevelSet = userBefore?.activityLevel == null;
+    if (activityLevelSet) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { activityLevel: "moderate" },
+      });
+    }
+
+    // Set inventory goals so dashboard Category Progress and Goals feature are demonstrated
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ammoGoalRounds: 1500,
+        waterGoalGallons: 30,
+        foodGoalDays: 90,
+        fuelGoalGallons: 20,
+      },
+    });
+
     return {
       categories: categoryNames.length,
       locations: locationNames.length,
       items: itemDefs.length,
       consumptionLogs: consumptionCount,
       familyMembers: familyMembersCreated,
+      activityLevelSet,
+      goalsSet: true,
     };
   }),
 

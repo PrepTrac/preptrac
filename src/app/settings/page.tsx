@@ -812,12 +812,20 @@ function FillTestDataButton() {
         {fillTestData.isPending ? "Adding test data…" : "Fill test data"}
       </button>
       {fillTestData.isSuccess && fillTestData.data && (
-        <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">
-          Done. Created {fillTestData.data.categories} categories, {fillTestData.data.locations}{" "}
-          locations, {fillTestData.data.items} items, and {fillTestData.data.consumptionLogs}{" "}
-          consumption log entries.
+        <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm space-y-1">
+          <p>
+            Done. Created {fillTestData.data.categories} categories, {fillTestData.data.locations}{" "}
+            locations, {fillTestData.data.items} items, and {fillTestData.data.consumptionLogs}{" "}
+            consumption log entries.
+          </p>
           {fillTestData.data.familyMembers != null && fillTestData.data.familyMembers > 0 && (
-            <> Also added {fillTestData.data.familyMembers} household members so &ldquo;Days of Food&rdquo; uses your household profile.</>
+            <p>Added {fillTestData.data.familyMembers} household members so &ldquo;Days of Food&rdquo; uses your household profile.</p>
+          )}
+          {fillTestData.data.activityLevelSet && (
+            <p>Set activity level to <strong>Moderate</strong> so Days of Food and food goals use it (change in Household).</p>
+          )}
+          {fillTestData.data.goalsSet && (
+            <p>Set inventory goals (Ammo 1500 rounds, Water 30 gal, Food 90 days, Fuel 20 gal) in Settings → Goals so the dashboard Category Progress shows goal-based progress.</p>
           )}
         </div>
       )}

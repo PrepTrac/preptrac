@@ -128,8 +128,10 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
       minQuantity: Number(data.minQuantity) || 0,
       targetQuantity: targetDisabledByGoal ? (item?.targetQuantity ?? 0) : Number(data.targetQuantity) || 0,
     };
+    const selectedCategoryIsFood =
+      categories?.find((c) => c.id === data.categoryId)?.name.toLowerCase().includes("food") ?? false;
     const cal = data.caloriesPerUnit;
-    if (cal != null && !Number.isNaN(cal) && cal > 0) {
+    if (selectedCategoryIsFood && cal != null && !Number.isNaN(cal) && cal > 0) {
       submitData.caloriesPerUnit = cal;
     } else if (itemId) {
       submitData.caloriesPerUnit = null;
@@ -299,32 +301,32 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Calories per unit {isFoodCategory && "*"}
-            </label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              {...register("caloriesPerUnit", {
-                valueAsNumber: true,
-                required: isFoodCategory ? "Required for food items" : false,
-                min: isFoodCategory
-                  ? { value: 1, message: "Enter calories per single unit (e.g. per jar, per can)" }
-                  : undefined,
-              })}
-              className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g. 3100"
-            />
-            {errors.caloriesPerUnit && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.caloriesPerUnit.message}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Calories per single unit (e.g. per jar, per can, per bag). Total for this item = quantity ×
-              calories per unit. {isFoodCategory ? "Required for food items for Days of Food." : "Optional for non-food."}
-            </p>
-          </div>
+          {isFoodCategory && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Calories per unit *
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                {...register("caloriesPerUnit", {
+                  valueAsNumber: true,
+                  required: "Required for food items",
+                  min: { value: 1, message: "Enter calories per single unit (e.g. per jar, per can)" },
+                })}
+                className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="e.g. 3100"
+              />
+              {errors.caloriesPerUnit && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.caloriesPerUnit.message}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Calories per single unit (e.g. per jar, per can, per bag). Total for this item = quantity ×
+                calories per unit. Required for Days of Food.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
