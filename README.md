@@ -88,6 +88,7 @@ Under **Settings → Test data**, **Fill test data** adds sample categories, loc
 
 - **Quick setup** — See [QUICKSTART.md](./QUICKSTART.md) for a short step-by-step.
 - **Technical details** — Setup options, database, deployment, and development info are in [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md).
+- **Raspberry Pi** — For running on a Pi or other low-memory device, use production build and `./start-prod.sh`; see [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md#raspberry-pi-and-low-memory-hosts).
 
 ---
 

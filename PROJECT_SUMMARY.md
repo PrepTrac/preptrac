@@ -128,6 +128,17 @@ Use a Node 18 image: install deps, copy source, `npm run build`, `CMD ["npm", "s
 - `npm run build` then `npm start`.
 - Put a reverse proxy (nginx, Caddy) in front for HTTPS and routing.
 
+### Raspberry Pi (and low-memory hosts)
+
+The app is tuned to run on Raspberry Pi (4/5, 64-bit) and similar low-RAM devices:
+
+- **Use production mode**: Run `npm run build` once, then `./start-prod.sh` (or `NODE_OPTIONS=--max-old-space-size=512 npm start`). Do not use `npm run dev` on the Pi; it uses more CPU and memory.
+- **Memory limit**: `start-prod.sh` sets `NODE_OPTIONS=--max-old-space-size=512` by default so Node.js does not exhaust RAM. On a Pi with 2GB or more you can override, e.g. `NODE_OPTIONS=--max-old-space-size=768 ./start-prod.sh`.
+- **Standalone build**: `next.config.js` uses `output: "standalone"`, producing a smaller deploy under `.next/standalone` if you want to copy only that plus `.next/static` and `public` to the Pi.
+- **SQLite**: Keep `DATABASE_URL="file:./dev.db"` so no separate database process runs.
+- **Charts**: The Activity page loads the chart library (Recharts) only when you open that page, reducing initial load and memory use.
+- Put nginx or Caddy in front for HTTPS and to serve static assets if desired.
+
 ---
 
 ## Development
