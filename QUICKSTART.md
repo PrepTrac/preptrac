@@ -80,7 +80,8 @@ You can either try the app with sample data first, or set up your own data.
 ## Step 7: Explore Features
 
 - **Dashboard**: See your inventory metrics and upcoming events
-- **Inventory**: Browse and filter items; add or edit items
+- **Inventory**: Browse and filter items; add or edit items; export to CSV or JSON
+- **Import**: Download the CSV template, fill in your items (name, unit, category, location required), then upload to create many items at once
 - **Locations**: Select a location to see what’s stored there and consumption from that location
 - **Consume**: Log consumption (single or multiple items) and view consumption analytics
 - **Calendar**: View upcoming expirations and maintenance
@@ -91,7 +92,7 @@ You can either try the app with sample data first, or set up your own data.
 1. ✅ Try **Fill test data** in Settings → Test data to see the app with sample data, or create your own categories and locations
 2. ✅ Create 5-10 categories (or use the ones from test data)
 3. ✅ Create 3-5 locations
-4. ✅ Add 10-20 items (from Inventory or from Locations → Add item here)
+4. ✅ Add 10-20 items (from Inventory, from **Import** with a filled CSV, or from Locations → Add item here)
 5. ✅ Log consumption from **Consume** and check **Locations** for per-location history
 6. ✅ Set expiration dates for perishables
 7. ✅ Configure notification preferences in Settings → Notifications

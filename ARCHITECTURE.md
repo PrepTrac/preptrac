@@ -5,9 +5,9 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Client Layer                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-│  │ Dashboard│  │Inventory │  │ Calendar │  │ Settings │  │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+│  ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ Dashboard│  │Inventory │  │ Import │  │ Calendar │  │ Settings │  │
+│  └──────────┘  └──────────┘  └────────┘  └──────────┘  └──────────┘  │
 │                                                             │
 │  React Components (TailwindCSS, Next.js App Router)       │
 └─────────────────────────────────────────────────────────────┘
@@ -68,7 +68,9 @@ app/
 ├── dashboard/
 │   └── page.tsx           # Dashboard with metrics
 ├── inventory/
-│   └── page.tsx           # Inventory list with filters
+│   └── page.tsx           # Inventory list with filters, CSV/JSON export
+├── import/
+│   └── page.tsx           # CSV template download + upload import
 ├── calendar/
 │   └── page.tsx           # Calendar view
 ├── settings/
@@ -159,6 +161,18 @@ Item (1) ────< (Many) Event
 - Filters combined with AND logic
 - Server-side filtering via Prisma
 - Optimized with database indexes
+
+## Import & Export
+
+### CSV Export (Inventory)
+- **Location**: Inventory page → CSV / JSON buttons.
+- **Implementation**: `src/utils/export.ts` — `exportToCSV` uses a single header list (`CSV_HEADERS`) that includes all item fields: id, name, description, quantity, unit, categoryId, category, locationId, location, expiration/maintenance/rotation dates, notes, imageUrl, qrCode, minQuantity, targetQuantity, caloriesPerUnit, createdAt, updatedAt.
+- Exported CSV is quoted and UTF-8; dates are ISO strings.
+
+### CSV Import (Import page)
+- **Location**: Import page — Download template, then Upload CSV.
+- **Template**: `downloadCSVTemplate()` in `src/utils/export.ts` downloads an empty CSV with the same headers so users can fill rows in a spreadsheet.
+- **Backend**: `items.importFromCSV` in `src/server/api/routers/items.ts` parses CSV (quoted fields, commas inside quotes), resolves category/location by name (exact match) or by ID, creates items and syncs events. Returns `{ created, errors }` with per-row errors.
 
 ## QR Code System
 

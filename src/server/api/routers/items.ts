@@ -3,6 +3,60 @@ import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents } from "~/server/syncItemEvents";
 
+/** Parse a single CSV line with quoted fields ("" for escaped quote). */
+function parseCSVLine(line: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      let field = "";
+      i++;
+      while (i < line.length) {
+        if (line[i] === '"') {
+          i++;
+          if (line[i] === '"') {
+            field += '"';
+            i++;
+          } else {
+            break;
+          }
+        } else {
+          field += line[i];
+          i++;
+        }
+      }
+      out.push(field);
+      if (line[i] === ",") i++;
+    } else {
+      let field = "";
+      while (i < line.length && line[i] !== ",") {
+        field += line[i];
+        i++;
+      }
+      out.push(field.trim());
+      if (line[i] === ",") i++;
+    }
+  }
+  return out;
+}
+
+/** Parse CSV string into array of row objects (first row = headers). */
+function parseCSV(csvContent: string): Record<string, string>[] {
+  const lines = csvContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]!);
+  const rows: Record<string, string>[] = [];
+  for (let r = 1; r < lines.length; r++) {
+    const values = parseCSVLine(lines[r]!);
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => {
+      row[h] = values[i] ?? "";
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
 export const itemsRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(
@@ -416,6 +470,117 @@ export const itemsRouter = createTRPCRouter({
         },
         include: { category: true, location: true },
       });
+    }),
+
+  /** Import items from CSV (same columns as export/template). Resolves category/location by name or ID. */
+  importFromCSV: protectedProcedure
+    .input(z.object({ csvContent: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.userId;
+      const rows = parseCSV(input.csvContent);
+      if (rows.length === 0) {
+        return { created: 0, errors: [{ row: 0, message: "No data rows in CSV (need header row + at least one row)." }] };
+      }
+
+      const [categories, locations] = await Promise.all([
+        ctx.prisma.category.findMany({ where: { userId } }),
+        ctx.prisma.location.findMany({ where: { userId } }),
+      ]);
+      const categoryById = new Map(categories.map((c) => [c.id, c]));
+      const categoryByName = new Map(categories.map((c) => [c.name.toLowerCase().trim(), c]));
+      const locationById = new Map(locations.map((l) => [l.id, l]));
+      const locationByName = new Map(locations.map((l) => [l.name.toLowerCase().trim(), l]));
+
+      const errors: { row: number; message: string }[] = [];
+      let created = 0;
+
+      for (let r = 0; r < rows.length; r++) {
+        const row = rows[r]!;
+        const rowNum = r + 1;
+
+        const name = (row.name ?? "").trim();
+        const unit = (row.unit ?? "").trim();
+        if (!name) {
+          errors.push({ row: rowNum, message: "Missing name." });
+          continue;
+        }
+        if (!unit) {
+          errors.push({ row: rowNum, message: "Missing unit." });
+          continue;
+        }
+
+        let categoryId = (row.categoryId ?? "").trim() || null;
+        if (!categoryId && (row.category ?? "").trim()) {
+          const cat = categoryByName.get((row.category ?? "").toLowerCase().trim());
+          categoryId = cat?.id ?? null;
+        }
+        if (!categoryId) {
+          errors.push({ row: rowNum, message: "Category required (use category column with exact name or categoryId)." });
+          continue;
+        }
+        if (!categoryById.has(categoryId)) {
+          errors.push({ row: rowNum, message: "Category not found for this user." });
+          continue;
+        }
+
+        let locationId = (row.locationId ?? "").trim() || null;
+        if (!locationId && (row.location ?? "").trim()) {
+          const loc = locationByName.get((row.location ?? "").toLowerCase().trim());
+          locationId = loc?.id ?? null;
+        }
+        if (!locationId) {
+          errors.push({ row: rowNum, message: "Location required (use location column with exact name or locationId)." });
+          continue;
+        }
+        if (!locationById.has(locationId)) {
+          errors.push({ row: rowNum, message: "Location not found for this user." });
+          continue;
+        }
+
+        const num = (v: string) => (v === "" ? undefined : Number(v));
+        const qty = num(row.quantity);
+        const minQty = num(row.minQuantity);
+        const targetQty = num(row.targetQuantity);
+        const calories = num(row.caloriesPerUnit);
+        const date = (v: string) => {
+          const s = (v ?? "").trim();
+          if (!s) return undefined;
+          const d = new Date(s);
+          return isNaN(d.getTime()) ? undefined : d;
+        };
+
+        try {
+          const item = await ctx.prisma.item.create({
+            data: {
+              userId,
+              name,
+              description: (row.description ?? "").trim() || undefined,
+              quantity: qty !== undefined && !Number.isNaN(qty) ? qty : 0,
+              unit: unit || "pieces",
+              categoryId,
+              locationId,
+              expirationDate: date(row.expirationDate) ?? undefined,
+              maintenanceInterval: num(row.maintenanceInterval) ?? undefined,
+              lastMaintenanceDate: date(row.lastMaintenanceDate) ?? undefined,
+              rotationSchedule: num(row.rotationSchedule) ?? undefined,
+              lastRotationDate: date(row.lastRotationDate) ?? undefined,
+              notes: (row.notes ?? "").trim() || undefined,
+              imageUrl: (row.imageUrl ?? "").trim() || undefined,
+              qrCode: (row.qrCode ?? "").trim() || undefined,
+              minQuantity: minQty !== undefined && !Number.isNaN(minQty) ? minQty : 0,
+              targetQuantity: targetQty !== undefined && !Number.isNaN(targetQty) ? targetQty : 0,
+              caloriesPerUnit: calories !== undefined && !Number.isNaN(calories) ? calories : undefined,
+            },
+            include: { category: true, location: true },
+          });
+          await syncItemEvents(ctx.prisma, userId, item);
+          created++;
+        } catch (e) {
+          errors.push({ row: rowNum, message: e instanceof Error ? e.message : "Failed to create item." });
+        }
+      }
+
+      return { created, errors };
     }),
 });
 

@@ -53,6 +53,10 @@ Each location has:
 
 **Note**: Deleting a category or location will also delete all items assigned to it.
 
+### CSV Import
+
+When importing items from CSV (see **Import** in the app), category and location are matched by **exact name** (case-insensitive) or by **ID**. Use the same category and location names as in Settings, or use the `categoryId` and `locationId` values from an exported CSV. Create your categories and locations in Settings before importing.
+
 ## Filtering on Inventory Page
 
 ### Two Ways to Filter Categories

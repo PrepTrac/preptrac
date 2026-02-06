@@ -9,7 +9,8 @@ PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more
 ## What You Can Do
 
 - **Dashboard** — See total water, **days of food** (based on your household’s calorie needs), ammo count, and upcoming expirations or maintenance.
-- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock.
+- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (all item fields included).
+- **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name or ID.
 - **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover.
 - **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and what’s been consumed from that spot.
 - **Consume** — Log when you use something. Your totals update and you can review consumption over time with simple charts.
@@ -63,6 +64,11 @@ In **Consume**, pick one or more items, enter how much you used, add an optional
 ### Calendar
 
 Expirations, maintenance due dates, and rotation schedules from your items show up on the **Calendar**. You can also add or edit events there.
+
+### Import and Export
+
+- **Export** — On the **Inventory** page, use **CSV** or **JSON** to download your current (filtered) inventory. The CSV includes all item fields: name, quantity, unit, category, location, expiration, maintenance, rotation, notes, imageUrl, qrCode, minQuantity, targetQuantity, caloriesPerUnit, and timestamps.
+- **Import** — Go to **Import**, click **Download template** to get an empty CSV with the same columns. Fill in rows (name, unit, category, and location are required; category and location must match the exact names in Settings, or use categoryId/locationId from an export). Then click **Upload CSV**. The app reports how many items were created and any row-level errors.
 
 ### Notifications
 

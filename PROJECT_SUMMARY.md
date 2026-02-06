@@ -61,7 +61,7 @@ No authentication layer: a single default user is created automatically (`getOrC
 
 Routers under `src/server/api/routers/`:
 
-- **items** — CRUD, filters, consumption logging, consumption stats.
+- **items** — CRUD, filters, consumption logging, consumption stats, **importFromCSV** (parse CSV and create items; category/location by name or ID).
 - **categories** — Category CRUD.
 - **locations** — Location CRUD, `getConsumptionByLocation`.
 - **events** — Event CRUD, sync from items.
@@ -79,7 +79,8 @@ Routers under `src/server/api/routers/`:
 src/
 ├── app/
 │   ├── dashboard/    # Dashboard page
-│   ├── inventory/    # Inventory list
+│   ├── inventory/    # Inventory list (CSV/JSON export)
+│   ├── import/       # CSV template download + upload import
 │   ├── locations/    # Location detail + consumption
 │   ├── consume/      # Log consumption + analytics
 │   ├── household/    # Household profile
@@ -91,6 +92,7 @@ src/
 ├── server/db.ts
 ├── server/auth.ts    # getOrCreateDefaultUser
 └── utils/
+    └── export.ts     # CSV_HEADERS, exportToCSV, exportToJSON, downloadCSVTemplate
 ```
 
 ---
@@ -161,7 +163,7 @@ Use a Node 18 image: install deps, copy source, `npm run build`, `CMD ["npm", "s
 
 ## Roadmap Ideas
 
-- Barcode scanning, mobile app, multi-user/sharing, export/import, advanced reporting, external API integrations, automated suggestions, photo upload, inventory templates.
+- Barcode scanning, mobile app, multi-user/sharing, advanced reporting, external API integrations, automated suggestions, photo upload, inventory templates. (CSV export/import and template-based import are implemented.)
 
 ---
 
