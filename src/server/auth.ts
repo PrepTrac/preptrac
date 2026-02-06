@@ -27,39 +27,29 @@ const DEFAULT_LOCATIONS = [
 
 /** Get the single default user, creating with default categories/locations if none exists. */
 export async function getOrCreateDefaultUser(): Promise<{ id: string }> {
-  let user = await prisma.user.findFirst({
+  const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
+  const user = await prisma.user.upsert({
     where: { email: DEFAULT_USER_EMAIL },
+    create: {
+      email: DEFAULT_USER_EMAIL,
+      password: hashedPassword,
+      name: "Default User",
+    },
+    update: {},
     select: { id: true },
   });
-  if (user) return user;
 
-  try {
-    const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
-    user = await prisma.user.create({
-      data: {
-        email: DEFAULT_USER_EMAIL,
-        password: hashedPassword,
-        name: "Default User",
-      },
-      select: { id: true },
-    });
-
+  // Seed default categories/locations only if this user has none (e.g. just created or fresh DB)
+  const categoryCount = await prisma.category.count({ where: { userId: user.id } });
+  if (categoryCount === 0) {
     await prisma.category.createMany({
-      data: DEFAULT_CATEGORIES.map((category) => ({ ...category, userId: user!.id })),
+      data: DEFAULT_CATEGORIES.map((category) => ({ ...category, userId: user.id })),
     });
     await prisma.location.createMany({
-      data: DEFAULT_LOCATIONS.map((location) => ({ ...location, userId: user!.id })),
+      data: DEFAULT_LOCATIONS.map((location) => ({ ...location, userId: user.id })),
     });
-
-    return user;
-  } catch (err: unknown) {
-    // Race: another request already created the default user
-    const existing = await prisma.user.findFirst({
-      where: { email: DEFAULT_USER_EMAIL },
-      select: { id: true },
-    });
-    if (existing) return existing;
-    throw err;
   }
+
+  return user;
 }
 
