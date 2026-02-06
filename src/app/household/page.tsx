@@ -247,7 +247,7 @@ function HouseholdMemberForm({
       setHeightCm("");
       setSex("male");
     }
-  }, [editing?.id]);
+  }, [editing]);
 
   const createMember = api.household.create.useMutation({
     onSuccess: () => {

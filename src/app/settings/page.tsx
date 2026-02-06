@@ -201,6 +201,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("goals");
 
   useEffect(() => {
+    if (!searchParams) return;
     const tab = searchParams.get("tab");
     if (tab && isSettingsTab(tab)) setActiveTab(tab);
   }, [searchParams]);
