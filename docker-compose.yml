@@ -7,8 +7,6 @@ services:
       - NODE_ENV=production
       - PORT=8008
       - DATABASE_URL=file:/app/data/dev.db
-      - NEXTAUTH_URL=http://localhost:8008
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-me-in-production}
     volumes:
       - preptrac-data:/app/data
     restart: unless-stopped

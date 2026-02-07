@@ -43,7 +43,7 @@ Opens at http://localhost:3000. Database is stored in a Docker volume. Stop with
 **Local development:**
 1. Clone or copy the project.
 2. **Install dependencies**: `npm install`
-3. **Environment**: `cp .env.example .env` — set `DATABASE_URL` (e.g. `file:./dev.db` for SQLite). `NEXTAUTH_*` vars are optional (auth not used).
+3. **Environment**: `cp .env.example .env` — set `DATABASE_URL` (e.g. `file:./dev.db` for SQLite).
 4. **Database**: `npm run db:push` then `npm run db:generate`
 5. **Run**: `npm run dev` → open http://localhost:3000
 
@@ -131,8 +131,7 @@ From the project root:
 ```bash
 docker compose up -d
 ```
-The Dockerfile builds the Next.js standalone output, runs Prisma migrations on startup, and serves the app on port 3000. SQLite data is stored in a named volume (`preptrac-data`). Override `NEXTAUTH_SECRET` via env or `.env` for production.
-
+The Dockerfile builds the Next.js standalone output, runs Prisma migrations on startup, and serves the app on port 3000. SQLite data is stored in a named volume (`preptrac-data`). 
 To build and run the image manually:
 ```bash
 docker build -t preptrac .
