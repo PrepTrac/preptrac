@@ -6,7 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
-- (Nothing yet; add items here as you work toward the next release.)
+- **Import/Export** — CSV export and template now use user-friendly columns only (no id, categoryId, locationId, createdAt, updatedAt). Dates are in simple form (e.g. 1/1/2026) instead of ISO timestamps.
 
 ---
 

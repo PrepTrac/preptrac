@@ -67,7 +67,7 @@ Opens at http://localhost:8008. Database is stored in a Docker volume. Stop with
 
 Routers under `src/server/api/routers/`:
 
-- **items** — CRUD, filters, activity logging (consume/add), activity stats (consumption + additions), **importFromCSV** (parse CSV and create items; category/location by name or ID).
+- **items** — CRUD, filters, activity logging (consume/add), activity stats (consumption + additions), **importFromCSV** (parse CSV and create items; category/location by name).
 - **categories** — Category CRUD.
 - **locations** — Location CRUD, `getConsumptionByLocation` (returns logs with type).
 - **events** — Event CRUD, sync from items.

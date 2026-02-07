@@ -760,7 +760,7 @@ function SettingsPageContent() {
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                   <FileSpreadsheet className="h-4 w-4 flex-shrink-0" />
-                  Use the same category and location names as in Settings. You can also use categoryId and locationId from an export.
+                  Use the same category and location names as in Settings. Use simple dates like 1/1/2026 for expiration and maintenance fields.
                 </p>
                 {importResult && (
                   <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">

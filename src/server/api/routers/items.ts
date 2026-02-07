@@ -544,7 +544,7 @@ export const itemsRouter = createTRPCRouter({
           categoryId = cat?.id ?? null;
         }
         if (!categoryId) {
-          errors.push({ row: rowNum, message: "Category required (use category column with exact name or categoryId)." });
+          errors.push({ row: rowNum, message: "Category required (use category column with exact name from Settings)." });
           continue;
         }
         if (!categoryById.has(categoryId)) {
@@ -558,7 +558,7 @@ export const itemsRouter = createTRPCRouter({
           locationId = loc?.id ?? null;
         }
         if (!locationId) {
-          errors.push({ row: rowNum, message: "Location required (use location column with exact name or locationId)." });
+          errors.push({ row: rowNum, message: "Location required (use location column with exact name from Settings)." });
           continue;
         }
         if (!locationById.has(locationId)) {

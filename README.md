@@ -9,8 +9,8 @@ PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more
 ## What You Can Do
 
 - **Dashboard** — See total water (click to toggle gallons/days), **fuel & energy** (click to cycle: gallons → total kWh → battery kWh), **days of food** (based on your household’s calorie needs), ammo count, total items, and upcoming expirations or maintenance. **Category Progress** shows goal progress for water, food, ammo, and fuel/energy with units (gallons, days, rounds, kWh) and hover tooltips with category colors. A **Recent activity** section shows consumption and additions with configurable rows (5, 10, 25), pagination, and filters (type and category); use **View all** to open the full Activity page.
-- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (all item fields included).
-- **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name or ID.
+- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (user-friendly columns; dates in simple form like 1/1/2026).
+- **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name.
 - **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover.
 - **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and what’s been consumed from that spot.
 - **Activity** — Log when you use something (consume) or add to inventory (e.g. refuel). Your totals update and you can review consumption and additions over time with charts. The **Recent activity** list supports configurable rows per page (5, 10, 25), pagination, and filters by type (All / Used / Added) and category.
@@ -85,8 +85,8 @@ Expirations, maintenance due dates, and rotation schedules from your items show 
 
 ### Import and Export
 
-- **Export** — On the **Inventory** page, use **CSV** or **JSON** to download your current (filtered) inventory. The CSV includes all item fields: name, quantity, unit, category, location, expiration, maintenance, rotation, notes, imageUrl, qrCode, minQuantity, targetQuantity, caloriesPerUnit, and timestamps.
-- **Import** — Go to **Import**, click **Download template** to get an empty CSV with the same columns. Fill in rows (name, unit, category, and location are required; category and location must match the exact names in Settings, or use categoryId/locationId from an export). Then click **Upload CSV**. The app reports how many items were created and any row-level errors.
+- **Export** — On the **Inventory** page, use **CSV** or **JSON** to download your current (filtered) inventory. The CSV uses user-friendly columns only (name, quantity, unit, category, location, expiration, maintenance, rotation, notes, etc.) with dates in simple form (e.g. 1/1/2026).
+- **Import** — Go to **Import**, click **Download template** to get an empty CSV with the same columns. Fill in rows (name, unit, category, and location are required; category and location must match the exact names in Settings). Use simple dates like 1/1/2026 for expiration and maintenance fields. Then click **Upload CSV**. The app reports how many items were created and any row-level errors.
 
 ### Notifications
 
