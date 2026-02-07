@@ -106,6 +106,7 @@ Under **Settings → Test data**, **Fill test data** adds sample categories, loc
 
 - **Quick setup** — See [QUICKSTART.md](./QUICKSTART.md) for a short step-by-step.
 - **Technical details** — Setup options, database, deployment, and development info are in [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md).
+- **Contributing** — See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch workflow, PRs, and version upgrades.
 
 ---
 

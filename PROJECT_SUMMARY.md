@@ -38,7 +38,7 @@ No authentication layer: a single default user is created automatically (`getOrC
 ```bash
 docker compose up -d
 ```
-Opens at http://localhost:3000. Database is stored in a Docker volume. Stop with `docker compose down`.
+Opens at http://localhost:8008. Database is stored in a Docker volume. Stop with `docker compose down`.
 
 **Local development:**
 1. Clone or copy the project.
@@ -131,11 +131,11 @@ From the project root:
 ```bash
 docker compose up -d
 ```
-The Dockerfile builds the Next.js standalone output, runs Prisma migrations on startup, and serves the app on port 3000. SQLite data is stored in a named volume (`preptrac-data`). 
+The Dockerfile builds the Next.js standalone output, runs Prisma migrations on startup, and serves the app on port 8008. SQLite data is stored in a named volume (`preptrac-data`). 
 To build and run the image manually:
 ```bash
 docker build -t preptrac .
-docker run -p 3000:3000 -v preptrac-data:/app/data preptrac
+docker run -p 8008:8008 -v preptrac-data:/app/data preptrac
 ```
 
 ### Self-hosted (without Docker)
