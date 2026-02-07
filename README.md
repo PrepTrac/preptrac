@@ -23,7 +23,7 @@ No sign-in required. Open the app and start using it.
 
 ## Get Started
 
-**Docker (recommended)** — one command to run PrepTrac with a persistent database:
+**Docker (recommended for production and quick runs)** — one command to run PrepTrac with a persistent database:
 
 ```bash
 docker compose up -d
@@ -31,7 +31,7 @@ docker compose up -d
 
 Then open [http://localhost:8008](http://localhost:8008). To stop: `docker compose down`.
 
-**Or run locally** (Node.js 18+):
+**Or run locally** (Node.js 18+), e.g. for development:
 
 ```bash
 npm install
@@ -41,6 +41,14 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll land on the Dashboard.
+
+### Production deployment (Docker)
+
+- **Port**: The app listens on **8008** inside the container; `docker-compose.yml` maps `8008:8008`. Change the host port in `ports` if you need a different external port.
+- **Data**: The SQLite database is stored in a Docker volume (`preptrac-data`). It persists across `docker compose down` and `docker compose up -d`. To wipe data and start fresh: `docker compose down -v` then `docker compose up -d`.
+- **Secrets**: Set `NEXTAUTH_SECRET` in the environment (or in a `.env` file next to `docker-compose.yml`) for production. The compose file defaults to `change-me-in-production` if unset.
+- **Updates**: Pull the latest code, then rebuild and restart: `docker compose up -d --build`. Your database and volume are unchanged; only the app image is replaced.
+- **Logs**: `docker compose logs -f preptrac` to follow container logs.
 
 **First time?**
 
