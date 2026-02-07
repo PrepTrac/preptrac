@@ -7,6 +7,7 @@ PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more
 If you like this project and want to support it buy me a coffe :) 
 buymeacoffee.com/hardenedsite
 
+![PrepTrac Dashboard](docs/images/Dashboard%20Page.png)
 
 ---
 
@@ -75,13 +76,21 @@ Go to **Inventory** → **Add Item**. Enter name, quantity, unit (e.g. jars, can
 
 In **Household**, add each family member (name optional, age, sex, weight in kg, height in cm). PrepTrac estimates daily calorie needs and sums them. On the Dashboard, **Days of Food** = your total inventory calories ÷ that household total. Add calories per unit to your food items so the number is meaningful.
 
+![Household](docs/images/Household.png)
+
 ### Locations
 
 In **Locations**, choose a place from the dropdown. You’ll see all items there and their quantities, plus a history of what was consumed from that location. You can add a new item and assign it to that location with **Add item here**.
 
 ### Logging Activity (Consume or Add)
 
-In **Activity**, choose **Consume** or **Add**, pick one or more items, enter the amount, add an optional note, and submit. Quantities update and the log is saved. The analytics section shows both consumption and additions over a chosen time range (bar chart and pie charts by item). The **Recent activity** list below lets you choose how many rows to show (5, 10, or 25), page through results, and filter by type (All / Used / Added) or by category. The same recent-activity list appears on the **Dashboard** with a **View all** link to the Activity page.
+In **Activity**, choose **Consume** or **Add**, pick one or more items, enter the amount, add an optional note, and submit. Quantities update and the log is saved. The **Recent activity** list lets you choose how many rows to show (5, 10, or 25), page through results, and filter by type (All / Used / Added) or by category. The same recent-activity list appears on the **Dashboard** with a **View all** link to the Activity page.
+
+#### Activity analytics
+
+Review consumption and additions over a chosen time range with bar and pie charts by item.
+
+![Activity Analytics](docs/images/Activity%20Analytics.png)
 
 ### Calendar
 
