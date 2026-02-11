@@ -22,7 +22,7 @@ export default function LocationForm() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const { register, handleSubmit, reset } = useForm<LocationFormData>();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<LocationFormData>();
 
   const onSubmit = (data: LocationFormData) => {
     if (editingId) {
@@ -102,8 +102,11 @@ export default function LocationForm() {
               </label>
               <input
                 {...register("name", { required: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${errors.name ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Name is required</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

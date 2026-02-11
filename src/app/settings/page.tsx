@@ -235,7 +235,7 @@ function SettingsPageContent() {
     message?: string;
   } | null>(null);
 
-  const { register, handleSubmit, reset, watch } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: {
       emailEnabled: false,
       emailExpirationDays: 7,
@@ -595,11 +595,14 @@ function SettingsPageContent() {
                           <input
                             type="url"
                             {...register("webhookUrl", {
-                              required: webhookEnabled,
+                              required: webhookEnabled ? "Webhook URL is required when notifications are enabled." : false,
                             })}
                             placeholder="https://example.com/webhook"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 border ${errors.webhookUrl ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                           />
+                          {errors.webhookUrl && (
+                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.webhookUrl.message}</p>
+                          )}
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             Your webhook endpoint URL
                           </p>

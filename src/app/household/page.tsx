@@ -229,11 +229,13 @@ function HouseholdMemberForm({
   const [weightKg, setWeightKg] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [sex, setSex] = useState<"male" | "female">("male");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: members } = api.household.getAll.useQuery();
   const editing = members?.find((m) => m.id === memberId);
 
   useEffect(() => {
+    setFieldErrors({});
     if (editing) {
       setName(editing.name ?? "");
       setAge(String(editing.age));
@@ -262,12 +264,33 @@ function HouseholdMemberForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const a = parseInt(age, 10);
-    const w = parseFloat(weightKg);
-    const h = parseFloat(heightCm);
-    if (Number.isNaN(a) || a < 0 || a > 120 || Number.isNaN(w) || w <= 0 || Number.isNaN(h) || h <= 0) {
+    const err: Record<string, string> = {};
+    const ageTrim = age.trim();
+    const weightTrim = weightKg.trim();
+    const heightTrim = heightCm.trim();
+    if (!ageTrim) err.age = "Age is required";
+    else {
+      const a = parseInt(ageTrim, 10);
+      if (Number.isNaN(a) || a < 0 || a > 120) err.age = "Enter a valid age (0–120)";
+    }
+    if (!weightTrim) err.weightKg = "Weight is required";
+    else {
+      const w = parseFloat(weightTrim);
+      if (Number.isNaN(w) || w <= 0) err.weightKg = "Enter a valid weight";
+    }
+    if (!heightTrim) err.heightCm = "Height is required";
+    else {
+      const h = parseFloat(heightTrim);
+      if (Number.isNaN(h) || h <= 0) err.heightCm = "Enter a valid height";
+    }
+    if (Object.keys(err).length > 0) {
+      setFieldErrors(err);
       return;
     }
+    setFieldErrors({});
+    const a = parseInt(ageTrim, 10);
+    const w = parseFloat(weightTrim);
+    const h = parseFloat(heightTrim);
     if (editing) {
       updateMember.mutate({
         id: editing.id,
@@ -317,10 +340,15 @@ function HouseholdMemberForm({
                 min={0}
                 max={120}
                 value={age}
-                onChange={(e) => setAge(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                onChange={(e) => {
+                  setAge(e.target.value);
+                  if (fieldErrors.age) setFieldErrors((prev) => { const next = { ...prev }; delete next.age; return next; });
+                }}
+                className={`w-full px-3 py-2 border ${fieldErrors.age ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               />
+              {fieldErrors.age && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.age}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -346,11 +374,16 @@ function HouseholdMemberForm({
                 step="0.1"
                 min="0.1"
                 value={weightKg}
-                onChange={(e) => setWeightKg(e.target.value)}
-                required
+                onChange={(e) => {
+                  setWeightKg(e.target.value);
+                  if (fieldErrors.weightKg) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightKg; return next; });
+                }}
                 placeholder="e.g. 70"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${fieldErrors.weightKg ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               />
+              {fieldErrors.weightKg && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightKg}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -359,13 +392,18 @@ function HouseholdMemberForm({
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min={1}
                 value={heightCm}
-                onChange={(e) => setHeightCm(e.target.value)}
-                required
+                onChange={(e) => {
+                  setHeightCm(e.target.value);
+                  if (fieldErrors.heightCm) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightCm; return next; });
+                }}
                 placeholder="e.g. 170"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${fieldErrors.heightCm ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               />
+              {fieldErrors.heightCm && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.heightCm}</p>
+              )}
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
