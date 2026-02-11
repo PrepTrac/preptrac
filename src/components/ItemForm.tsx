@@ -191,10 +191,10 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
             </label>
             <input
               {...register("name", { required: true })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className={`w-full px-3 py-2 border ${errors.name ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600">Name is required</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">Name is required</p>
             )}
           </div>
 
@@ -218,8 +218,11 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                 type="number"
                 step="0.01"
                 {...register("quantity", { required: true, valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${errors.quantity ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               />
+              {errors.quantity && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Quantity is required</p>
+              )}
             </div>
 
             <div>
@@ -229,8 +232,11 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
               <input
                 {...register("unit", { required: true })}
                 placeholder="gallons, rounds, days, etc."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${errors.unit ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               />
+              {errors.unit && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Unit is required</p>
+              )}
             </div>
           </div>
 
@@ -241,7 +247,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
               </label>
               <select
                 {...register("locationId", { required: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${errors.locationId ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               >
                 <option value="">Select location</option>
                 {locations?.map((loc) => (
@@ -250,6 +256,9 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                   </option>
                 ))}
               </select>
+              {errors.locationId && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a location</p>
+              )}
             </div>
 
             <div>
@@ -258,7 +267,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
               </label>
               <select
                 {...register("categoryId", { required: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full px-3 py-2 border ${errors.categoryId ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               >
                 <option value="">Select category</option>
                 {categories?.map((cat) => (
@@ -267,6 +276,9 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                   </option>
                 ))}
               </select>
+              {errors.categoryId && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a category</p>
+              )}
             </div>
           </div>
 
@@ -323,7 +335,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                   required: "Required for food items",
                   min: { value: 1, message: "Enter calories per single unit (e.g. per jar, per can)" },
                 })}
-                className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full max-w-xs px-3 py-2 border ${errors.caloriesPerUnit ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                 placeholder="e.g. 3100"
               />
               {errors.caloriesPerUnit && (
