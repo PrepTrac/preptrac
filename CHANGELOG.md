@@ -6,6 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Forms** — Required fields (marked with *) now show a red border and error message when the user submits without filling them in. Applies to Item form, Location form, Category form, Settings (webhook URL when enabled), and Household member form (Age, Weight, Height).
 - **Item Form** — Reordered fields in add/edit inventory form: Location and Category now appear before Target Quantity and Low Inventory Threshold.
 
 ---
