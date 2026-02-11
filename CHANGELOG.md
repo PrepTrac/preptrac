@@ -8,6 +8,8 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 - **Forms** — Required fields (marked with *) now show a red border and error message when the user submits without filling them in. Applies to Item form, Location form, Category form, Settings (webhook URL when enabled), and Household member form (Age, Weight, Height).
 - **Item Form** — Reordered fields in add/edit inventory form: Location and Category now appear before Target Quantity and Low Inventory Threshold.
+- **Dashboard** — Fuel/energy widget now defaults to generator + battery (total kWh) view instead of gallons.
+- **Settings** — Fuel/energy goals: Total kWh is shown first, above Fuel (gallons), as a read-only computed value (6 kWh/gal × fuel gallons + battery kWh); Fuel and Battery kWh remain editable.
 
 ---
 

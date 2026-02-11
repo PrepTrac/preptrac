@@ -39,7 +39,6 @@ function GoalsSection({
   const [water, setWater] = useState("");
   const [food, setFood] = useState("");
   const [fuelGallons, setFuelGallons] = useState("");
-  const [fuelKwh, setFuelKwh] = useState("");
   const [fuelBatteryKwh, setFuelBatteryKwh] = useState("");
 
   useEffect(() => {
@@ -48,20 +47,28 @@ function GoalsSection({
       setWater(goals.waterGoalGallons != null ? String(goals.waterGoalGallons) : "");
       setFood(goals.foodGoalDays != null ? String(goals.foodGoalDays) : "");
       setFuelGallons(goals.fuelGoalGallons != null ? String(goals.fuelGoalGallons) : "");
-      setFuelKwh(goals.fuelGoalKwh != null ? String(goals.fuelGoalKwh) : "");
       setFuelBatteryKwh(goals.fuelGoalBatteryKwh != null ? String(goals.fuelGoalBatteryKwh) : "");
     }
   }, [goals]);
 
+  const totalKwh =
+    (parseFloat(fuelGallons) || 0) * 6 + (parseFloat(fuelBatteryKwh) || 0);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const gallons = fuelGallons === "" ? null : Number(fuelGallons) || null;
+    const battery = fuelBatteryKwh === "" ? null : Number(fuelBatteryKwh) || null;
+    const computedKwh =
+      gallons == null && battery == null
+        ? null
+        : (gallons ?? 0) * 6 + (battery ?? 0);
     onSave({
       ammoGoalRounds: ammo === "" ? null : Number(ammo) || null,
       waterGoalGallons: water === "" ? null : Number(water) || null,
       foodGoalDays: food === "" ? null : Number(food) || null,
-      fuelGoalGallons: fuelGallons === "" ? null : Number(fuelGallons) || null,
-      fuelGoalKwh: fuelKwh === "" ? null : Number(fuelKwh) || null,
-      fuelGoalBatteryKwh: fuelBatteryKwh === "" ? null : Number(fuelBatteryKwh) || null,
+      fuelGoalGallons: gallons,
+      fuelGoalKwh: computedKwh,
+      fuelGoalBatteryKwh: battery,
     });
   };
 
@@ -133,6 +140,21 @@ function GoalsSection({
             Fuel / energy goals
           </p>
           <div>
+            <label id="goals-fuel-kwh-label" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Total kWh
+            </label>
+            <div
+              id="goals-fuel-kwh"
+              aria-labelledby="goals-fuel-kwh-label"
+              className="w-full px-3 py-2.5 rounded-md bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white font-semibold text-lg tabular-nums"
+            >
+              {totalKwh.toFixed(1)}
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Generator (6 kWh/gal × fuel gallons) + battery kWh.
+            </p>
+          </div>
+          <div>
             <label htmlFor="goals-fuel-gal" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
               Fuel (gallons)
             </label>
@@ -146,24 +168,6 @@ function GoalsSection({
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g. 10"
             />
-          </div>
-          <div>
-            <label htmlFor="goals-fuel-kwh" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-              Total kWh
-            </label>
-            <input
-              id="goals-fuel-kwh"
-              type="number"
-              min={0}
-              step={0.1}
-              value={fuelKwh}
-              onChange={(e) => setFuelKwh(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g. 100"
-            />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Generator (6 kWh/gal × fuel gallons) + battery kWh.
-            </p>
           </div>
           <div>
             <label htmlFor="goals-fuel-battery" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">

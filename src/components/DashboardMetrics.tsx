@@ -90,7 +90,7 @@ type FuelDisplayMode = 0 | 1 | 2; // 0 = gallons, 1 = kWh total, 2 = kWh battery
 
 export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
   const [waterDisplayGallons, setWaterDisplayGallons] = useState(true);
-  const [fuelDisplayMode, setFuelDisplayMode] = useState<FuelDisplayMode>(0);
+  const [fuelDisplayMode, setFuelDisplayMode] = useState<FuelDisplayMode>(1);
 
   const cycleFuelDisplay = () =>
     setFuelDisplayMode((m) => ((m + 1) % 3) as FuelDisplayMode);
