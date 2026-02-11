@@ -6,6 +6,8 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Item Form** — Reordered fields in add/edit inventory form: Location and Category now appear before Target Quantity and Low Inventory Threshold.
+
 ---
 
 ## [0.1.1] — 2026-02-07
