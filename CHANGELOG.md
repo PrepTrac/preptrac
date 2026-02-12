@@ -6,6 +6,8 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Dashboard** — Fuel/energy total now displays as "generator + battery + solar" kWh; the third view (previously "battery only") is now "battery + solar".
+- **Settings** — Fuel/energy goals: the "Battery kWh only" field is now labeled "battery + solar kWh"; Total kWh helper text updated to include solar.
 - **Code quality** — Type-safety and validation improvements: replaced `any` with specific types or `unknown` across app, components, server, and utils; removed non-null assertions (`!`) in favor of guards and optional chaining; added Zod `.strict()` to tRPC input schemas (items, events, notifications); derived `BulkItem` from Prisma `Item` in syncItemEvents; Item form now sends date fields as ISO strings to match API contract.
 - **Forms** — Required fields (marked with *) now show a red border and error message when the user submits without filling them in. Applies to Item form, Location form, Category form, Settings (webhook URL when enabled), and Household member form (Age, Weight, Height).
 - **Item Form** — Reordered fields in add/edit inventory form: Location and Category now appear before Target Quantity and Low Inventory Threshold.

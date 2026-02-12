@@ -86,7 +86,7 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   );
 }
 
-type FuelDisplayMode = 0 | 1 | 2; // 0 = gallons, 1 = kWh total, 2 = kWh battery only
+type FuelDisplayMode = 0 | 1 | 2; // 0 = gallons, 1 = kWh total, 2 = kWh battery + solar
 
 export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
   const [waterDisplayGallons, setWaterDisplayGallons] = useState(true);
@@ -104,9 +104,9 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
   const fuelUnit =
     fuelDisplayMode === 0 ? "gallons" : "kWh";
   const fuelSubtitle =
-    fuelDisplayMode === 1 ? "generator + battery" : fuelDisplayMode === 2 ? "battery only" : undefined;
+    fuelDisplayMode === 1 ? "generator + battery + solar" : fuelDisplayMode === 2 ? "battery + solar" : undefined;
   const fuelAriaNext =
-    fuelDisplayMode === 0 ? "kWh total" : fuelDisplayMode === 1 ? "kWh battery only" : "gallons";
+    fuelDisplayMode === 0 ? "kWh total" : fuelDisplayMode === 1 ? "kWh battery + solar" : "gallons";
 
   const foodDaysValue =
     typeof stats?.totalFoodDays === "number"
