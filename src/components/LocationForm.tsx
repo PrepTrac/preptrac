@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "~/utils/api";
+import { api, type RouterOutputs } from "~/utils/api";
 import { useForm } from "react-hook-form";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
@@ -48,7 +48,7 @@ export default function LocationForm() {
     }
   };
 
-  const handleEdit = (location: any) => {
+  const handleEdit = (location: RouterOutputs["locations"]["getAll"][number]) => {
     setEditingId(location.id);
     reset({
       name: location.name,

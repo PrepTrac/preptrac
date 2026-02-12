@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "~/utils/api";
+import { api, type RouterOutputs } from "~/utils/api";
 import { useForm } from "react-hook-form";
 import { Plus, X, Edit, Trash2 } from "lucide-react";
 
@@ -56,7 +56,7 @@ export default function CategoryForm() {
     }
   };
 
-  const handleEdit = (category: any) => {
+  const handleEdit = (category: RouterOutputs["categories"]["getAll"][number]) => {
     setEditingId(category.id);
     reset({
       name: category.name,

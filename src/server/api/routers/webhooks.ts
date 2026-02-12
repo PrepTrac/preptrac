@@ -67,10 +67,12 @@ export async function checkAndSendExpirationWebhooks(userId: string) {
   });
 
   for (const item of expiringItems) {
+    const expirationDate = item.expirationDate;
+    if (!expirationDate) continue;
     await sendWebhookNotification(userId, {
       type: "expiration",
-      message: `${item.name} expires on ${item.expirationDate!.toLocaleDateString()}`,
-      date: item.expirationDate!.toISOString(),
+      message: `${item.name} expires on ${expirationDate.toLocaleDateString()}`,
+      date: expirationDate.toISOString(),
       itemId: item.id,
       item: {
         id: item.id,
@@ -79,7 +81,7 @@ export async function checkAndSendExpirationWebhooks(userId: string) {
         unit: item.unit,
         category: item.category.name,
         location: item.location.name,
-        expirationDate: item.expirationDate?.toISOString(),
+        expirationDate: expirationDate.toISOString(),
       },
     });
   }

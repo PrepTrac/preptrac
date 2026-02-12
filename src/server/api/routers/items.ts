@@ -31,10 +31,11 @@ export const itemsRouter = createTRPCRouter({
           lowInventory: z.boolean().optional(),
           needsMaintenance: z.boolean().optional(),
         })
+        .strict()
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
+      const where: Prisma.ItemWhereInput = {
         userId: ctx.userId,
       };
 
@@ -98,13 +99,10 @@ export const itemsRouter = createTRPCRouter({
       }
 
       if (lowInventoryIds !== undefined || needsMaintenanceIds !== undefined) {
-        let itemIds: string[];
-        if (lowInventoryIds !== undefined && needsMaintenanceIds !== undefined) {
-          const set = new Set(needsMaintenanceIds);
-          itemIds = lowInventoryIds.filter((id) => set.has(id));
-        } else {
-          itemIds = (lowInventoryIds ?? needsMaintenanceIds)!;
-        }
+        const itemIds: string[] =
+          lowInventoryIds !== undefined && needsMaintenanceIds !== undefined
+            ? lowInventoryIds.filter((id) => new Set(needsMaintenanceIds).has(id))
+            : (lowInventoryIds ?? needsMaintenanceIds ?? []);
         where.id = itemIds.length > 0 ? { in: itemIds } : { in: ["__none__"] };
       }
 
@@ -119,7 +117,7 @@ export const itemsRouter = createTRPCRouter({
     }),
 
   getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string() }).strict())
     .query(async ({ ctx, input }) => {
       return ctx.prisma.item.findFirst({
         where: {
@@ -248,7 +246,7 @@ export const itemsRouter = createTRPCRouter({
         if (!timeSeriesByDate.has(dateKey)) {
           timeSeriesByDate.set(dateKey, []);
         }
-        const dayItems = timeSeriesByDate.get(dateKey)!;
+        const dayItems = timeSeriesByDate.get(dateKey) ?? [];
         const existing = dayItems.find((i) => i.itemId === log.itemId);
         if (existing) {
           if (isAddition) existing.addition += log.quantity;
@@ -365,7 +363,7 @@ export const itemsRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string() }).strict())
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.item.delete({
         where: { id: input.id },
@@ -434,7 +432,7 @@ export const itemsRouter = createTRPCRouter({
       const userId = ctx.userId;
       const isAddition = input.activityType === "addition";
       const results: { itemId: string; success: boolean; error?: string }[] = [];
-      const updates: Prisma.PrismaPromise<any>[] = [];
+      const updates: Prisma.PrismaPromise<unknown>[] = [];
       const items = await ctx.prisma.item.findMany({
         where: {
           id: { in: input.entries.map((e) => e.itemId) },
@@ -524,7 +522,8 @@ export const itemsRouter = createTRPCRouter({
       }[] = [];
 
       for (let r = 0; r < rows.length; r++) {
-        const row = rows[r]!;
+        const row = rows[r];
+        if (!row) continue;
         const rowNum = r + 1;
 
         const name = (row.name ?? "").trim();

@@ -22,7 +22,7 @@ export default function LocationsPage() {
   );
   const { data: consumption, isLoading: consumptionLoading } =
     api.locations.getConsumptionByLocation.useQuery(
-      { locationId: selectedLocationId!, limit: 50 },
+      { locationId: selectedLocationId ?? "", limit: 50 },
       { enabled: !!selectedLocationId }
     );
 

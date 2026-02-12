@@ -39,10 +39,14 @@ export function parseCSVLine(line: string): string[] {
 export function parseCSV(csvContent: string): Record<string, string>[] {
   const lines = csvContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]!);
+  const firstLine = lines[0];
+  if (!firstLine) return [];
+  const headers = parseCSVLine(firstLine);
   const rows: Record<string, string>[] = [];
   for (let r = 1; r < lines.length; r++) {
-    const values = parseCSVLine(lines[r]!);
+    const line = lines[r];
+    if (line === undefined) continue;
+    const values = parseCSVLine(line);
     const row: Record<string, string> = {};
     headers.forEach((h, i) => {
       row[h] = values[i] ?? "";

@@ -93,10 +93,10 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
 
       {(isExpiringSoon || needsMaintenance || isLowInventory) && (
         <div className="mt-3 space-y-1">
-          {isExpiringSoon && (
+          {isExpiringSoon && item.expirationDate && (
             <div className="flex items-center text-sm text-red-600 dark:text-red-400">
               <AlertCircle className="h-4 w-4 mr-1" />
-              Expires: {format(new Date(item.expirationDate!), "MMM d, yyyy")}
+              Expires: {format(new Date(item.expirationDate), "MMM d, yyyy")}
             </div>
           )}
           {needsMaintenance && (
