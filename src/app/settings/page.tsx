@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { api } from "~/utils/api";
+import { api, type RouterInputs } from "~/utils/api";
 import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
 import CategoryForm from "~/components/CategoryForm";
@@ -290,7 +290,7 @@ function SettingsPageContent() {
     }
   }, [notificationSettings, reset]);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: RouterInputs["notifications"]["updateSettings"]) => {
     updateSettings.mutate(data, {
       onSuccess: () => {
         setTestWebhookStatus(null);
@@ -303,10 +303,10 @@ function SettingsPageContent() {
     try {
       const result = await sendTestWebhook.mutateAsync();
       setTestWebhookStatus({ success: true, message: result.message });
-    } catch (error: any) {
+    } catch (error: unknown) {
       setTestWebhookStatus({
         success: false,
-        message: error.message || "Failed to send test webhook",
+        message: error instanceof Error ? error.message : "Failed to send test webhook",
       });
     }
   };
@@ -316,10 +316,10 @@ function SettingsPageContent() {
     try {
       const result = await sendTestEmail.mutateAsync();
       setTestEmailStatus({ success: true, message: result.message });
-    } catch (error: any) {
+    } catch (error: unknown) {
       setTestEmailStatus({
         success: false,
-        message: error.message || "Failed to send test email",
+        message: error instanceof Error ? error.message : "Failed to send test email",
       });
     }
   };

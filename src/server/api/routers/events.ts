@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents } from "~/server/syncItemEvents";
 
@@ -12,10 +13,11 @@ export const eventsRouter = createTRPCRouter({
           type: z.enum(["expiration", "maintenance", "rotation", "battery_replacement"]).optional(),
           completed: z.boolean().optional(),
         })
+        .strict()
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
+      const where: Prisma.EventWhereInput = {
         userId: ctx.userId,
       };
 

@@ -6,6 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Code quality** — Type-safety and validation improvements: replaced `any` with specific types or `unknown` across app, components, server, and utils; removed non-null assertions (`!`) in favor of guards and optional chaining; added Zod `.strict()` to tRPC input schemas (items, events, notifications); derived `BulkItem` from Prisma `Item` in syncItemEvents; Item form now sends date fields as ISO strings to match API contract.
 - **Forms** — Required fields (marked with *) now show a red border and error message when the user submits without filling them in. Applies to Item form, Location form, Category form, Settings (webhook URL when enabled), and Household member form (Age, Weight, Height).
 - **Item Form** — Reordered fields in add/edit inventory form: Location and Category now appear before Target Quantity and Low Inventory Threshold.
 - **Dashboard** — Fuel/energy widget now defaults to generator + battery (total kWh) view instead of gallons.

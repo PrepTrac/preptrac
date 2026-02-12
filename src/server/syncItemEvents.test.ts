@@ -37,11 +37,13 @@ describe("buildEventsToCreate", () => {
       lastMaintenanceDate: last,
     });
     expect(result).toHaveLength(1);
-    expect(result[0]!.type).toBe("maintenance");
-    expect(result[0]!.title).toBe("Test Item maintenance");
+    const event = result[0];
+    expect(event).toBeDefined();
+    expect(event?.type).toBe("maintenance");
+    expect(event?.title).toBe("Test Item maintenance");
     const expectedDate = new Date(last);
     expectedDate.setDate(expectedDate.getDate() + 90);
-    expect(result[0]!.date).toEqual(expectedDate);
+    expect(event?.date).toEqual(expectedDate);
   });
 
   it("creates rotation event when schedule and last date are set", () => {
@@ -52,11 +54,13 @@ describe("buildEventsToCreate", () => {
       lastRotationDate: last,
     });
     expect(result).toHaveLength(1);
-    expect(result[0]!.type).toBe("rotation");
-    expect(result[0]!.title).toBe("Test Item rotation");
+    const event = result[0];
+    expect(event).toBeDefined();
+    expect(event?.type).toBe("rotation");
+    expect(event?.title).toBe("Test Item rotation");
     const expectedDate = new Date(last);
     expectedDate.setDate(expectedDate.getDate() + 30);
-    expect(result[0]!.date).toEqual(expectedDate);
+    expect(event?.date).toEqual(expectedDate);
   });
 
   it("creates all three events when all date fields are set", () => {
@@ -75,9 +79,15 @@ describe("buildEventsToCreate", () => {
     expect(result).toHaveLength(3);
     const types = result.map((e) => e.type).sort();
     expect(types).toEqual(["expiration", "maintenance", "rotation"]);
-    expect(result.find((e) => e.type === "expiration")!.title).toBe("Full Item expires");
-    expect(result.find((e) => e.type === "maintenance")!.title).toBe("Full Item maintenance");
-    expect(result.find((e) => e.type === "rotation")!.title).toBe("Full Item rotation");
+    const exp = result.find((e) => e.type === "expiration");
+    const maint = result.find((e) => e.type === "maintenance");
+    const rot = result.find((e) => e.type === "rotation");
+    expect(exp).toBeDefined();
+    expect(maint).toBeDefined();
+    expect(rot).toBeDefined();
+    expect(exp?.title).toBe("Full Item expires");
+    expect(maint?.title).toBe("Full Item maintenance");
+    expect(rot?.title).toBe("Full Item rotation");
   });
 
   it("does not create maintenance event without lastMaintenanceDate", () => {

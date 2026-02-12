@@ -1,4 +1,10 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Item } from "@prisma/client";
+
+/** Subset of Item used for bulk event sync (from Prisma client, not redefined). */
+type BulkItem = Pick<
+  Item,
+  "id" | "name" | "expirationDate" | "maintenanceInterval" | "lastMaintenanceDate" | "rotationSchedule" | "lastRotationDate"
+>;
 
 const EVENT_TYPES = ["expiration", "maintenance", "rotation"] as const;
 
@@ -121,16 +127,6 @@ export async function syncItemEvents(
     ),
   ]);
 }
-
-type BulkItem = {
-  id: string;
-  name: string;
-  expirationDate: Date | null;
-  maintenanceInterval: number | null;
-  lastMaintenanceDate: Date | null;
-  rotationSchedule: number | null;
-  lastRotationDate: Date | null;
-};
 
 /** Sync calendar events for multiple items in bulk (e.g. after CSV import). */
 export async function syncItemEventsBulk(

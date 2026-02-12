@@ -31,26 +31,28 @@ export const notificationsRouter = createTRPCRouter({
 
   updateSettings: protectedProcedure
     .input(
-      z.object({
-        emailEnabled: z.boolean().optional(),
-        emailExpirationDays: z.number().optional(),
-        emailMaintenanceDays: z.number().optional(),
-        emailRotationDays: z.number().optional(),
-        emailLowInventory: z.boolean().optional(),
-        inAppEnabled: z.boolean().optional(),
-        webhookEnabled: z.boolean().optional(),
-        webhookUrl: z.preprocess((val) => val === "" ? null : val, z.string().url().nullable().optional()),
-        webhookSecret: z.string().nullable().optional(),
-        webhookExpirationDays: z.number().optional(),
-        webhookMaintenanceDays: z.number().optional(),
-        webhookRotationDays: z.number().optional(),
-        webhookLowInventory: z.boolean().optional(),
-        smtpHost: z.string().nullable().optional(),
-        smtpPort: z.preprocess((val) => (val === "" || isNaN(Number(val))) ? null : Number(val), z.number().nullable().optional()),
-        smtpUser: z.string().nullable().optional(),
-        smtpPassword: z.string().nullable().optional(),
-        smtpFrom: z.string().nullable().optional(),
-      })
+      z
+        .object({
+          emailEnabled: z.boolean().optional(),
+          emailExpirationDays: z.number().optional(),
+          emailMaintenanceDays: z.number().optional(),
+          emailRotationDays: z.number().optional(),
+          emailLowInventory: z.boolean().optional(),
+          inAppEnabled: z.boolean().optional(),
+          webhookEnabled: z.boolean().optional(),
+          webhookUrl: z.preprocess((val) => val === "" ? null : val, z.string().url().nullable().optional()),
+          webhookSecret: z.string().nullable().optional(),
+          webhookExpirationDays: z.number().optional(),
+          webhookMaintenanceDays: z.number().optional(),
+          webhookRotationDays: z.number().optional(),
+          webhookLowInventory: z.boolean().optional(),
+          smtpHost: z.string().nullable().optional(),
+          smtpPort: z.preprocess((val) => (val === "" || isNaN(Number(val))) ? null : Number(val), z.number().nullable().optional()),
+          smtpUser: z.string().nullable().optional(),
+          smtpPassword: z.string().nullable().optional(),
+          smtpFrom: z.string().nullable().optional(),
+        })
+        .strict()
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.prisma.notificationSettings.upsert({
@@ -105,7 +107,8 @@ export const notificationsRouter = createTRPCRouter({
         },
       };
       const examples = [testPayload, maintenanceExample];
-      const payload = examples[Math.floor(Math.random() * examples.length)]!;
+      const payload = examples[Math.floor(Math.random() * examples.length)];
+      if (!payload) throw new Error("No example payload");
 
       const result = await sendWebhook(
         settings.webhookUrl,
@@ -164,9 +167,9 @@ export const notificationsRouter = createTRPCRouter({
       });
 
       return { success: true, message: "Test email sent successfully" };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to send test email:", error);
-      throw new Error(error.message || "Failed to send test email");
+      throw new Error(error instanceof Error ? error.message : "Failed to send test email");
     }
   }),
 
@@ -205,10 +208,12 @@ export const notificationsRouter = createTRPCRouter({
       });
 
       for (const item of expiringItems) {
+        const expirationDate = item.expirationDate;
+        if (!expirationDate) continue;
         notifications.push({
           type: "expiration",
-          message: `${item.name} expires on ${item.expirationDate!.toLocaleDateString()}`,
-          date: item.expirationDate!,
+          message: `${item.name} expires on ${expirationDate.toLocaleDateString()}`,
+          date: expirationDate,
           itemId: item.id,
         });
       }

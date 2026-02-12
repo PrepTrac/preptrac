@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { api } from "~/utils/api";
+import { api, type RouterInputs } from "~/utils/api";
 import { X } from "lucide-react";
 
 interface ItemFormProps {
@@ -32,7 +32,7 @@ interface ItemFormData {
 
 export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFormProps) {
   const { data: item } = api.items.getById.useQuery(
-    { id: itemId! },
+    { id: itemId ?? "" },
     { enabled: !!itemId }
   );
   const { data: categories } = api.categories.getAll.useQuery(undefined, {
@@ -124,7 +124,15 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   }, [item, defaultLocationId, reset]);
 
   const onSubmit = (data: ItemFormData) => {
-    const submitData: any = {
+    type CreateInput = RouterInputs["items"]["create"];
+    type UpdateInput = RouterInputs["items"]["update"];
+    /** Payload we build: dates as ISO strings for API, caloriesPerUnit may be null for update. */
+    const submitData: Omit<CreateInput, "expirationDate" | "lastMaintenanceDate" | "lastRotationDate" | "caloriesPerUnit"> & {
+      expirationDate?: string;
+      lastMaintenanceDate?: string;
+      lastRotationDate?: string;
+      caloriesPerUnit?: number | null;
+    } = {
       name: data.name,
       description: data.description,
       quantity: Number(data.quantity),
@@ -145,15 +153,15 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
       submitData.caloriesPerUnit = null;
     }
 
-    // Only include date fields if they have values
+    // Only include date fields if they have values (send ISO strings for API)
     if (data.expirationDate) {
-      submitData.expirationDate = new Date(data.expirationDate);
+      submitData.expirationDate = new Date(data.expirationDate).toISOString();
     }
     if (data.lastMaintenanceDate) {
-      submitData.lastMaintenanceDate = new Date(data.lastMaintenanceDate);
+      submitData.lastMaintenanceDate = new Date(data.lastMaintenanceDate).toISOString();
     }
     if (data.lastRotationDate) {
-      submitData.lastRotationDate = new Date(data.lastRotationDate);
+      submitData.lastRotationDate = new Date(data.lastRotationDate).toISOString();
     }
     if (data.maintenanceInterval) {
       submitData.maintenanceInterval = Number(data.maintenanceInterval);
@@ -163,9 +171,9 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
     }
 
     if (itemId) {
-      updateItem.mutate({ id: itemId, ...submitData });
+      updateItem.mutate({ id: itemId, ...submitData } as UpdateInput);
     } else {
-      createItem.mutate(submitData);
+      createItem.mutate(submitData as CreateInput);
     }
   };
 

@@ -1,5 +1,11 @@
 import { format as formatDateFns } from "date-fns";
 
+/** Row shape for export: has category/location as objects with name, plus CSV_HEADERS fields. */
+type ExportRow = Record<string, unknown> & {
+  category?: { name?: string };
+  location?: { name?: string };
+};
+
 /** User-facing CSV columns: no internal IDs or timestamps. category/location are names for export or to match on import. */
 export const CSV_HEADERS = [
   "name",
@@ -44,7 +50,7 @@ export function downloadCSVTemplate() {
   URL.revokeObjectURL(url);
 }
 
-export function exportToCSV(data: any[], filename: string) {
+export function exportToCSV(data: ExportRow[], filename: string) {
   if (data.length === 0) return;
 
   const csvRows: string[] = [];
@@ -56,11 +62,11 @@ export function exportToCSV(data: any[], filename: string) {
     const values = CSV_HEADERS.map((header) => {
       let val: unknown = "";
       if (header === "category") {
-        val = (row as any).category?.name ?? "";
+        val = row.category?.name ?? "";
       } else if (header === "location") {
-        val = (row as any).location?.name ?? "";
+        val = row.location?.name ?? "";
       } else {
-        val = (row as any)[header] ?? "";
+        val = (row[header] as unknown) ?? "";
       }
       const str = dateHeaders.has(header) ? formatDateForCSV(val) : String(val ?? "");
       const escaped = str.replace(/"/g, '""');
@@ -81,7 +87,7 @@ export function exportToCSV(data: any[], filename: string) {
   document.body.removeChild(link);
 }
 
-export function exportToJSON(data: any[], filename: string) {
+export function exportToJSON(data: ExportRow[], filename: string) {
   const jsonContent = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonContent], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
