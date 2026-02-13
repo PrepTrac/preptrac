@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import {
@@ -35,8 +36,15 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
+                <Image
+                  src="/PrepTrac Logo.png"
+                  alt="PrepTrac"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 object-contain"
+                />
                 PrepTrac
               </Link>
             </div>
