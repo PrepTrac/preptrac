@@ -151,7 +151,7 @@ function GoalsSection({
               {totalKwh.toFixed(1)}
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Generator (6 kWh/gal × fuel gallons) + battery kWh.
+              Generator (6 kWh/gal × fuel gallons) + battery + solar kWh.
             </p>
           </div>
           <div>
@@ -171,7 +171,7 @@ function GoalsSection({
           </div>
           <div>
             <label htmlFor="goals-fuel-battery" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-              Battery kWh only
+              battery + solar kWh
             </label>
             <input
               id="goals-fuel-battery"
@@ -184,7 +184,7 @@ function GoalsSection({
               placeholder="e.g. 50"
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Items in Fuel &amp; Energy with unit &quot;kWh&quot; (e.g. portable battery banks).
+              Items in Fuel &amp; Energy with unit &quot;kWh&quot; (e.g. portable battery banks, solar).
             </p>
           </div>
         </div>

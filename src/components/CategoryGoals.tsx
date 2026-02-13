@@ -148,7 +148,7 @@ function FuelProgressTooltip({
   }
   if (fuelSubProgresses.batteryKwh) {
     lines.push({
-      label: "Battery kWh",
+      label: "Battery + solar kWh",
       current: fuelSubProgresses.batteryKwh.current,
       target: fuelSubProgresses.batteryKwh.target,
       progress: fuelSubProgresses.batteryKwh.progress,
