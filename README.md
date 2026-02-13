@@ -15,7 +15,7 @@ If you like this project and want to support it, [buy me a coffee :)](https://bu
 - **Dashboard** — See total water (click to toggle gallons/days), **fuel & energy** (click to cycle: gallons → total kWh → battery kWh), **days of food** (based on your household’s calorie needs), ammo count, total items, and upcoming expirations or maintenance. **Category Progress** shows goal progress for water, food, ammo, and fuel/energy with units (gallons, days, rounds, kWh) and hover tooltips with category colors. A **Recent activity** section shows consumption and additions with configurable rows (5, 10, 25), pagination, and filters (type and category); use **View all** to open the full Activity page.
 - **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (user-friendly columns; dates in simple form like 1/1/2026).
 - **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name.
-- **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover.
+- **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover, and to show how many **days of water** your inventory can cover.
 - **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and what’s been consumed from that spot.
 - **Activity** — Log when you use something (consume) or add to inventory (e.g. refuel). Your totals update and you can review consumption and additions over time with charts. The **Recent activity** list supports configurable rows per page (5, 10, 25), pagination, and filters by type (All / Used / Added) and category.
 - **Calendar** — Expiration dates, maintenance, and rotations appear automatically so you don’t miss a beat.
@@ -65,15 +65,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll la
 
 ### Dashboard
 
-Your at-a-glance view: **Water** (click to switch between gallons and days), **Fuel / Energy** (click to cycle: gallons → total kWh → battery kWh), **Days of Food** (when you’ve set up household and food calories), ammo count, total items, and lists of what’s expiring or needs maintenance. When Days of Food is based on your household, it will say “Based on your household.” Below the metrics, **Category Progress** shows progress toward your goals (Settings → Goals) for each category, with units (gallons, rounds, days, kWh) and hover tooltips that use each category’s color.
+Your at-a-glance view: **Water** (click to switch between gallons and days), **Fuel / Energy** (click to cycle: gallons → total kWh → battery kWh), **Days of Food** (when you’ve set up household and food calories), ammo count, total items, and lists of what’s expiring or needs maintenance. When Days of Food or Water (in days) is based on your household, it will say “Based on your household.” Below the metrics, **Category Progress** shows progress toward your goals (Settings → Goals) for each category, with units (gallons, rounds, days, kWh) and hover tooltips that use each category’s color.
 
 ### Adding Items
 
 Go to **Inventory** → **Add Item**. Enter name, quantity, unit (e.g. jars, cans, bags), category, and location. For **food** items, enter **Calories per unit** (the calories in one unit—e.g. one jar). That way the app can total your pantry calories and compute days of food. You can also add expiration dates, maintenance reminders, and notes.
 
-### Household and Days of Food
+### Household, Days of Food, and Water in Days
 
 In **Household**, add each family member (name optional, age, sex, weight in kg, height in cm). PrepTrac estimates daily calorie needs and sums them. On the Dashboard, **Days of Food** = your total inventory calories ÷ that household total. Add calories per unit to your food items so the number is meaningful.
+
+**Water in days** uses your household too: the app sums everyone’s body weight (in lbs) and, with your chosen activity level, computes daily water need (oz per lb of body weight → daily gallons). **Water in days** = your total water inventory (gallons) ÷ that daily need. When this is used, the dashboard water metric (in “days” mode) shows “Based on your household.”
 
 ![Household](docs/images/Household.png)
 

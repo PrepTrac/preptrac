@@ -53,7 +53,10 @@ export default function HouseholdPage() {
           Add family members with age, weight, and height. The app uses the Mifflin-St Jeor
           equation to estimate each person&apos;s daily calorie needs. &ldquo;Days of Food&rdquo; on
           the dashboard is then calculated as total food calories in your inventory divided by your
-          household&apos;s combined daily needs.
+          household&apos;s combined daily needs. Your household&apos;s total body weight and the
+          activity level below determine daily water need (oz per lb of body weight → daily gallons).
+          &ldquo;Water in days&rdquo; on the dashboard = your total water inventory (gallons) ÷ that
+          daily need; when available it shows &ldquo;Based on your household.&rdquo;
         </p>
 
         {totalDaily > 0 && (
@@ -62,6 +65,9 @@ export default function HouseholdPage() {
               <Flame className="h-5 w-5" />
               <span className="font-medium">Total daily calorie needs (household): {totalDaily.toLocaleString()} kcal/day</span>
             </div>
+            <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-2">
+              The same household and activity level are used for water-in-days when you view the dashboard water metric in &ldquo;days&rdquo; mode.
+            </p>
           </div>
         )}
 

@@ -6,6 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Docs** — Household section and README now explain how **water in days** is calculated from household members (total weight and activity level → daily water need → inventory gallons ÷ daily gallons). In-app Household page and README “Household, Days of Food, and Water in Days” updated accordingly.
 - **Inventory** — Low-inventory alerts and webhooks only run when a threshold is set (minQuantity &gt; 0). No default of 10 when threshold is 0 or empty; leave empty or 0 for no threshold alerts.
 - **Dashboard** — Fuel/energy total now displays as "generator + battery + solar" kWh; the third view (previously "battery only") is now "battery + solar".
 - **Settings** — Fuel/energy goals: the "Battery kWh only" field is now labeled "battery + solar kWh"; Total kWh helper text updated to include solar.
