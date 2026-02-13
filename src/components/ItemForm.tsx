@@ -386,7 +386,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Alert when quantity falls below this value (defaults to 10 if 0)
+                Leave empty or 0 for no threshold alerts. Otherwise you&apos;ll be alerted when quantity falls below this value.
               </p>
             </div>
           </div>

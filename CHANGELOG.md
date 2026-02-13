@@ -6,6 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Inventory** — Low-inventory alerts and webhooks only run when a threshold is set (minQuantity &gt; 0). No default of 10 when threshold is 0 or empty; leave empty or 0 for no threshold alerts.
 - **Dashboard** — Fuel/energy total now displays as "generator + battery + solar" kWh; the third view (previously "battery only") is now "battery + solar".
 - **Settings** — Fuel/energy goals: the "Battery kWh only" field is now labeled "battery + solar kWh"; Total kWh helper text updated to include solar.
 - **Code quality** — Type-safety and validation improvements: replaced `any` with specific types or `unknown` across app, components, server, and utils; removed non-null assertions (`!`) in favor of guards and optional chaining; added Zod `.strict()` to tRPC input schemas (items, events, notifications); derived `BulkItem` from Prisma `Item` in syncItemEvents; Item form now sends date fields as ISO strings to match API contract.

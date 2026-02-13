@@ -68,23 +68,10 @@ export const itemsRouter = createTRPCRouter({
       let needsMaintenanceIds: string[] | undefined;
 
       if (input?.lowInventory) {
-        const [lowWithThreshold, lowDefault] = await Promise.all([
-          ctx.prisma.$queryRaw<[{ id: string }]>`
-            SELECT id FROM Item WHERE userId = ${ctx.userId} AND minQuantity > 0 AND quantity <= minQuantity
-          `,
-          ctx.prisma.item.findMany({
-            where: {
-              userId: ctx.userId,
-              minQuantity: 0,
-              quantity: { lte: 10 },
-            },
-            select: { id: true },
-          }),
-        ]);
-        lowInventoryIds = [
-          ...lowWithThreshold.map((r) => r.id),
-          ...lowDefault.map((r) => r.id),
-        ];
+        const lowWithThreshold = await ctx.prisma.$queryRaw<[{ id: string }]>`
+          SELECT id FROM Item WHERE userId = ${ctx.userId} AND minQuantity > 0 AND quantity <= minQuantity
+        `;
+        lowInventoryIds = lowWithThreshold.map((r) => r.id);
       }
 
       if (input?.needsMaintenance) {
