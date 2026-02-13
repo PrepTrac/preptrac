@@ -5,9 +5,48 @@ import { useState, useEffect } from "react";
 import Navigation from "~/components/Navigation";
 import { Users, Plus, Pencil, Trash2, Flame } from "lucide-react";
 
+const HOUSEHOLD_UNITS_KEY = "preptrac-household-units";
+
+function kgToLb(kg: number): number {
+  return Math.round(kg * 2.20462 * 10) / 10;
+}
+function lbToKg(lb: number): number {
+  return lb / 2.20462;
+}
+function cmToFtIn(cm: number): { ft: number; in: number } {
+  const totalInches = Math.round(cm / 2.54);
+  const ft = Math.floor(totalInches / 12);
+  const inVal = totalInches % 12;
+  return { ft, in: inVal };
+}
+function ftInToCm(ft: number, inVal: number): number {
+  return (ft * 12 + inVal) * 2.54;
+}
+
+export type HouseholdUnits = "us" | "metric";
+
+function getStoredUnits(): HouseholdUnits {
+  if (typeof window === "undefined") return "metric";
+  const stored = window.localStorage.getItem(HOUSEHOLD_UNITS_KEY);
+  if (stored === "us" || stored === "metric") return stored;
+  return "metric";
+}
+
 export default function HouseholdPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [units, setUnits] = useState<HouseholdUnits>("metric");
+
+  useEffect(() => {
+    setUnits(getStoredUnits());
+  }, []);
+
+  const setUnitsAndStore = (next: HouseholdUnits) => {
+    setUnits(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(HOUSEHOLD_UNITS_KEY, next);
+    }
+  };
 
   const { data: members, isLoading } = api.household.getAll.useQuery();
   const { data: totalCal } = api.household.getTotalDailyCalories.useQuery();
@@ -132,19 +171,37 @@ export default function HouseholdPage() {
           </div>
         </section>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Family members</h2>
-          <button
-            type="button"
-            onClick={() => {
-              setEditingId(null);
-              setShowForm(true);
-            }}
-            className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add member
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex rounded-md shadow-sm border border-gray-300 dark:border-gray-600 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setUnitsAndStore("us")}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium border-r border-gray-300 dark:border-gray-600 ${units === "us" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200" : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`}
+              >
+                US (lb, ft)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnitsAndStore("metric")}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium ${units === "metric" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200" : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`}
+              >
+                Rest of world (kg, cm)
+              </button>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(null);
+                setShowForm(true);
+              }}
+              className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add member
+            </button>
+          </div>
         </div>
 
         <ul className="space-y-3">
@@ -158,7 +215,15 @@ export default function HouseholdPage() {
                   {m.name || "Unnamed"}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400 ml-2">
-                  {m.age}y, {m.weightKg} kg, {m.heightCm} cm, {m.sex}
+                  {m.age}y,{" "}
+                  {units === "metric"
+                    ? `${m.weightKg} kg, ${m.heightCm} cm`
+                    : (() => {
+                        const lb = kgToLb(m.weightKg);
+                        const { ft, in: inVal } = cmToFtIn(m.heightCm);
+                        return `${lb} lb, ${ft} ft ${inVal} in`;
+                      })()}
+                  , {m.sex}
                 </span>
                 <span className="block text-sm text-indigo-600 dark:text-indigo-400 mt-1">
                   ~{m.dailyCalories} kcal/day
@@ -196,13 +261,17 @@ export default function HouseholdPage() {
         {members?.length === 0 && !showForm && (
           <p className="text-gray-500 dark:text-gray-400 py-6">
             No family members yet. Add members to get an accurate &ldquo;Days of Food&rdquo; on the
-            dashboard. Enter weight in kg and height in cm (e.g. 70 kg, 170 cm).
+            dashboard.{" "}
+            {units === "metric"
+              ? "Enter weight in kg and height in cm (e.g. 70 kg, 170 cm)."
+              : "Enter weight in lb and height in ft and in (e.g. 154 lb, 5 ft 7 in)."}
           </p>
         )}
 
         {showForm && (
           <HouseholdMemberForm
             memberId={editingId}
+            units={units}
             onClose={() => {
               setShowForm(false);
               setEditingId(null);
@@ -221,12 +290,18 @@ export default function HouseholdPage() {
   );
 }
 
+const HEIGHT_FT_MIN = 2;
+const HEIGHT_FT_MAX = 7;
+const HEIGHT_IN_MAX = 11;
+
 function HouseholdMemberForm({
   memberId,
+  units,
   onClose,
   onSuccess,
 }: {
   memberId: string | null;
+  units: HouseholdUnits;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -234,6 +309,9 @@ function HouseholdMemberForm({
   const [age, setAge] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [heightCm, setHeightCm] = useState("");
+  const [weightLb, setWeightLb] = useState("");
+  const [heightFt, setHeightFt] = useState(5);
+  const [heightIn, setHeightIn] = useState(7);
   const [sex, setSex] = useState<"male" | "female">("male");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -247,12 +325,19 @@ function HouseholdMemberForm({
       setAge(String(editing.age));
       setWeightKg(String(editing.weightKg));
       setHeightCm(String(editing.heightCm));
+      setWeightLb(String(kgToLb(editing.weightKg)));
+      const { ft, in: inVal } = cmToFtIn(editing.heightCm);
+      setHeightFt(ft);
+      setHeightIn(inVal);
       setSex(editing.sex as "male" | "female");
     } else {
       setName("");
       setAge("");
       setWeightKg("");
       setHeightCm("");
+      setWeightLb("");
+      setHeightFt(5);
+      setHeightIn(7);
       setSex("male");
     }
   }, [editing]);
@@ -272,46 +357,65 @@ function HouseholdMemberForm({
     e.preventDefault();
     const err: Record<string, string> = {};
     const ageTrim = age.trim();
-    const weightTrim = weightKg.trim();
-    const heightTrim = heightCm.trim();
     if (!ageTrim) err.age = "Age is required";
     else {
       const a = parseInt(ageTrim, 10);
       if (Number.isNaN(a) || a < 0 || a > 120) err.age = "Enter a valid age (0–120)";
     }
-    if (!weightTrim) err.weightKg = "Weight is required";
-    else {
-      const w = parseFloat(weightTrim);
-      if (Number.isNaN(w) || w <= 0) err.weightKg = "Enter a valid weight";
+
+    if (units === "metric") {
+      const weightTrim = weightKg.trim();
+      const heightTrim = heightCm.trim();
+      if (!weightTrim) err.weightKg = "Weight is required";
+      else {
+        const w = parseFloat(weightTrim);
+        if (Number.isNaN(w) || w <= 0) err.weightKg = "Enter a valid weight";
+      }
+      if (!heightTrim) err.heightCm = "Height is required";
+      else {
+        const h = parseFloat(heightTrim);
+        if (Number.isNaN(h) || h <= 0) err.heightCm = "Enter a valid height";
+      }
+    } else {
+      const weightTrim = weightLb.trim();
+      if (!weightTrim) err.weightLb = "Weight is required";
+      else {
+        const w = parseFloat(weightTrim);
+        if (Number.isNaN(w) || w <= 0) err.weightLb = "Enter a valid weight";
+      }
+      const totalIn = heightFt * 12 + heightIn;
+      if (totalIn <= 0) err.heightFt = "Enter a valid height";
     }
-    if (!heightTrim) err.heightCm = "Height is required";
-    else {
-      const h = parseFloat(heightTrim);
-      if (Number.isNaN(h) || h <= 0) err.heightCm = "Enter a valid height";
-    }
+
     if (Object.keys(err).length > 0) {
       setFieldErrors(err);
       return;
     }
     setFieldErrors({});
     const a = parseInt(ageTrim, 10);
-    const w = parseFloat(weightTrim);
-    const h = parseFloat(heightTrim);
+    const weightKgVal =
+      units === "metric"
+        ? parseFloat(weightKg.trim())
+        : lbToKg(parseFloat(weightLb.trim()));
+    const heightCmVal =
+      units === "metric"
+        ? parseFloat(heightCm.trim())
+        : ftInToCm(heightFt, heightIn);
     if (editing) {
       updateMember.mutate({
         id: editing.id,
         name: name.trim() || null,
         age: a,
-        weightKg: w,
-        heightCm: h,
+        weightKg: weightKgVal,
+        heightCm: heightCmVal,
         sex,
       });
     } else {
       createMember.mutate({
         name: name.trim() || undefined,
         age: a,
-        weightKg: w,
-        heightCm: h,
+        weightKg: weightKgVal,
+        heightCm: heightCmVal,
         sex,
       });
     }
@@ -370,50 +474,120 @@ function HouseholdMemberForm({
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Weight (kg) *
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={weightKg}
-                onChange={(e) => {
-                  setWeightKg(e.target.value);
-                  if (fieldErrors.weightKg) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightKg; return next; });
-                }}
-                placeholder="e.g. 70"
-                className={`w-full px-3 py-2 border ${fieldErrors.weightKg ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              />
-              {fieldErrors.weightKg && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightKg}</p>
-              )}
+          {units === "metric" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Weight (kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={weightKg}
+                  onChange={(e) => {
+                    setWeightKg(e.target.value);
+                    if (fieldErrors.weightKg) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightKg; return next; });
+                  }}
+                  placeholder="e.g. 70"
+                  className={`w-full px-3 py-2 border ${fieldErrors.weightKg ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                />
+                {fieldErrors.weightKg && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightKg}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Height (cm) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min={1}
+                  value={heightCm}
+                  onChange={(e) => {
+                    setHeightCm(e.target.value);
+                    if (fieldErrors.heightCm) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightCm; return next; });
+                  }}
+                  placeholder="e.g. 170"
+                  className={`w-full px-3 py-2 border ${fieldErrors.heightCm ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                />
+                {fieldErrors.heightCm && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.heightCm}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Height (cm) *
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min={1}
-                value={heightCm}
-                onChange={(e) => {
-                  setHeightCm(e.target.value);
-                  if (fieldErrors.heightCm) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightCm; return next; });
-                }}
-                placeholder="e.g. 170"
-                className={`w-full px-3 py-2 border ${fieldErrors.heightCm ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              />
-              {fieldErrors.heightCm && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.heightCm}</p>
-              )}
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Weight (lb) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={weightLb}
+                  onChange={(e) => {
+                    setWeightLb(e.target.value);
+                    if (fieldErrors.weightLb) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightLb; return next; });
+                  }}
+                  placeholder="e.g. 154"
+                  className={`w-full px-3 py-2 border ${fieldErrors.weightLb ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                />
+                {fieldErrors.weightLb && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightLb}</p>
+                )}
+              </div>
+              <div className="flex gap-2 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Height (ft) *
+                  </label>
+                  <select
+                    value={heightFt}
+                    onChange={(e) => {
+                      setHeightFt(Number(e.target.value));
+                      if (fieldErrors.heightFt) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightFt; return next; });
+                    }}
+                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  >
+                    {Array.from({ length: HEIGHT_FT_MAX - HEIGHT_FT_MIN + 1 }, (_, i) => HEIGHT_FT_MIN + i).map((ft) => (
+                      <option key={ft} value={ft}>
+                        {ft} ft
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Inches *
+                  </label>
+                  <select
+                    value={heightIn}
+                    onChange={(e) => {
+                      setHeightIn(Number(e.target.value));
+                      if (fieldErrors.heightFt) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightFt; return next; });
+                    }}
+                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  >
+                    {Array.from({ length: HEIGHT_IN_MAX + 1 }, (_, i) => i).map((inVal) => (
+                      <option key={inVal} value={inVal}>
+                        {inVal} in
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {fieldErrors.heightFt && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 col-span-2">{fieldErrors.heightFt}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Use metric: weight in kilograms, height in centimeters. (1 lb ≈ 0.45 kg, 1 in ≈ 2.54 cm)
+            {units === "metric"
+              ? "Use metric: weight in kilograms, height in centimeters. (1 lb ≈ 0.45 kg, 1 in ≈ 2.54 cm)"
+              : "Using US units: weight in lb, height in ft and in."}
           </p>
           <div className="flex gap-2 pt-2">
             <button
