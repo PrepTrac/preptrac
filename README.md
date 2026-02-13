@@ -50,9 +50,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll la
 
 - **Port**: The app listens on **8008** inside the container; `docker-compose.yml` maps `8008:8008`. Change the host port in `ports` if you need a different external port.
 - **Data**: The SQLite database is stored in a Docker volume (`preptrac-data`). It persists across `docker compose down` and `docker compose up -d`. To wipe data and start fresh: `docker compose down -v` then `docker compose up -d`.
-- **Updates**: Pull the latest code, then rebuild and restart: `docker compose up -d --build`. Your database and volume are unchanged; only the app image is replaced.
-- **Update settings (version upgrades)**: When upgrading to a new version, check release notes for new or changed environment variables. If the app or `docker-compose.yml` adds options (e.g. new env vars), set them in your `.env` or in the `environment` section of `docker-compose.yml`.
 - **Logs**: `docker compose logs -f preptrac` to follow container logs.
+
+#### Updating PrepTrac
+
+PrepTrac’s Docker image is **built locally** from source, not pulled from a registry. To update to a new version:
+
+1. **Stop the app** (optional but clean):
+   ```bash
+   docker compose down
+   ```
+
+2. **Pull the latest code** from this repo (or download the new release and extract it over your existing install):
+   ```bash
+   git pull
+   ```
+
+3. **Rebuild and start**:
+   ```bash
+   docker compose up -d --build
+   ```
+
+Your database and volume (`preptrac-data`) are **not touched**; only the app image is rebuilt and the container is replaced. When upgrading, check [CHANGELOG.md](./CHANGELOG.md) and release notes for new or changed environment variables. If `docker-compose.yml` or the app adds options (e.g. new env vars), add them to your `environment` section or `.env` before running `docker compose up -d --build`.
 
 **First time?**
 
