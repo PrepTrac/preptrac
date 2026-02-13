@@ -6,6 +6,7 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **Household** — Toggle between US (lb, ft/in) and metric (kg, cm) for weight and height. Unit preference is stored in the browser and applies to the family members list and add/edit form; data is still stored in metric.
 - **Docs** — Household section and README now explain how **water in days** is calculated from household members (total weight and activity level → daily water need → inventory gallons ÷ daily gallons). In-app Household page and README “Household, Days of Food, and Water in Days” updated accordingly.
 - **Inventory** — Low-inventory alerts and webhooks only run when a threshold is set (minQuantity &gt; 0). No default of 10 when threshold is 0 or empty; leave empty or 0 for no threshold alerts.
 - **Dashboard** — Fuel/energy total now displays as "generator + battery + solar" kWh; the third view (previously "battery only") is now "battery + solar".
