@@ -5,6 +5,30 @@ import { useForm } from "react-hook-form";
 import { api, type RouterInputs } from "~/utils/api";
 import { X } from "lucide-react";
 
+/** Predefined units for dropdown. Use exact strings so dashboard/goals matching works (e.g. gallons, bottles, rounds, kWh). */
+const POPULAR_UNITS = [
+  "gallons",
+  "bottles",
+  "rounds",
+  "kWh",
+  "cans",
+  "lbs",
+  "meals",
+  "jars",
+  "packets",
+  "tablets",
+  "kit",
+  "boxes",
+  "rolls",
+  "units",
+  "sheets",
+  "tanks",
+  "count",
+  "days",
+] as const;
+
+const OTHER_UNIT_SENTINEL = "__other__";
+
 interface ItemFormProps {
   itemId?: string | null;
   defaultLocationId?: string;
@@ -15,7 +39,10 @@ interface ItemFormData {
   name: string;
   description?: string;
   quantity: number;
+  /** Either a value from POPULAR_UNITS or OTHER_UNIT_SENTINEL when "Other" is selected. */
   unit: string;
+  /** Custom unit text when unit === OTHER_UNIT_SENTINEL. */
+  unitCustom?: string;
   categoryId: string;
   locationId: string;
   expirationDate?: string;
@@ -66,20 +93,27 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
     formState: { errors },
     reset,
     watch,
+    setValue,
+    setError,
+    clearErrors,
   } = useForm<ItemFormData>();
 
   const selectedCategoryId = watch("categoryId");
   const selectedUnit = watch("unit");
+  const unitCustom = watch("unitCustom");
+  /** Effective unit for goal matching: predefined value or custom when "Other" is selected. */
+  const effectiveUnit =
+    selectedUnit === OTHER_UNIT_SENTINEL ? (unitCustom ?? "").trim() : (selectedUnit ?? "");
   const category = categories?.find((c) => c.id === selectedCategoryId);
   const categoryNameLower = category?.name.toLowerCase() ?? "";
   const isFoodCategory = categoryNameLower.includes("food");
   const isAmmoCategory = categoryNameLower.includes("ammo");
   const isWaterCategory = categoryNameLower.includes("water");
   const isFuelCategory = categoryNameLower.includes("fuel") || categoryNameLower.includes("energy");
-  const unitIsRounds = /round(s)?/i.test(selectedUnit ?? "");
-  const unitIsGallons = /gallon(s)?/i.test(selectedUnit ?? "");
-  const unitIsBottles = /bottle(s)?/i.test(selectedUnit ?? "");
-  const unitIsKwh = /kwh/i.test(selectedUnit ?? "");
+  const unitIsRounds = /round(s)?/i.test(effectiveUnit);
+  const unitIsGallons = /gallon(s)?/i.test(effectiveUnit);
+  const unitIsBottles = /bottle(s)?/i.test(effectiveUnit);
+  const unitIsKwh = /kwh/i.test(effectiveUnit);
   const targetDisabledByGoal =
     (isAmmoCategory && unitIsRounds && goals?.ammoGoalRounds != null && goals.ammoGoalRounds > 0) ||
     (isWaterCategory && (unitIsGallons || unitIsBottles) && goals?.waterGoalGallons != null && goals.waterGoalGallons > 0) ||
@@ -90,11 +124,13 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   useEffect(() => {
     if (item) {
       const itemWithCal = item as { caloriesPerUnit?: number | null };
+      const isPopular = POPULAR_UNITS.includes(item.unit as (typeof POPULAR_UNITS)[number]);
       reset({
         name: item.name,
         description: item.description ?? "",
         quantity: item.quantity,
-        unit: item.unit,
+        unit: isPopular ? item.unit : OTHER_UNIT_SENTINEL,
+        unitCustom: isPopular ? "" : item.unit,
         categoryId: item.categoryId,
         locationId: item.locationId,
         minQuantity: item.minQuantity ?? 0,
@@ -107,6 +143,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
         description: "",
         quantity: 0,
         unit: "",
+        unitCustom: "",
         categoryId: "",
         locationId: defaultLocationId,
         expirationDate: "",
@@ -124,6 +161,14 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
   }, [item, defaultLocationId, reset]);
 
   const onSubmit = (data: ItemFormData) => {
+    const effectiveUnit =
+      data.unit === OTHER_UNIT_SENTINEL ? (data.unitCustom ?? "").trim() : data.unit;
+    if (data.unit === OTHER_UNIT_SENTINEL && !effectiveUnit) {
+      setError("unitCustom", { type: "required", message: "Enter a unit (e.g. bottles, gallons)" });
+      return;
+    }
+    clearErrors("unitCustom");
+
     type CreateInput = RouterInputs["items"]["create"];
     type UpdateInput = RouterInputs["items"]["update"];
     /** Payload we build: dates as ISO strings for API, caloriesPerUnit may be null for update. */
@@ -136,7 +181,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
       name: data.name,
       description: data.description,
       quantity: Number(data.quantity),
-      unit: data.unit,
+      unit: effectiveUnit,
       categoryId: data.categoryId,
       locationId: data.locationId,
       notes: data.notes,
@@ -237,13 +282,30 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Unit *
               </label>
-              <input
+              <select
                 {...register("unit", { required: true })}
-                placeholder="gallons, rounds, days, etc."
                 className={`w-full px-3 py-2 border ${errors.unit ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              />
+              >
+                <option value="">Select unit</option>
+                {POPULAR_UNITS.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+                <option value={OTHER_UNIT_SENTINEL}>Other (type your own)</option>
+              </select>
+              {selectedUnit === OTHER_UNIT_SENTINEL && (
+                <input
+                  {...register("unitCustom")}
+                  placeholder="e.g. bottles, gallons, kWh"
+                  className={`mt-2 w-full px-3 py-2 border ${errors.unitCustom ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                />
+              )}
               {errors.unit && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Unit is required</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a unit</p>
+              )}
+              {errors.unitCustom && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.unitCustom.message}</p>
               )}
             </div>
           </div>
