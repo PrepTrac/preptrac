@@ -6,6 +6,10 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] — 2026-02-13
+
 - **Household** — Toggle between US (lb, ft/in) and metric (kg, cm) for weight and height. Unit preference is stored in the browser and applies to the family members list and add/edit form; data is still stored in metric.
 - **Docs** — Household section and README now explain how **water in days** is calculated from household members (total weight and activity level → daily water need → inventory gallons ÷ daily gallons). In-app Household page and README “Household, Days of Food, and Water in Days” updated accordingly.
 - **Inventory** — Low-inventory alerts and webhooks only run when a threshold is set (minQuantity &gt; 0). No default of 10 when threshold is 0 or empty; leave empty or 0 for no threshold alerts.
@@ -41,8 +45,9 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 - **Docker** — `docker compose up -d` with persistent SQLite volume; app on port 8008.
 - **Docs** — README, QUICKSTART, PROJECT_SUMMARY, ARCHITECTURE, WEBHOOKS.
 
-[Unreleased]: https://github.com/your-username/PrepTrac/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/your-username/PrepTrac/releases/tag/v0.1.1
-[0.1.0]: https://github.com/your-username/PrepTrac/releases/tag/v0.1.0
+[Unreleased]: https://github.com/PrepTrac/preptrac/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/PrepTrac/preptrac/releases/tag/v0.2.0
+[0.1.1]: https://github.com/PrepTrac/preptrac/releases/tag/v0.1.1
+[0.1.0]: https://github.com/PrepTrac/preptrac/releases/tag/v0.1.0
 
 
