@@ -158,10 +158,10 @@ export async function checkAndSendLowInventoryWebhooks(userId: string) {
     return;
   }
 
-  const lowInventoryItems = await prisma.item.findMany({
+  const itemsWithThreshold = await prisma.item.findMany({
     where: {
       userId,
-      quantity: { lte: 10 },
+      minQuantity: { gt: 0 },
     },
     include: {
       category: true,
@@ -169,7 +169,8 @@ export async function checkAndSendLowInventoryWebhooks(userId: string) {
     },
   });
 
-  for (const item of lowInventoryItems) {
+  for (const item of itemsWithThreshold) {
+    if (item.quantity > item.minQuantity) continue;
     await sendWebhookNotification(userId, {
       type: "low_inventory",
       message: `${item.name} is running low (${item.quantity} ${item.unit} remaining)`,

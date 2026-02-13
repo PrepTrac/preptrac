@@ -57,9 +57,9 @@ Sent for battery replacement events.
 **Trigger**: Manual event creation or scheduled battery replacement.
 
 ### Low Inventory
-Sent when item quantity falls below threshold (default: 10).
+Sent when an item has a low-inventory threshold set and its quantity is at or below that threshold.
 
-**Trigger**: Item quantity ≤ 10 (or custom threshold).
+**Trigger**: Item has Low Inventory Threshold &gt; 0 and quantity ≤ threshold. Items with threshold 0 or empty do not trigger this webhook.
 
 ## Security: Signature Verification
 
