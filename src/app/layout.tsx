@@ -1,6 +1,7 @@
 import "~/styles/globals.css";
 import { Inter } from "next/font/google";
 import { Providers } from "./providers";
+import Footer from "~/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,8 +20,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans ${inter.variable}`}>
-        <Providers>{children}</Providers>
+      <body className={`font-sans ${inter.variable} flex min-h-screen flex-col`}>
+        <div className="flex-1">
+          <Providers>{children}</Providers>
+        </div>
+        <Footer />
       </body>
     </html>
   );
