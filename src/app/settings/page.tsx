@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api, type RouterInputs } from "~/utils/api";
-import Navigation from "~/components/Navigation";
 import { useForm } from "react-hook-form";
 import CategoryForm from "~/components/CategoryForm";
 import LocationForm from "~/components/LocationForm";
@@ -325,9 +324,7 @@ function SettingsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
           Settings
         </h1>
@@ -833,20 +830,16 @@ function SettingsPageContent() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }
 
 function SettingsPageFallback() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
-        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
-      </main>
-    </div>
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
+      <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+    </main>
   );
 }
 

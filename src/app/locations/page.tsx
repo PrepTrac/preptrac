@@ -2,7 +2,6 @@
 
 import { api } from "~/utils/api";
 import { useState } from "react";
-import Navigation from "~/components/Navigation";
 import ItemCard from "~/components/ItemCard";
 import ItemForm from "~/components/ItemForm";
 import { MapPin, Package, History, Edit, ChevronDown } from "lucide-react";
@@ -37,9 +36,7 @@ export default function LocationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
           <MapPin className="h-8 w-8 text-emerald-500" />
           Locations
@@ -215,7 +212,6 @@ export default function LocationsPage() {
             }}
           />
         )}
-      </main>
-    </div>
+    </main>
   );
 }

@@ -5,10 +5,7 @@ import { useEffect } from "react";
 import DashboardMetrics from "~/components/DashboardMetrics";
 import CategoryGoals from "~/components/CategoryGoals";
 import UpcomingEvents from "~/components/UpcomingEvents";
-import RecentActivityList from "~/components/RecentActivityList";
-import Navigation from "~/components/Navigation";
-
-const SYNC_STORAGE_KEY = "preptrac_events_last_sync";
+import RecentActivityList from "~/components/RecentActivityList";const SYNC_STORAGE_KEY = "preptrac_events_last_sync";
 const SYNC_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
 export default function DashboardPage() {
@@ -42,10 +39,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
           Dashboard
         </h1>
         <DashboardMetrics stats={stats} />
@@ -64,8 +59,7 @@ export default function DashboardPage() {
             activityPageHref="/activity"
           />
         </div>
-      </main>
-    </div>
+    </main>
   );
 }
 
