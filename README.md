@@ -91,7 +91,6 @@ Your at-a-glance view: **Water** (click to switch between gallons and days), **F
 Go to **Inventory** → **Add Item**. Enter name, quantity, unit (e.g. jars, cans, bags), category, and location. For **food** items, enter **Calories per unit** (the calories in one unit—e.g. one jar). That way the app can total your pantry calories and compute days of food. You can also add expiration dates, maintenance reminders, and notes.
 
 ### Household, Days of Food, and Water in Days
-
 In **Household**, add each family member (name optional, age, sex, weight in kg, height in cm). PrepTrac estimates daily calorie needs and sums them. On the Dashboard, **Days of Food** = your total inventory calories ÷ that household total. Add calories per unit to your food items so the number is meaningful.
 
 **Water in days** uses your household too: the app sums everyone’s body weight (in lbs) and, with your chosen activity level, computes daily water need (oz per lb of body weight → daily gallons). **Water in days** = your total water inventory (gallons) ÷ that daily need. When this is used, the dashboard water metric (in “days” mode) shows “Based on your household.”
