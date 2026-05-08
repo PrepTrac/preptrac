@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { api } from "~/utils/api";
 import { useMemo, useState } from "react";
-import Navigation from "~/components/Navigation";
 import { Activity, Plus, MinusCircle, Trash2, BarChart3 } from "lucide-react";
 import RecentActivityList from "~/components/RecentActivityList";
 import { format, subDays, eachDayOfInterval } from "date-fns";
@@ -174,9 +173,7 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full max-w-7xl">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -471,7 +468,6 @@ export default function ActivityPage() {
           showTitle={true}
           compact={false}
         />
-      </main>
-    </div>
+    </main>
   );
 }
