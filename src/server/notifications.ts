@@ -22,7 +22,7 @@
  * endpoint, which is correct for single-replica and multi-replica alike.
  */
 
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "~/generated/prisma/client";
 import { prisma } from "~/server/db";
 import { sendWebhook, type WebhookPayload } from "~/utils/webhooks";
 import { formatCSVDate } from "~/utils/dates";
@@ -214,6 +214,17 @@ export function collectDueAlerts(
   ];
 }
 
+/**
+ * Retry policy for transient delivery failures (SMTP down, webhook 5xx/timeout).
+ *
+ * A failed delivery is retried on a later run only after {@link RETRY_WINDOW_MS}
+ * has elapsed and fewer than {@link MAX_RETRY_ATTEMPTS} attempts have been made.
+ * Successful deliveries are never retried — the NotificationLog dedup key still
+ * guarantees at-most-once delivery per (user, channel, type, item, event date).
+ */
+export const MAX_RETRY_ATTEMPTS = 5;
+export const RETRY_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
 /** Build the unique dedup key that makes delivery idempotent. */
 export function dedupKey(
   userId: string,
@@ -294,6 +305,8 @@ async function sendEmailAlert(
 export interface SendOutcome {
   sent: number;
   skipped: number;
+  /** Deliveries that re-attempted a previously-failed alert this run. */
+  retried: number;
   errors: string[];
 }
 
@@ -302,8 +315,11 @@ export interface SendOutcome {
  * channel, and delivers each at most once via the NotificationLog dedup key.
  *
  * Claim-first: a `NotificationLog` row is created *before* delivery. If the
- * unique key already exists (Prisma P2002) the alert was already delivered, so
- * it is skipped — even under overlapping/retried runs.
+ * unique key already exists (Prisma P2002), a prior run already created it: a
+ * prior *success* is skipped (dedup holds), while a prior *failure* is
+ * re-attempted once the retry window elapses and the attempt cap has not been
+ * reached (see MAX_RETRY_ATTEMPTS / RETRY_WINDOW_MS). This is safe under
+ * overlapping/retried runs — successfully delivered alerts are never repeated.
  */
 export async function runScheduledNotifications(
   client: PrismaClient = prisma,
@@ -312,6 +328,7 @@ export async function runScheduledNotifications(
   const errors: string[] = [];
   let sent = 0;
   let skipped = 0;
+  let retried = 0;
 
   const users = await client.user.findMany({ select: { id: true, email: true } });
 
@@ -373,9 +390,12 @@ export async function runScheduledNotifications(
       for (const alert of alerts) {
         const key = dedupKey(user.id, channel, alert);
 
-        // Claim-first: insert the log row; P2002 means already delivered.
+        // Claim-first: insert the log row; P2002 means a row for this key already
+        // exists (a prior attempt — success or failure — or a concurrent run).
+        let log: { success: boolean; attemptCount: number; sentAt: Date } | null;
+        let isRetry = false;
         try {
-          await client.notificationLog.create({
+          log = await client.notificationLog.create({
             data: {
               userId: user.id,
               dedupKey: key,
@@ -384,16 +404,40 @@ export async function runScheduledNotifications(
               itemId: alert.itemId,
               message: alert.message,
               success: false, // marked true only after successful delivery
+              attemptCount: 0,
             },
           });
         } catch (e) {
-          if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-            skipped++;
-            continue;
+          if (
+            e instanceof Prisma.PrismaClientKnownRequestError &&
+            e.code === "P2002"
+          ) {
+            // Row exists from a previous run. Re-attempt only a prior *failure*,
+            // and only once the retry window has elapsed and under the attempt cap.
+            // A prior success (or an ineligible/in-flight failure) is skipped, so
+            // dedup still holds for successfully delivered alerts.
+            log = await client.notificationLog.findUnique({
+              where: { dedupKey: key },
+            });
+            if (!log || log.success) {
+              skipped++;
+              continue;
+            }
+            const elapsed = now.getTime() - log.sentAt.getTime();
+            const eligible =
+              log.attemptCount < MAX_RETRY_ATTEMPTS &&
+              elapsed >= RETRY_WINDOW_MS;
+            if (!eligible) {
+              skipped++;
+              continue;
+            }
+            isRetry = true;
+          } else {
+            throw e;
           }
-          throw e;
         }
 
+        const attemptNumber = log.attemptCount + 1;
         const detail = itemById.get(alert.itemId);
         let outcome: { success: boolean; error?: string };
         if (channel === "email") {
@@ -442,11 +486,14 @@ export async function runScheduledNotifications(
           data: {
             success: outcome.success,
             error: outcome.success ? null : (outcome.error ?? "Unknown error"),
+            attemptCount: attemptNumber,
+            sentAt: now,
           },
         });
 
         if (outcome.success) {
           sent++;
+          if (isRetry) retried++;
         } else {
           errors.push(
             `${channel}/${alert.type}/${alert.itemId}: ${outcome.error ?? "unknown"}`,
@@ -456,5 +503,5 @@ export async function runScheduledNotifications(
     }
   }
 
-  return { sent, skipped, errors, processedUsers: users.length };
+  return { sent, skipped, retried, errors, processedUsers: users.length };
 }

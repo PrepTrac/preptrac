@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import QRCode from "qrcode";
+import { generateQRCode } from "~/utils/qrcode";
+import { logger } from "~/server/logger";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -10,18 +11,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const qrDataUrl = await QRCode.toDataURL(data, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    });
+    const qrDataUrl = await generateQRCode(data);
     return NextResponse.json({ qrCode: qrDataUrl });
   } catch (error) {
-    console.error("Error generating QR code:", error);
+    logger.error("Failed to generate QR code", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ error: "Failed to generate QR code" }, { status: 500 });
   }
 }
-

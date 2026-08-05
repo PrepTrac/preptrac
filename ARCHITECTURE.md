@@ -44,6 +44,22 @@
 
 ## Component Architecture
 
+### Module layout (canonical import paths)
+
+- **tRPC** — one canonical module: `src/server/api/trpc.ts` defines the context,
+  router factory, and `protectedProcedure`. All routers and the
+  `src/pages/api/trpc/[trpc].ts` handler import from `~/server/api/trpc`.
+- **Routers** — `src/server/api/routers/` (items, categories, locations, events,
+  dashboard, notifications, settings, household), wired in `root.ts`.
+- **Shared server logic** — `src/server/notifications.ts` (scheduling + email +
+  webhook fan-out), `src/server/syncItemEvents.ts`, `src/server/logger.ts`
+  (structured JSON logging).
+- **Shared pure helpers** — `src/utils/` (inventory classification, household
+  BMR/calorie math, event-type styles, QR generation, notification defaults).
+- **Settings UI** — `src/app/settings/page.tsx` is a thin tab shell; each tab is
+  a self-contained component under `src/components/settings/`, with tab state in
+  `src/hooks/useSettingsTabs.ts`.
+
 ### Frontend Components
 
 ```
@@ -116,12 +132,12 @@ Item (1) ────< (Many) Event
 
 ## Authentication Flow
 
-1. User submits credentials on sign-in page
-2. NextAuth validates against database
-3. JWT session created
-4. Session stored in cookie
-5. Protected routes check session via tRPC middleware
-6. Session available in all tRPC procedures
+**Auth has been removed.** PrepTrac is intentionally single-user with no
+sign-in. The tRPC context (`src/server/trpc` → now `src/server/api/trpc.ts`)
+auto-creates/resolves a single default user (`src/server/auth.ts`) and threads
+its id as `ctx.userId`. All routers scope queries/mutations by `userId`.
+Access control is the hosting layer's responsibility — see [SECURITY.md](./SECURITY.md)
+and [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
 
 ## Notification System
 
@@ -155,7 +171,7 @@ Item (1) ────< (Many) Event
 - Location: Filter by storage location
 - Search: Text search in name/description
 - Expiring Soon: Items expiring within 30 days
-- Low Inventory: Items with quantity ≤ 10
+- **Low Inventory**: Items with an explicit low-inventory threshold (`minQuantity > 0`) whose quantity is at or below it. Consistent definition lives in `src/utils/inventory.ts`.
 - Needs Maintenance: Items past maintenance date
 
 ### Implementation
@@ -268,10 +284,18 @@ Item (1) ────< (Many) Event
 
 ## Monitoring & Maintenance
 
+### Structured logging
+
+Server runtime logs are emitted as one JSON object per line by
+`src/server/logger.ts` (fields: `level`, `timestamp`, `message`, plus
+arbitrary context). Level is controlled by `LOG_LEVEL` (default `info`). It is
+wired into the tRPC error handler, the scheduled-notification cron route, the
+notifications router, and the QR route. Client components still use `console.*`.
+
 ### Database
-- Regular backups
+- Regular backups of the `/app/data` SQLite volume
 - Prisma Studio for inspection
-- Migration management
+- Migration management via `prisma migrate deploy` (history in `prisma/migrations/`)
 
 ### Application
 - Error logging

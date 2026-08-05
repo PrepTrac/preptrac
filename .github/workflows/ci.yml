@@ -1,11 +1,13 @@
-# CI: lint, build, and test on push and pull requests to main
+# CI: type-check, lint, test (with coverage gate), build, E2E, and migration
+# validation. Runs on push and pull requests for main and feature branches so
+# long-lived feature branches get continuous validation.
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feat/**"]
 
 jobs:
   ci:
@@ -30,11 +32,89 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate
 
+      - name: Type-check
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm run test
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Validate migrations apply to a fresh database
+        # Proves the committed migration history creates the schema from empty,
+        # catching schema/migration drift before merge.
+        run: |
+          mkdir -p /tmp/migcheck
+          npx prisma migrate deploy --schema prisma/schema.prisma 2>&1
+        env:
+          DATABASE_URL: "file:/tmp/migcheck/fresh.db"
 
       - name: Build
         run: npm run build
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  audit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    # Non-blocking advisory job: surfaces known vulnerabilities without failing
+    # the pipeline on dev-dependency advisories.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: npm audit (advisory)
+        run: npm audit --omit=dev --audit-level=high || true
+
+  e2e:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up env for Prisma
+        run: echo "DATABASE_URL=file:./e2e.db" >> .env
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Apply migrations to the E2E database
+        run: npm run db:migrate:deploy
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

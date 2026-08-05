@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "~/generated/prisma/client";
 import { env } from "~/env.mjs";
+import { createPrismaClient } from "~/server/prismaClient";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -7,7 +8,7 @@ const globalForPrisma = globalThis as unknown as {
 
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
+  createPrismaClient(env.DATABASE_URL, {
     log: env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api, type RouterOutputs } from "~/utils/api";
 import { useForm } from "react-hook-form";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import ConfirmDialog from "~/components/ConfirmDialog";
 
 interface LocationFormData {
   name: string;
@@ -21,6 +22,7 @@ export default function LocationForm() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<LocationFormData>();
 
@@ -58,16 +60,14 @@ export default function LocationForm() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this location?")) {
-      deleteLocation.mutate(
-        { id },
-        {
-          onSuccess: () => {
-            utils.locations.getAll.invalidate();
-          },
-        }
-      );
-    }
+    deleteLocation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          utils.locations.getAll.invalidate();
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -159,20 +159,36 @@ export default function LocationForm() {
             <div className="flex space-x-2">
               <button
                 onClick={() => handleEdit(location)}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label={`Edit location ${location.name}`}
+                title={`Edit ${location.name}`}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4" aria-hidden="true" />
               </button>
               <button
-                onClick={() => handleDelete(location.id)}
-                className="p-2 text-red-400 hover:text-red-600"
+                onClick={() => setPendingDelete(location.id)}
+                aria-label={`Delete location ${location.name}`}
+                title={`Delete ${location.name}`}
+                className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete location"
+        message="Are you sure you want to delete this location?"
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          if (pendingDelete) handleDelete(pendingDelete);
+          setPendingDelete(null);
+        }}
+        onClose={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

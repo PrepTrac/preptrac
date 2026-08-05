@@ -1,19 +1,22 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+import { createPrismaClient } from "../src/server/prismaClient";
 
-const prisma = new PrismaClient();
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is required to seed the database");
+const prisma = createPrismaClient(databaseUrl);
 
 // Default categories for users
 const DEFAULT_CATEGORIES = [
-  { name: "Food", description: "Canned goods, MREs, dried food, etc.", color: "#F59E0B", icon: "utensils" },
-  { name: "Water", description: "Water storage, purification, containers", color: "#3B82F6", icon: "droplet" },
-  { name: "Ammo", description: "Ammunition and reloading supplies", color: "#EF4444", icon: "crosshair" },
-  { name: "Medical", description: "First aid, medications, medical supplies", color: "#10B981", icon: "cross" },
-  { name: "Tools", description: "Knives, multi-tools, equipment", color: "#6B7280", icon: "wrench" },
-  { name: "Clothing", description: "Survival gear, boots, clothing", color: "#8B5CF6", icon: "shirt" },
-  { name: "Shelter", description: "Tents, tarps, sleeping bags", color: "#EC4899", icon: "home" },
-  { name: "Fuel & Energy", description: "Gasoline, batteries, solar panels", color: "#F97316", icon: "zap" },
-  { name: "Communication", description: "Radios, phones, signaling", color: "#06B6D4", icon: "radio" },
-  { name: "Defense", description: "Self-defense items, security", color: "#DC2626", icon: "shield" },
+  { name: "Food", description: "Canned goods, MREs, dried food, etc.", color: "#F59E0B", icon: "utensils", kind: "food" },
+  { name: "Water", description: "Water storage, purification, containers", color: "#3B82F6", icon: "droplet", kind: "water" },
+  { name: "Ammo", description: "Ammunition and reloading supplies", color: "#EF4444", icon: "crosshair", kind: "ammo" },
+  { name: "Medical", description: "First aid, medications, medical supplies", color: "#10B981", icon: "cross", kind: "other" },
+  { name: "Tools", description: "Knives, multi-tools, equipment", color: "#6B7280", icon: "wrench", kind: "other" },
+  { name: "Clothing", description: "Survival gear, boots, clothing", color: "#8B5CF6", icon: "shirt", kind: "other" },
+  { name: "Shelter", description: "Tents, tarps, sleeping bags", color: "#EC4899", icon: "home", kind: "other" },
+  { name: "Fuel & Energy", description: "Gasoline, batteries, solar panels", color: "#F97316", icon: "zap", kind: "fuel" },
+  { name: "Communication", description: "Radios, phones, signaling", color: "#06B6D4", icon: "radio", kind: "other" },
+  { name: "Defense", description: "Self-defense items, security", color: "#DC2626", icon: "shield", kind: "other" },
 ];
 
 // Default locations for users

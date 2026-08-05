@@ -1,4 +1,4 @@
-import type { PrismaClient, Item } from "@prisma/client";
+import type { PrismaClient, Item } from "~/generated/prisma/client";
 
 /** Subset of Item used for bulk event sync (from Prisma client, not redefined). */
 type BulkItem = Pick<

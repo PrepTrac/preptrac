@@ -54,9 +54,10 @@ export default function QRCodeDisplay({ data, title, onClose }: QRCodeDisplayPro
           )}
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Close"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}

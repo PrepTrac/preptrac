@@ -1,9 +1,18 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Accessible dismiss behavior for modal-style dialogs:
+ * Selector matching elements that are keyboard focusable within a dialog.
+ * Used by the focus trap to cycle Tab/Shift+Tab among interactive descendants.
+ */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Accessible dismiss + focus-trap behavior for modal-style dialogs:
  *  - Closes the dialog when Escape is pressed.
  *  - Moves focus into the dialog when it opens.
+ *  - **Traps Tab/Shift+Tab** so focus cycles among the dialog's focusable
+ *    descendants and cannot escape to the page behind it.
  *  - Restores focus to the element that had focus before the dialog opened
  *    (typically the trigger button) when it closes.
  *
@@ -19,9 +28,12 @@ import { useEffect, useRef } from "react";
  */
 export function useDialogDismiss(open: boolean, onClose: () => void) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +55,35 @@ export function useDialogDismiss(open: boolean, onClose: () => void) {
       if (event.key === "Escape") {
         event.stopPropagation();
         onCloseRef.current();
+        return;
+      }
+      // Focus trap: keep Tab cycling within the dialog so focus cannot leak to
+      // the background page while a modal is open.
+      if (event.key === "Tab") {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusable = Array.from(
+          panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+        );
+        if (focusable.length === 0) {
+          event.preventDefault();
+          panel.focus();
+          return;
+        }
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        const active = document.activeElement as HTMLElement | null;
+        if (event.shiftKey) {
+          if (active === first || !panel.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (active === last || !panel.contains(active)) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
       }
     }
     document.addEventListener("keydown", onKeyDown);

@@ -19,10 +19,11 @@ export default function CategoryNav({
 
   return (
     <div className="flex items-center gap-3">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor="inventory-category-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
         Category:
       </label>
       <select
+        id="inventory-category-filter"
         value={selectedCategory || ""}
         onChange={(e) => onSelectCategory(e.target.value || undefined)}
         className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"

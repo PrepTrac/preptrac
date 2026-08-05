@@ -8,7 +8,7 @@ import ServiceWorkerRegister from "~/components/ServiceWorkerRegister";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-inter",
 });
 
 export const metadata = {
@@ -55,10 +55,12 @@ export default function RootLayout({
               <div
                 id="main-content"
                 tabIndex={-1}
-                className="flex-1 overflow-y-auto outline-none"
+                className="flex-1 overflow-y-auto outline-none bg-gray-50 dark:bg-gray-900"
               >
-                {children}
-                <Footer />
+                <div className="flex min-h-full flex-col">
+                  {children}
+                  <Footer />
+                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
+// Mirrors CATEGORY_KINDS in src/utils/inventory.ts (z.enum needs a literal tuple).
+const categoryKindSchema = z.enum(["ammo", "water", "food", "fuel", "other"]);
+
 export const categoriesRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.category.findMany({
@@ -27,6 +30,7 @@ export const categoriesRouter = createTRPCRouter({
         description: z.string().optional(),
         color: z.string().optional(),
         icon: z.string().optional(),
+        kind: categoryKindSchema.optional(),
         targetQuantity: z.number().optional(),
       })
     )
@@ -47,23 +51,36 @@ export const categoriesRouter = createTRPCRouter({
         description: z.string().optional(),
         color: z.string().optional(),
         icon: z.string().optional(),
+        kind: categoryKindSchema.optional(),
         targetQuantity: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      return ctx.prisma.category.update({
-        where: { id },
+      // Ownership scoping: only update a category owned by this user.
+      const result = await ctx.prisma.category.updateMany({
+        where: { id, userId: ctx.userId },
         data,
+      });
+      if (result.count === 0) {
+        throw new Error("Category not found");
+      }
+      return ctx.prisma.category.findFirstOrThrow({
+        where: { id, userId: ctx.userId },
       });
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.category.delete({
-        where: { id: input.id },
+      // Ownership scoping: only delete a category owned by this user.
+      const result = await ctx.prisma.category.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
       });
+      if (result.count === 0) {
+        throw new Error("Category not found");
+      }
+      return { success: true };
     }),
 });
 

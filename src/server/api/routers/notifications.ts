@@ -7,6 +7,7 @@ import {
 } from "~/server/notifications";
 import { env } from "~/env.mjs";
 import * as nodemailer from "nodemailer";
+import { logger } from "~/server/logger";
 
 export const notificationsRouter = createTRPCRouter({
   getSettings: protectedProcedure.query(async ({ ctx }) => {
@@ -172,7 +173,10 @@ export const notificationsRouter = createTRPCRouter({
 
       return { success: true, message: "Test email sent successfully" };
     } catch (error: unknown) {
-      console.error("Failed to send test email:", error);
+      logger.error("Failed to send test email", {
+        component: "notifications.sendTestEmail",
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw new Error(error instanceof Error ? error.message : "Failed to send test email");
     }
   }),

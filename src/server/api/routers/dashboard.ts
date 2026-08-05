@@ -1,97 +1,37 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-
-/** Activity level multipliers for calories (BMR × factor) and water (oz per lb body weight). */
-const ACTIVITY_CALORIE_FACTOR: Record<string, number> = {
-  moderate: 1.55,
-  very_active: 1.725,
-  extra_active: 1.9,
-};
-const ACTIVITY_WATER_OZ_PER_LB: Record<string, number> = {
-  moderate: 0.65,
-  very_active: 0.75,
-  extra_active: 0.85,
-};
-const DEFAULT_WATER_OZ_PER_LB = 0.5;
+import {
+  resolveCategoryKind,
+  EXPIRING_SOON_DAYS,
+  DAY_MS,
+} from "~/utils/inventory";
+import {
+  bmr,
+  calorieFactorFor,
+  waterOzPerLbFor,
+  LB_PER_KG,
+  FL_OZ_PER_GALLON,
+} from "~/utils/household";
 
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.userId;
 
-    // Targeted item queries and user/household (no full-item fetch)
-    const [
-      waterItems,
-      foodItems,
-      ammoItems,
-      fuelItems,
-      itemsWithCalories,
-      totalItemsCount,
-      familyMembers,
-      user,
-    ] = await Promise.all([
+    // Single fetch of every item with its category kind/name, then bucket by the
+    // canonical kind. This replaces the previous per-kind name-substring queries
+    // (category: { name: { contains: "Water" } }, …) so classification is owned
+    // by `resolveCategoryKind` and can no longer drift between the queries and the
+    // category-progress mapping below.
+    const [typedItems, totalItemsCount, familyMembers, user] = await Promise.all([
       ctx.prisma.item.findMany({
-        where: {
-          userId,
-          category: { name: { contains: "Water" } },
-        },
-        select: {
-          id: true,
-          name: true,
-          quantity: true,
-          unit: true,
-          category: { select: { name: true } },
-        },
-      }),
-      ctx.prisma.item.findMany({
-        where: {
-          userId,
-          category: { name: { contains: "Food" } },
-        },
+        where: { userId },
         select: {
           id: true,
           name: true,
           quantity: true,
           unit: true,
           caloriesPerUnit: true,
-          category: { select: { name: true } },
+          category: { select: { name: true, kind: true } },
         },
-      }),
-      ctx.prisma.item.findMany({
-        where: {
-          userId,
-          category: { name: { contains: "Ammo" } },
-        },
-        select: {
-          id: true,
-          name: true,
-          quantity: true,
-          unit: true,
-          category: { select: { name: true } },
-        },
-      }),
-      ctx.prisma.item.findMany({
-        where: {
-          userId,
-          category: {
-            OR: [
-              { name: { contains: "Fuel" } },
-              { name: { contains: "Energy" } },
-            ],
-          },
-        },
-        select: {
-          id: true,
-          name: true,
-          quantity: true,
-          unit: true,
-          category: { select: { name: true } },
-        },
-      }),
-      ctx.prisma.item.findMany({
-        where: {
-          userId,
-          caloriesPerUnit: { not: null },
-        },
-        select: { quantity: true, caloriesPerUnit: true },
       }),
       ctx.prisma.item.count({ where: { userId } }),
       ctx.prisma.familyMember.findMany({ where: { userId } }),
@@ -108,9 +48,22 @@ export const dashboardRouter = createTRPCRouter({
         },
       }),
     ]);
+
+    const waterItems = typedItems.filter(
+      (item) => resolveCategoryKind(item.category) === "water",
+    );
+    const foodItems = typedItems.filter(
+      (item) => resolveCategoryKind(item.category) === "food",
+    );
+    const ammoItems = typedItems.filter(
+      (item) => resolveCategoryKind(item.category) === "ammo",
+    );
+    const fuelItems = typedItems.filter(
+      (item) => resolveCategoryKind(item.category) === "fuel",
+    );
     const activityLevel = user?.activityLevel ?? null;
-    const calorieFactor = activityLevel ? (ACTIVITY_CALORIE_FACTOR[activityLevel] ?? 1) : 1;
-    const waterOzPerLb = activityLevel ? (ACTIVITY_WATER_OZ_PER_LB[activityLevel] ?? DEFAULT_WATER_OZ_PER_LB) : DEFAULT_WATER_OZ_PER_LB;
+    const calorieFactor = calorieFactorFor(activityLevel);
+    const waterOzPerLb = waterOzPerLbFor(activityLevel);
 
     // Water: only count items in water category with unit "gallon(s)" or "bottle(s)"
     // Bottles = 16.9 fl oz standard; 1 gallon = 128 fl oz → 1 bottle = 16.9/128 gal
@@ -139,15 +92,15 @@ export const dashboardRouter = createTRPCRouter({
     });
 
     // Water days: oz per lb by activity level (from household)
-    const totalWeightLbs = familyMembers.reduce((sum, m) => sum + m.weightKg * 2.20462, 0);
+    const totalWeightLbs = familyMembers.reduce((sum, m) => sum + m.weightKg * LB_PER_KG, 0);
     const dailyWaterOz = totalWeightLbs * waterOzPerLb;
-    const dailyWaterGallons = dailyWaterOz / 128;
+    const dailyWaterGallons = dailyWaterOz / FL_OZ_PER_GALLON;
     const totalWaterDays =
       dailyWaterGallons > 0 && totalWater > 0 ? totalWater / dailyWaterGallons : undefined;
     const useHouseholdForWater = totalWeightLbs > 0 && totalWaterDays != null;
 
     // Total inventory calories: sum over items that have caloriesPerUnit set
-    const totalInventoryCalories = itemsWithCalories.reduce(
+    const totalInventoryCalories = typedItems.reduce(
       (sum, item) =>
         item.caloriesPerUnit != null && item.caloriesPerUnit > 0
           ? sum + item.quantity * item.caloriesPerUnit
@@ -157,12 +110,8 @@ export const dashboardRouter = createTRPCRouter({
 
     // Household total daily calories (Mifflin-St Jeor BMR × activity factor)
     const getTotalDailyCalories = () => {
-      const base = (w: number, h: number, a: number, s: string) => {
-        const b = 10 * w + 6.25 * h - 5 * a;
-        return s.toLowerCase() === "female" ? b - 161 : b + 5;
-      };
       const bmrSum = familyMembers.reduce(
-        (sum, m) => sum + Math.max(0, Math.round(base(m.weightKg, m.heightCm, m.age, m.sex))),
+        (sum, m) => sum + bmr(m.weightKg, m.heightCm, m.age, m.sex),
         0
       );
       return Math.round(bmrSum * calorieFactor);
@@ -215,11 +164,10 @@ export const dashboardRouter = createTRPCRouter({
     const totalKwh = generatorKwh + batteryKwh;
 
     // Run second wave of queries in parallel
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    const now = new Date();
+    const expiringSoonHorizon = new Date(now.getTime() + EXPIRING_SOON_DAYS * DAY_MS);
     const threeMonthsFromNow = new Date();
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-    const now = new Date();
 
     const [upcomingExpirations, allItemsWithMaintenance, upcomingEvents, categoriesWithItems] =
       await Promise.all([
@@ -227,7 +175,7 @@ export const dashboardRouter = createTRPCRouter({
           where: {
             userId,
             expirationDate: {
-              lte: thirtyDaysFromNow,
+              lte: expiringSoonHorizon,
               gte: now,
             },
           },
@@ -287,15 +235,12 @@ export const dashboardRouter = createTRPCRouter({
           : null,
       }));
 
-    const catNameLower = (name: string) => name.toLowerCase();
-    const isAmmoCat = (name: string) => catNameLower(name).includes("ammo");
-    const isWaterCat = (name: string) => catNameLower(name).includes("water");
-    const isFoodCat = (name: string) => catNameLower(name).includes("food");
-    const isFuelCat = (name: string) =>
-      catNameLower(name).includes("fuel") || catNameLower(name).includes("energy");
+    const catKind = (cat: { kind?: string | null; name: string }) =>
+      resolveCategoryKind(cat);
 
     const categoryStats = categoriesWithItems
       .map((cat) => {
+        const kind = catKind(cat);
         let currentQuantity: number;
         let targetQuantity: number;
         let fuelSubProgresses:
@@ -307,10 +252,10 @@ export const dashboardRouter = createTRPCRouter({
           | undefined;
         let fuelDisplayUnit: string | undefined;
 
-        if (isAmmoCat(cat.name) && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0) {
+        if (kind === "ammo" && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0) {
           currentQuantity = cat.items.reduce((sum, item) => sum + item.quantity, 0);
           targetQuantity = user.ammoGoalRounds;
-        } else if (isWaterCat(cat.name) && user?.waterGoalGallons != null && user.waterGoalGallons > 0) {
+        } else if (kind === "water" && user?.waterGoalGallons != null && user.waterGoalGallons > 0) {
           currentQuantity = cat.items
             .filter((item) => isGallon(item.unit) || isBottle(item.unit))
             .reduce((sum, item) => {
@@ -318,7 +263,7 @@ export const dashboardRouter = createTRPCRouter({
               return sum + item.quantity;
             }, 0);
           targetQuantity = user.waterGoalGallons;
-        } else if (isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0) {
+        } else if (kind === "food" && user?.foodGoalDays != null && user.foodGoalDays > 0) {
           const totalFoodCalories = cat.items.reduce((sum, item) => {
             const cal = (item as { caloriesPerUnit?: number | null }).caloriesPerUnit;
             if (cal != null && cal > 0) return sum + item.quantity * cal;
@@ -326,7 +271,7 @@ export const dashboardRouter = createTRPCRouter({
           }, 0);
           currentQuantity = totalDailyCalories > 0 ? totalFoodCalories / totalDailyCalories : 0;
           targetQuantity = user.foodGoalDays;
-        } else if (isFuelCat(cat.name)) {
+        } else if (kind === "fuel") {
           // Fuel/energy: per-category gallons, total kWh, battery kWh
           const catFuelGallons = cat.items
             .filter((item) => isGallonUnit(item.unit))
@@ -407,11 +352,11 @@ export const dashboardRouter = createTRPCRouter({
         }
 
         const displayUnit =
-          isAmmoCat(cat.name) && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0
+          kind === "ammo" && user?.ammoGoalRounds != null && user.ammoGoalRounds > 0
             ? "rounds"
-            : isWaterCat(cat.name) && user?.waterGoalGallons != null && user.waterGoalGallons > 0
+            : kind === "water" && user?.waterGoalGallons != null && user.waterGoalGallons > 0
               ? "gallons"
-              : isFoodCat(cat.name) && user?.foodGoalDays != null && user.foodGoalDays > 0
+              : kind === "food" && user?.foodGoalDays != null && user.foodGoalDays > 0
                 ? "days"
                 : fuelDisplayUnit;
         return {

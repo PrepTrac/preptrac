@@ -1,5 +1,12 @@
 import QRCode from "qrcode";
 
+/**
+ * Generate a QR code as a data URL (base64 PNG).
+ *
+ * Single canonical QR generator for the app. Used by both the client
+ * (`QRCodeDisplay`) and the server QR route (`/api/qrcode`), so it stays free
+ * of server-only imports (logging etc.) and reports failures by throwing.
+ */
 export async function generateQRCode(data: string): Promise<string> {
   try {
     const qrDataUrl = await QRCode.toDataURL(data, {
@@ -16,24 +23,3 @@ export async function generateQRCode(data: string): Promise<string> {
     throw error;
   }
 }
-
-export async function generateQRCodeForItem(itemId: string, itemName: string): Promise<string> {
-  const data = JSON.stringify({
-    type: "item",
-    id: itemId,
-    name: itemName,
-    url: `${typeof window !== "undefined" ? window.location.origin : ""}/items/${itemId}`,
-  });
-  return generateQRCode(data);
-}
-
-export async function generateQRCodeForLocation(locationId: string, locationName: string): Promise<string> {
-  const data = JSON.stringify({
-    type: "location",
-    id: locationId,
-    name: locationName,
-    url: `${typeof window !== "undefined" ? window.location.origin : ""}/locations/${locationId}`,
-  });
-  return generateQRCode(data);
-}
-

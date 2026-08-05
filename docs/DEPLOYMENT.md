@@ -103,9 +103,47 @@ independent of the app), or use **Custom Labels** for IP allow-listing.
 
 ## 6. Notes
 
-- The schema is applied on every container start via `prisma db push` in the
-  entrypoint. This is idempotent for SQLite and safe as long as the volume
-  persists. Schema changes in this project are kept **additive** to avoid any
-  destructive migration prompt.
-- The runner image copies the Prisma CLI from the build stage (no network
-  `npm install` at runner build time) for reproducibility.
+- The database schema is applied on every container start via
+  `prisma migrate deploy` in the entrypoint (`scripts/start.sh`). Migration
+  history lives in `prisma/migrations/` and is committed to the repo. This is
+  safer than the previous `prisma db push` startup: migrations are versioned,
+  reviewable, and applied in order.
+
+### Migrating an existing self-hosted database (baseline path)
+
+Deployments created before the migration history existed used `prisma db push`
+  and have **no `_prisma_migrations` table**. A naive `migrate deploy` against
+  such a database fails with Prisma error **P3005** ("The database schema is not
+  empty"). The container entrypoint handles this automatically:
+
+  1. It runs `prisma migrate deploy`.
+  2. On P3005 it runs one additive `prisma db push` reconciliation so legacy
+     databases gain any fields introduced before migration history (such as
+     `NotificationLog` and `Category.kind`).
+  3. It marks the baseline migration (`20240101000000_init`) as already applied,
+     then runs `prisma migrate deploy` again.
+  4. From then on all schema changes use migration history.
+
+  Existing data is **never** dropped or recreated. To perform the baseline
+  manually (for example outside Docker), back up the SQLite file first and run
+  the following with `DATABASE_URL` pointing at it:
+
+  ```sh
+  npx prisma db push
+  npx prisma migrate resolve --applied 20240101000000_init
+  npx prisma migrate deploy
+  ```
+
+  Schema changes in this project are kept **additive** to avoid destructive
+  migration prompts.
+- `Category.kind` (canonical category type used for dashboard goal aggregation)
+  is a nullable, additive column. Existing rows start with `kind = NULL` and the
+  app infers the kind from the name at runtime. After deploying, run
+  `npm run db:backfill:kinds` once (inside the container) to populate `kind` for
+  existing categories so classification no longer depends on the name.
+- Transient notification delivery failures are retried (up to 5 attempts, 15-min
+  spacing); successful deliveries are deduplicated. See
+  [Notification & Expiration Policy](./NOTIFICATION_AND_EXPIRATION_POLICY.md).
+- The runner image copies its pruned production dependencies, including the
+  Prisma 7 CLI and SQLite driver adapter, from the build stage. No runner-stage
+  network install is required.

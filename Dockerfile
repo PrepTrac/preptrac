@@ -11,6 +11,9 @@ RUN npm ci
 
 COPY . .
 RUN npm run build
+# Keep only runtime dependencies for the runner. Prisma CLI is a production
+# dependency because migrations run at container startup.
+RUN npm prune --omit=dev
 
 # Prepare standalone: copy static and public into standalone output
 RUN cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
@@ -20,6 +23,11 @@ FROM node:20-alpine AS runner
 
 RUN apk add --no-cache openssl wget
 
+# Run as a non-root user for least-privilege. The image ships no app code as
+# root: /app/data (the SQLite volume) is chowned to nextjs so the unprivileged
+# startup (prisma migrate) can write to it.
+RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -27,18 +35,25 @@ ENV PORT=8008
 ENV DATABASE_URL="file:/app/data/dev.db"
 
 # Copy standalone app
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 
-# Prisma schema + CLI for db push at startup. Copying the CLI from the builder
-# avoids a network `npm install prisma` in the runner stage (more reproducible).
-COPY --from=builder /app/prisma/schema.prisma ./prisma/
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Prisma 7 CLI, adapter, and runtime dependencies are needed for startup
+# migrations. The builder tree was pruned to production dependencies above.
+COPY --from=builder --chown=nextjs:nextjs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nextjs /app/prisma/schema.prisma ./prisma/
+COPY --from=builder --chown=nextjs:nextjs /app/prisma/migrations ./prisma/migrations
+COPY --from=builder --chown=nextjs:nextjs /app/prisma.config.ts ./prisma.config.ts
 
-# Ensure data dir exists for SQLite default
-RUN mkdir -p /app/data
+# Startup script (migrate-deploy baseline strategy + node server.js), owned + exec by nextjs.
+COPY --chown=nextjs:nextjs scripts/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# Ensure the SQLite data dir exists and is writable by the non-root user.
+RUN mkdir -p /app/data && chown -R nextjs:nextjs /app/data
+
+USER nextjs
 
 EXPOSE 8008
 
@@ -47,5 +62,5 @@ EXPOSE 8008
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8008/api/health || exit 1
 
-# Apply schema and start the server
-ENTRYPOINT ["sh", "-c", "npx prisma db push --skip-generate && node server.js"]
+# Apply migrations (preserving existing self-hosted SQLite DBs) and start the server.
+ENTRYPOINT ["./start.sh"]
