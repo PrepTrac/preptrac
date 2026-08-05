@@ -1,6 +1,8 @@
-# CI: type-check, lint, test (with coverage gate), build, E2E, and migration
-# validation. Runs on push and pull requests for main and feature branches so
-# long-lived feature branches get continuous validation.
+# CI: type-check, lint, test (with coverage gate), build, E2E, migration
+# validation, and a Docker image build (validates the Dockerfile end-to-end,
+# including the better-sqlite3 native compile). Runs on push and pull requests
+# for main and feature branches so long-lived feature branches get continuous
+# validation.
 name: CI
 
 on:
@@ -118,3 +120,17 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  docker:
+    # Validates the production image builds end-to-end (Dockerfile, native
+    # module compile for better-sqlite3, prisma generate). Build-only — it does
+    # not push to any registry. Uses plain `docker build` so it works for both
+    # same-repo and fork PRs without cache-permission edge cases.
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t preptrac:ci .
