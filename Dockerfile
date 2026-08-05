@@ -1,7 +1,10 @@
-# Build stage (Node 20 matches the supported runtime and CI environment)
-FROM node:20-alpine AS builder
+# Build stage (Node 22 — better-sqlite3@13 requires Node >=22; matches CI)
+FROM node:22-alpine AS builder
 
-RUN apk add --no-cache openssl
+# openssl: Prisma's Query Engine.
+# build-base + python3: better-sqlite3 publishes no prebuilt binary for
+# Alpine/musl, so its native module is compiled from source during `npm ci`.
+RUN apk add --no-cache openssl build-base python3
 
 WORKDIR /app
 
@@ -19,7 +22,7 @@ RUN npm prune --omit=dev
 RUN cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
 
 # Run stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 RUN apk add --no-cache openssl wget
 
