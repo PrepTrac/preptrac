@@ -3,6 +3,7 @@
 import { api } from "~/utils/api";
 import { useState, useEffect } from "react";
 import { Users, Plus, Pencil, Trash2, Flame } from "lucide-react";
+import { useDialogDismiss } from "~/hooks/useDialogDismiss";
 
 const HOUSEHOLD_UNITS_KEY = "preptrac-household-units";
 
@@ -417,9 +418,23 @@ function HouseholdMemberForm({
     }
   };
 
+  const panelRef = useDialogDismiss(true, onClose);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={editing ? "Edit family member" : "Add family member"}
+        tabIndex={-1}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 outline-none"
+      >
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           {editing ? "Edit family member" : "Add family member"}
         </h3>

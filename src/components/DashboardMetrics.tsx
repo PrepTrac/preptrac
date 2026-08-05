@@ -29,6 +29,7 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   renderItem,
   getBarTotal,
   barColorClass = "bg-gray-500 dark:bg-gray-400",
+  interactiveContent = false,
 }: {
   children: React.ReactNode;
   title: string;
@@ -38,6 +39,14 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
   getBarTotal?: (item: T) => number;
   /** Tailwind class for the progress bar fill (e.g. bg-blue-500). Uses category color when set. */
   barColorClass?: string;
+  /**
+   * When true the wrapped card is itself an interactive control (e.g. the
+   * water/fuel metric cards that cycle units on click). In that case this
+   * wrapper stays non-focusable and the breakdown appears on hover/focus of
+   * the card. When false the wrapper is the keyboard/touch target for
+   * revealing the breakdown.
+   */
+  interactiveContent?: boolean;
 }) {
   const [show, setShow] = useState(false);
   if (!items || items.length === 0) return <>{children}</>;
@@ -46,9 +55,32 @@ function BreakdownTooltip<T extends { name: string; quantity: number; unit: stri
     : items.reduce((s, i) => s + i.quantity, 0);
   return (
     <div
-      className="relative h-full"
+      className={`relative h-full ${
+        interactiveContent
+          ? ""
+          : "rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 cursor-pointer"
+      }`}
+      tabIndex={interactiveContent ? undefined : 0}
+      role={interactiveContent ? undefined : "button"}
+      aria-expanded={interactiveContent ? undefined : show}
+      aria-label={interactiveContent ? undefined : `${title}: toggle details`}
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+      onClick={interactiveContent ? undefined : () => setShow((v) => !v)}
+      onKeyDown={
+        interactiveContent
+          ? undefined
+          : (e) => {
+              if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                setShow((v) => !v);
+              } else if (e.key === "Escape") {
+                setShow(false);
+              }
+            }
+      }
     >
       {children}
       {show && (
@@ -240,6 +272,7 @@ export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
         <BreakdownTooltip
           title="By source"
           items={stats.waterBreakdown}
+          interactiveContent
           getBarTotal={(item: WaterBreakdownItem) => item.gallonsEquivalent}
           barColorClass="bg-blue-500"
           renderItem={(item: WaterBreakdownItem) => (

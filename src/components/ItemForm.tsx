@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { api, type RouterInputs } from "~/utils/api";
+import { toDateInputValue } from "~/utils/dates";
+import { useDialogDismiss } from "~/hooks/useDialogDismiss";
 import { X } from "lucide-react";
 
 /** Predefined units for dropdown. Use exact strings so dashboard/goals matching works (e.g. gallons, bottles, rounds, kWh). */
@@ -87,6 +89,8 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
     },
   });
 
+  const panelRef = useDialogDismiss(true, onClose);
+
   const {
     register,
     handleSubmit,
@@ -136,6 +140,14 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
         minQuantity: item.minQuantity ?? 0,
         targetQuantity: item.targetQuantity ?? 0,
         caloriesPerUnit: itemWithCal.caloriesPerUnit ?? undefined,
+        // Populate the remaining editable fields so editing reflects saved values.
+        expirationDate: toDateInputValue(item.expirationDate),
+        lastMaintenanceDate: toDateInputValue(item.lastMaintenanceDate),
+        lastRotationDate: toDateInputValue(item.lastRotationDate),
+        maintenanceInterval: item.maintenanceInterval ?? undefined,
+        rotationSchedule: item.rotationSchedule ?? undefined,
+        notes: item.notes ?? "",
+        imageUrl: item.imageUrl ?? "",
       });
     } else if (defaultLocationId) {
       reset({
@@ -171,67 +183,90 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
 
     type CreateInput = RouterInputs["items"]["create"];
     type UpdateInput = RouterInputs["items"]["update"];
-    /** Payload we build: dates as ISO strings for API, caloriesPerUnit may be null for update. */
-    const submitData: Omit<CreateInput, "expirationDate" | "lastMaintenanceDate" | "lastRotationDate" | "caloriesPerUnit"> & {
-      expirationDate?: string;
-      lastMaintenanceDate?: string;
-      lastRotationDate?: string;
-      caloriesPerUnit?: number | null;
-    } = {
-      name: data.name,
-      description: data.description,
-      quantity: Number(data.quantity),
-      unit: effectiveUnit,
-      categoryId: data.categoryId,
-      locationId: data.locationId,
-      notes: data.notes,
-      imageUrl: data.imageUrl,
-      minQuantity: Number(data.minQuantity) || 0,
-      targetQuantity: targetDisabledByGoal ? (item?.targetQuantity ?? 0) : Number(data.targetQuantity) || 0,
-    };
+
     const selectedCategoryIsFood =
       categories?.find((c) => c.id === data.categoryId)?.name.toLowerCase().includes("food") ?? false;
     const cal = data.caloriesPerUnit;
-    if (selectedCategoryIsFood && cal != null && !Number.isNaN(cal) && cal > 0) {
-      submitData.caloriesPerUnit = cal;
-    } else if (itemId) {
-      submitData.caloriesPerUnit = null;
-    }
+    const hasCalories = selectedCategoryIsFood && cal != null && !Number.isNaN(cal) && cal > 0;
 
-    // Only include date fields if they have values (send ISO strings for API)
-    if (data.expirationDate) {
-      submitData.expirationDate = new Date(data.expirationDate).toISOString();
-    }
-    if (data.lastMaintenanceDate) {
-      submitData.lastMaintenanceDate = new Date(data.lastMaintenanceDate).toISOString();
-    }
-    if (data.lastRotationDate) {
-      submitData.lastRotationDate = new Date(data.lastRotationDate).toISOString();
-    }
-    if (data.maintenanceInterval) {
-      submitData.maintenanceInterval = Number(data.maintenanceInterval);
-    }
-    if (data.rotationSchedule) {
-      submitData.rotationSchedule = Number(data.rotationSchedule);
-    }
+    // Number inputs use valueAsNumber, so an empty field comes back as NaN/undefined.
+    const numOrUndef = (v?: number) =>
+      v != null && !Number.isNaN(v) ? Number(v) : undefined;
+    const isoOrUndef = (v?: string) => (v ? new Date(v).toISOString() : undefined);
 
     if (itemId) {
-      updateItem.mutate({ id: itemId, ...submitData } as UpdateInput);
+      // Update: send null for cleared optional fields so they can be removed.
+      const updatePayload = {
+        id: itemId,
+        name: data.name,
+        description: data.description,
+        quantity: Number(data.quantity),
+        unit: effectiveUnit,
+        categoryId: data.categoryId,
+        locationId: data.locationId,
+        notes: data.notes?.trim() ? data.notes : null,
+        imageUrl: data.imageUrl?.trim() ? data.imageUrl : null,
+        minQuantity: Number(data.minQuantity) || 0,
+        targetQuantity: targetDisabledByGoal
+          ? (item?.targetQuantity ?? 0)
+          : Number(data.targetQuantity) || 0,
+        expirationDate: isoOrUndef(data.expirationDate) ?? null,
+        lastMaintenanceDate: isoOrUndef(data.lastMaintenanceDate) ?? null,
+        lastRotationDate: isoOrUndef(data.lastRotationDate) ?? null,
+        maintenanceInterval: numOrUndef(data.maintenanceInterval) ?? null,
+        rotationSchedule: numOrUndef(data.rotationSchedule) ?? null,
+        caloriesPerUnit: hasCalories ? cal : null,
+      };
+      updateItem.mutate(updatePayload as UpdateInput);
     } else {
-      createItem.mutate(submitData as CreateInput);
+      // Create: omit cleared optional fields (create schema uses .optional(), not .nullable()).
+      const createPayload = {
+        name: data.name,
+        description: data.description,
+        quantity: Number(data.quantity),
+        unit: effectiveUnit,
+        categoryId: data.categoryId,
+        locationId: data.locationId,
+        notes: data.notes,
+        imageUrl: data.imageUrl,
+        minQuantity: Number(data.minQuantity) || 0,
+        targetQuantity: targetDisabledByGoal
+          ? (item?.targetQuantity ?? 0)
+          : Number(data.targetQuantity) || 0,
+        expirationDate: isoOrUndef(data.expirationDate),
+        lastMaintenanceDate: isoOrUndef(data.lastMaintenanceDate),
+        lastRotationDate: isoOrUndef(data.lastRotationDate),
+        maintenanceInterval: numOrUndef(data.maintenanceInterval),
+        rotationSchedule: numOrUndef(data.rotationSchedule),
+        caloriesPerUnit: hasCalories ? cal : undefined,
+      };
+      createItem.mutate(createPayload as CreateInput);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={itemId ? "Edit item" : "Add item"}
+        tabIndex={-1}
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto outline-none"
+      >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {itemId ? "Edit Item" : "Add Item"}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Close dialog"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <X className="h-5 w-5" />
           </button>

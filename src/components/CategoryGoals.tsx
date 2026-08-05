@@ -157,9 +157,24 @@ function FuelProgressTooltip({
   }
   return (
     <div
-      className="relative"
+      className="relative rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 cursor-pointer"
+      tabIndex={0}
+      role="button"
+      aria-expanded={show}
+      aria-label="Fuel / energy breakdown"
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+      onClick={() => setShow((v) => !v)}
+      onKeyDown={(e) => {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          setShow((v) => !v);
+        } else if (e.key === "Escape") {
+          setShow(false);
+        }
+      }}
     >
       {children}
       {show && lines.length > 0 && (
@@ -211,9 +226,24 @@ function CategoryRowTooltip({
   const [show, setShow] = useState(false);
   return (
     <div
-      className="relative"
+      className="relative rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 cursor-pointer"
+      tabIndex={0}
+      role="button"
+      aria-expanded={show}
+      aria-label={`${isFood ? "Calorie" : isWater ? "Source" : "Type"} breakdown`}
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+      onClick={() => setShow((v) => !v)}
+      onKeyDown={(e) => {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          setShow((v) => !v);
+        } else if (e.key === "Escape") {
+          setShow(false);
+        }
+      }}
     >
       {children}
       {show && (() => {

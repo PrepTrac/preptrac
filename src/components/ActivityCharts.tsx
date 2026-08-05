@@ -1,5 +1,6 @@
 "use client";
 
+import { useTheme } from "next-themes";
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,6 +14,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { chartTheme, type ChartTheme } from "~/utils/chartTheme";
 
 const CHART_COLORS = [
   "#3b82f6", "#22c55e", "#eab308", "#ef4444", "#8b5cf6",
@@ -46,6 +48,31 @@ export default function ActivityCharts({
   pieAdditionData,
   clampedDays,
 }: ActivityChartsProps) {
+  const { resolvedTheme } = useTheme();
+  const t: ChartTheme = chartTheme(resolvedTheme === "dark");
+  // recharts passes the label position (x,y) and data entry to this render fn.
+  const renderPieLabel = (entry: {
+    name?: string;
+    value?: number;
+    x?: number;
+    y?: number;
+  }) => {
+    const { name, value, x, y } = entry;
+    if (!value) return null;
+    return (
+      <text
+        x={x}
+        y={y}
+        fill={t.pieLabel}
+        fontSize={11}
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {`${name ?? ""}: ${value}`}
+      </text>
+    );
+  };
+
   return (
     <>
       <div>
@@ -55,11 +82,16 @@ export default function ActivityCharts({
         <div className="h-64 sm:h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={timeSeriesChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-600" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-gray-600 dark:text-gray-400" />
-              <YAxis tick={{ fontSize: 12 }} className="text-gray-600 dark:text-gray-400" />
-              <Tooltip />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke={t.grid} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: t.axis }} stroke={t.grid} />
+              <YAxis tick={{ fontSize: 12, fill: t.axis }} stroke={t.grid} />
+              <Tooltip
+                contentStyle={t.tooltipStyle}
+                itemStyle={t.tooltipItemStyle}
+                labelStyle={t.tooltipLabelStyle}
+                cursor={{ fill: "rgba(156, 163, 175, 0.15)" }}
+              />
+              <Legend wrapperStyle={{ color: t.legend, fontSize: 12 }} />
               <Bar dataKey="consumption" name="Consumed" fill={CONSUMPTION_COLOR} stackId="a" />
               <Bar dataKey="addition" name="Added" fill={ADDITION_COLOR} stackId="a" />
             </BarChart>
@@ -81,13 +113,18 @@ export default function ActivityCharts({
                   cx="50%"
                   cy="50%"
                   outerRadius="70%"
-                  label={({ name, value }) => `${name}: ${value}`}
+                  label={renderPieLabel}
                 >
                   {pieConsumptionData.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]} />
+                <Tooltip
+                  contentStyle={t.tooltipStyle}
+                  itemStyle={t.tooltipItemStyle}
+                  labelStyle={t.tooltipLabelStyle}
+                  formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -106,13 +143,18 @@ export default function ActivityCharts({
                   cx="50%"
                   cy="50%"
                   outerRadius="70%"
-                  label={({ name, value }) => `${name}: ${value}`}
+                  label={renderPieLabel}
                 >
                   {pieAdditionData.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]} />
+                <Tooltip
+                  contentStyle={t.tooltipStyle}
+                  itemStyle={t.tooltipItemStyle}
+                  labelStyle={t.tooltipLabelStyle}
+                  formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>

@@ -212,10 +212,14 @@ function SettingsPageContent() {
   const { data: goals } = api.settings.getGoals.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
-  const updateGoalsMutation = api.settings.updateGoals.useMutation({
-    onSuccess: () => utils.settings.getGoals.invalidate(),
-  });
   const utils = api.useUtils();
+  const updateGoalsMutation = api.settings.updateGoals.useMutation({
+    onSuccess: () => {
+      void utils.settings.getGoals.invalidate();
+      // Goals drive dashboard category progress; refresh it so changes are visible.
+      void utils.dashboard.getStats.invalidate();
+    },
+  });
   const { data: notificationSettings } = api.notifications.getSettings.useQuery();
   const updateSettings = api.notifications.updateSettings.useMutation();
   const sendTestWebhook = api.notifications.sendTestWebhook.useMutation();

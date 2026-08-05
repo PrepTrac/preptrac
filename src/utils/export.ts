@@ -1,4 +1,4 @@
-import { format as formatDateFns } from "date-fns";
+import { formatCSVDate } from "./dates";
 
 /** Row shape for export: has category/location as objects with name, plus CSV_HEADERS fields. */
 type ExportRow = Record<string, unknown> & {
@@ -27,11 +27,9 @@ export const CSV_HEADERS = [
   "caloriesPerUnit",
 ] as const;
 
-/** Format a date for CSV as M/d/yyyy (e.g. 1/1/2026). */
+/** Format a date for CSV deterministically (UTC-based M/d/yyyy, e.g. 1/1/2026). */
 function formatDateForCSV(val: unknown): string {
-  if (val == null || val === "") return "";
-  const d = val instanceof Date ? val : new Date(String(val));
-  return isNaN(d.getTime()) ? "" : formatDateFns(d, "M/d/yyyy");
+  return formatCSVDate(val as Date | string | null | undefined);
 }
 
 /** Download an empty CSV with headers only for users to fill in and import. */

@@ -9,6 +9,7 @@ PrepTrac supports webhook notifications to send real-time alerts to external ser
 3. **Optional Secret**: Add a secret for HMAC-SHA256 signature verification
 4. **Configure Preferences**: Set notification thresholds (days before expiration, etc.)
 5. **Test**: Click "Send Test Webhook" to verify your endpoint
+6. **Schedule delivery**: Webhooks for expiration, maintenance, rotation, and low-inventory events are delivered by the scheduled runner at `/api/cron/notifications`. Configure a Coolify Scheduled Task (or cron) to call it — see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md). The runner is idempotent: each alert is sent at most once per item/event-date, so retried or overlapping runs never produce duplicates.
 
 ## Webhook Payload
 
@@ -143,7 +144,7 @@ Your webhook endpoint should:
 1. **Accept POST requests** with JSON content
 2. **Return 2xx status** (200, 201, 202) for success
 3. **Respond quickly** (within 10 seconds, timeout is 10s)
-4. **Handle errors gracefully** - PrepTrac will log failures but won't retry automatically
+4. **Handle errors gracefully** - PrepTrac logs delivery failures in the `NotificationLog` table but does not retry a failed send on the next run (the alert is marked as delivered to avoid duplicates). Verify your endpoint returns 2xx.
 5. **Verify signatures** if using a secret
 
 ## Example Webhook Handler
