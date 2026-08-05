@@ -1,0 +1,56 @@
+# Release automation. Triggered by pushing a `v*` tag (e.g. v0.3.0), this builds
+# the production standalone bundle, validates that migrations apply cleanly, and
+# publishes a GitHub Release with auto-generated release notes. It does not push
+# to any registry (the app is self-hosted), keeping the flow tag-driven and
+# reversible: delete/recreate the tag to re-run.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up env for Prisma
+        run: echo "DATABASE_URL=file:./release.db" >> .env
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm run test
+
+      - name: Validate migrations apply to a fresh database
+        run: npx prisma migrate deploy --schema prisma/schema.prisma
+        env:
+          DATABASE_URL: "file:/tmp/release-fresh.db"
+
+      - name: Build
+        run: npm run build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

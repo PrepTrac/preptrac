@@ -8,6 +8,13 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ---
 
+## [0.2.1] — 2026-08-05
+
+- **UI** — Footer now locks to the bottom of the viewport on short pages instead of floating mid-page. The main scroll area is now a flex column (`min-h-full`), so the footer's `mt-auto` pushes it down when content is short and it scrolls naturally on long pages.
+- **UI** — Fixed the dark-mode background falling back to near-black (#0a0a0a). Aligned `globals.css` theme variables with the app's gray-50/gray-900 palette and made the dark override class-based (`.dark`) to match `next-themes`'s `attribute="class"`.
+
+---
+
 ## [0.2.0] — 2026-02-13
 
 - **Household** — Toggle between US (lb, ft/in) and metric (kg, cm) for weight and height. Unit preference is stored in the browser and applies to the family members list and add/edit form; data is still stored in metric.

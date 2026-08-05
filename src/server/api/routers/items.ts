@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { type Prisma } from "@prisma/client";
+import { type Prisma } from "~/generated/prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents, syncItemEventsBulk } from "~/server/syncItemEvents";
 import { parseCSV } from "~/utils/csv";
+import { EXPIRING_SOON_DAYS, DAY_MS } from "~/utils/inventory";
 
 export const itemsRouter = createTRPCRouter({
   /** Lightweight list for dropdowns (id, name, unit, quantity, category name). */
@@ -56,11 +57,10 @@ export const itemsRouter = createTRPCRouter({
       }
 
       if (input?.expiringSoon) {
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        const now = new Date();
         where.expirationDate = {
-          lte: thirtyDaysFromNow,
-          gte: new Date(),
+          lte: new Date(now.getTime() + EXPIRING_SOON_DAYS * DAY_MS),
+          gte: now,
         };
       }
 
@@ -336,25 +336,39 @@ export const itemsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const item = await ctx.prisma.item.update({
-        where: { id },
+      const userId = ctx.userId;
+      // Ownership scoping: only update an item owned by this user. updateMany with
+      // userId makes the guard atomic at the DB level.
+      const result = await ctx.prisma.item.updateMany({
+        where: { id, userId },
         data,
+      });
+      if (result.count === 0) {
+        throw new Error("Item not found");
+      }
+      const item = await ctx.prisma.item.findFirstOrThrow({
+        where: { id, userId },
         include: {
           category: true,
           location: true,
         },
       });
 
-      await syncItemEvents(ctx.prisma, ctx.userId, item);
+      await syncItemEvents(ctx.prisma, userId, item);
       return item;
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }).strict())
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.item.delete({
-        where: { id: input.id },
+      // Ownership scoping: only delete an item owned by this user.
+      const result = await ctx.prisma.item.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
       });
+      if (result.count === 0) {
+        throw new Error("Item not found");
+      }
+      return { success: true };
     }),
 
   /** Record consumption of an item: decrement quantity and log the consumption. */

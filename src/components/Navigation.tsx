@@ -216,7 +216,7 @@ export default function Navigation() {
             onClick={() => setIsCollapsed(!isCollapsed)}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!isCollapsed}
-            className="flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {isCollapsed ? (
               <ChevronRight className="h-5 w-5" />

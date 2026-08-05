@@ -5,6 +5,10 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/e2e.db
+/e2e.db-journal
 
 # next.js
 /.next/
@@ -38,6 +42,7 @@ next-env.d.ts
 /dev.db-journal
 /prisma/dev.db
 /prisma/dev.db-journal
+/src/generated/prisma/
 
 # scripts
 .preptrac-dev.pid

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import crypto from "crypto";
 import { env } from "~/env.mjs";
 import { runScheduledNotifications } from "~/server/notifications";
+import { logger } from "~/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,10 @@ async function handle(request: NextRequest) {
       ...result,
     });
   } catch (error) {
-    console.error("[cron/notifications] runner failed:", error);
+    logger.error("Scheduled notification runner failed", {
+      component: "cron/notifications",
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Runner failed" },
       { status: 500 },

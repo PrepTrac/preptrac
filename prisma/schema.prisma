@@ -2,13 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  // For PostgreSQL, change to: provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -69,6 +68,13 @@ model Category {
   description String?
   color       String?  // Hex color for UI
   icon        String?  // Icon name
+  // Canonical category kind used for dashboard goal aggregation and inventory
+  // classification. Nullable + additive so existing SQLite rows are untouched by
+  // `prisma db push`; rows with a null `kind` fall back to name-based inference
+  // (see src/utils/inventory.ts `resolveCategoryKind`). Run
+  // `scripts/backfill-category-kind.ts` once to populate it for existing rows.
+  // Values: "ammo" | "water" | "food" | "fuel" | "other".
+  kind        String?
   targetQuantity Float @default(0)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -210,6 +216,10 @@ model NotificationLog {
   itemId    String?
   message   String
   success   Boolean  @default(true)
+  // Number of delivery attempts made for this dedup key. Successful deliveries
+  // stop at their attempt count and are never retried (dedup holds). Failed
+  // deliveries are retried up to MAX_RETRY_ATTEMPTS once RETRY_WINDOW elapses.
+  attemptCount Int   @default(0)
   error     String?
   sentAt    DateTime @default(now())
 

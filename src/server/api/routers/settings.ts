@@ -81,16 +81,16 @@ export const settingsRouter = createTRPCRouter({
 
     // Ensure categories exist (get or create)
     const categoryNames = [
-      { name: "Food", description: "Canned goods, MREs, dried food", color: "#F59E0B" },
-      { name: "Water", description: "Water storage and purification", color: "#3B82F6" },
-      { name: "Ammo", description: "Ammunition and reloading", color: "#EF4444" },
-      { name: "Medical", description: "First aid and medications", color: "#10B981" },
-      { name: "Tools", description: "Knives, multi-tools, equipment", color: "#6B7280" },
-      { name: "Shelter", description: "Tents, tarps, sleeping gear", color: "#EC4899" },
-      { name: "Fuel & Energy", description: "Gas, batteries, solar", color: "#F97316" },
-      { name: "Communication", description: "Radios, signaling", color: "#06B6D4" },
-      { name: "Hygiene", description: "Soap, toiletries", color: "#8B5CF6" },
-      { name: "Defense", description: "Self-defense and security", color: "#DC2626" },
+      { name: "Food", description: "Canned goods, MREs, dried food", color: "#F59E0B", kind: "food" },
+      { name: "Water", description: "Water storage and purification", color: "#3B82F6", kind: "water" },
+      { name: "Ammo", description: "Ammunition and reloading", color: "#EF4444", kind: "ammo" },
+      { name: "Medical", description: "First aid and medications", color: "#10B981", kind: "other" },
+      { name: "Tools", description: "Knives, multi-tools, equipment", color: "#6B7280", kind: "other" },
+      { name: "Shelter", description: "Tents, tarps, sleeping gear", color: "#EC4899", kind: "other" },
+      { name: "Fuel & Energy", description: "Gas, batteries, solar", color: "#F97316", kind: "fuel" },
+      { name: "Communication", description: "Radios, signaling", color: "#06B6D4", kind: "other" },
+      { name: "Hygiene", description: "Soap, toiletries", color: "#8B5CF6", kind: "other" },
+      { name: "Defense", description: "Self-defense and security", color: "#DC2626", kind: "other" },
     ];
     const categoryIds: Record<string, string> = {};
     for (const cat of categoryNames) {
@@ -99,7 +99,7 @@ export const settingsRouter = createTRPCRouter({
       });
       if (!c) {
         c = await prisma.category.create({
-          data: { userId, name: cat.name, description: cat.description, color: cat.color },
+          data: { userId, name: cat.name, description: cat.description, color: cat.color, kind: cat.kind },
         });
         await recordTestData(prisma, userId, c.id, "category");
       }

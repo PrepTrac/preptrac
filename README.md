@@ -37,12 +37,12 @@ docker compose up -d
 
 Then open [http://localhost:8008](http://localhost:8008). To stop: `docker compose down`.
 
-**Or run locally** (Node.js 18+), e.g. for development:
+**Or run locally** (Node.js 20.19+), e.g. for development:
 
 ```bash
 npm install
 cp .env.example .env
-npm run db:push
+npm run db:migrate:deploy
 npm run dev
 ```
 

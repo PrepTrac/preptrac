@@ -123,7 +123,10 @@ export default function ActivityCharts({
                   contentStyle={t.tooltipStyle}
                   itemStyle={t.tooltipItemStyle}
                   labelStyle={t.tooltipLabelStyle}
-                  formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]}
+                  formatter={(value, name) => [
+                    Array.isArray(value) ? value.join(", ") : (value ?? 0),
+                    String(name ?? ""),
+                  ]}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -153,7 +156,10 @@ export default function ActivityCharts({
                   contentStyle={t.tooltipStyle}
                   itemStyle={t.tooltipItemStyle}
                   labelStyle={t.tooltipLabelStyle}
-                  formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name ?? ""]}
+                  formatter={(value, name) => [
+                    Array.isArray(value) ? value.join(", ") : (value ?? 0),
+                    String(name ?? ""),
+                  ]}
                 />
               </PieChart>
             </ResponsiveContainer>

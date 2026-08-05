@@ -46,18 +46,30 @@ export const locationsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      return ctx.prisma.location.update({
-        where: { id },
+      // Ownership scoping: only update a location owned by this user.
+      const result = await ctx.prisma.location.updateMany({
+        where: { id, userId: ctx.userId },
         data,
+      });
+      if (result.count === 0) {
+        throw new Error("Location not found");
+      }
+      return ctx.prisma.location.findFirstOrThrow({
+        where: { id, userId: ctx.userId },
       });
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.location.delete({
-        where: { id: input.id },
+      // Ownership scoping: only delete a location owned by this user.
+      const result = await ctx.prisma.location.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
       });
+      if (result.count === 0) {
+        throw new Error("Location not found");
+      }
+      return { success: true };
     }),
 
   /** Consumption logs for items in this location (for location detail view). */

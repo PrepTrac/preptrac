@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import Image from "next/image";
 import { Edit, AlertCircle, Wrench } from "lucide-react";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
-import { isLowInventory } from "~/utils/inventory";
+import { isLowInventory, isExpiringSoon as isItemExpiringSoon } from "~/utils/inventory";
+import ConfirmDialog from "~/components/ConfirmDialog";
 
 type Item = RouterOutputs["items"]["getAll"][0];
 
@@ -21,11 +23,9 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
       utils.items.getAll.invalidate();
     },
   });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const isExpiringSoon =
-    item.expirationDate &&
-    new Date(item.expirationDate) <=
-      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const isExpiringSoon = isItemExpiringSoon(item);
 
   const needsMaintenance =
     item.maintenanceInterval &&
@@ -61,9 +61,11 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         </div>
         <button
           onClick={onEdit}
-          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          aria-label={`Edit ${item.name}`}
+          title={`Edit ${item.name}`}
+          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
@@ -121,16 +123,24 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
 
       <div className="mt-auto pt-4 flex justify-end">
         <button
-          onClick={() => {
-            if (confirm("Are you sure you want to delete this item?")) {
-              deleteItem.mutate({ id: item.id });
-            }
-          }}
-          className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+          onClick={() => setConfirmDelete(true)}
+          className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
         >
           Delete
         </button>
       </div>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete item"
+        message={`Are you sure you want to delete ${item.name}?`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          deleteItem.mutate({ id: item.id });
+          setConfirmDelete(false);
+        }}
+        onClose={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

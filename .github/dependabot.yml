@@ -1,0 +1,65 @@
+# Dependabot keeps npm dependencies and GitHub Actions versions current.
+# Updates are grouped per ecosystem to reduce PR noise; npm production + dev
+# updates are separated so production dependency changes are reviewable on
+# their own.
+version: 2
+updates:
+  # npm production dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    groups:
+      production:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+
+  # npm development dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    groups:
+      development:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(dev)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "dev"
+
+  # GitHub Actions used in workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"

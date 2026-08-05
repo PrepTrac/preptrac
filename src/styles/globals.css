@@ -1,24 +1,32 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* next-themes toggles a `.dark` class on <html>. Tailwind v4 defaults to the
+ * media query, so define the class-based variant explicitly. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
 
 :root {
-  --background: #ffffff;
+  --background: #f9fafb; /* gray-50 — matches the app shell's light background */
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* next-themes toggles a `.dark` class on <html> (attribute="class"). Mirror
+ * the app shell palette here so the <body> background never falls back to the
+ * near-black (#0a0a0a) template default. These are unlayered rules, so they
+ * outrank Tailwind's layered `dark:` utilities — the values must agree. */
+.dark {
+  --background: #111827; /* gray-900 */
+  --foreground: #ededed;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  /* Inter is loaded via next/font and exposed as --font-sans on <body>. */
-  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont,
+  /* Inter is loaded via next/font and exposed as --font-inter on <body>. */
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 

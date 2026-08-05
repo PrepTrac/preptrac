@@ -105,23 +105,3 @@ export async function sendWebhook(
   }
 }
 
-export function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-  secret: string
-): boolean {
-  try {
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-    const providedSignature = signature.replace("sha256=", "");
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(providedSignature)
-    );
-  } catch {
-    return false;
-  }
-}
-

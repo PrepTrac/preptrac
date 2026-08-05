@@ -21,7 +21,7 @@ export default function LocationNav({
         onClick={() => onSelectLocation(undefined)}
         className={`px-4 py-2 rounded-md text-sm font-medium ${
           !selectedLocation
-            ? "bg-green-600 text-white"
+            ? "bg-green-700 text-white"
             : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
         }`}
       >
@@ -37,7 +37,7 @@ export default function LocationNav({
           }
           className={`px-4 py-2 rounded-md text-sm font-medium ${
             selectedLocation === location.id
-              ? "bg-green-600 text-white"
+              ? "bg-green-700 text-white"
               : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           }`}
         >

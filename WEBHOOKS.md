@@ -144,7 +144,7 @@ Your webhook endpoint should:
 1. **Accept POST requests** with JSON content
 2. **Return 2xx status** (200, 201, 202) for success
 3. **Respond quickly** (within 10 seconds, timeout is 10s)
-4. **Handle errors gracefully** - PrepTrac logs delivery failures in the `NotificationLog` table but does not retry a failed send on the next run (the alert is marked as delivered to avoid duplicates). Verify your endpoint returns 2xx.
+4. **Handle errors gracefully** - PrepTrac logs delivery failures in the `NotificationLog` table and retries transient failures (SMTP down, webhook 5xx/timeout) up to 5 times with a 15-minute spacing between attempts; after that the alert is abandoned for that day. Successful deliveries are never repeated (dedup). See [Notification & Expiration Policy](./docs/NOTIFICATION_AND_EXPIRATION_POLICY.md).
 5. **Verify signatures** if using a secret
 
 ## Example Webhook Handler

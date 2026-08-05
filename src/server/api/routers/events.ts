@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type Prisma } from "@prisma/client";
+import { type Prisma } from "~/generated/prisma/client";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { syncItemEvents } from "~/server/syncItemEvents";
 
@@ -130,9 +130,16 @@ export const eventsRouter = createTRPCRouter({
         updateData.completedAt = null;
       }
       
-      return ctx.prisma.event.update({
-        where: { id },
+      // Ownership scoping: only update an event owned by this user.
+      const result = await ctx.prisma.event.updateMany({
+        where: { id, userId: ctx.userId },
         data: updateData,
+      });
+      if (result.count === 0) {
+        throw new Error("Event not found");
+      }
+      return ctx.prisma.event.findFirstOrThrow({
+        where: { id, userId: ctx.userId },
         include: {
           item: {
             include: {
@@ -147,20 +154,32 @@ export const eventsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.event.delete({
-        where: { id: input.id },
+      // Ownership scoping: only delete an event owned by this user.
+      const result = await ctx.prisma.event.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
       });
+      if (result.count === 0) {
+        throw new Error("Event not found");
+      }
+      return { success: true };
     }),
 
   markComplete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.event.update({
-        where: { id: input.id },
+      // Ownership scoping: only mark an event owned by this user as complete.
+      const result = await ctx.prisma.event.updateMany({
+        where: { id: input.id, userId: ctx.userId },
         data: {
           completed: true,
           completedAt: new Date(),
         },
+      });
+      if (result.count === 0) {
+        throw new Error("Event not found");
+      }
+      return ctx.prisma.event.findFirstOrThrow({
+        where: { id: input.id, userId: ctx.userId },
       });
     }),
 

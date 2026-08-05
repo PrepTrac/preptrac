@@ -4,6 +4,12 @@ import { api } from "~/utils/api";
 import { useEffect, useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  getEventBadgeClass,
+  getEventSwatchClass,
+  getEventLabel,
+  type EventType,
+} from "~/utils/eventStyles";
 
 const SYNC_STORAGE_KEY = "preptrac_events_last_sync";
 const SYNC_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
@@ -51,21 +57,6 @@ export default function CalendarPage() {
     return events?.filter((event) => isSameDay(new Date(event.date), day)) ?? [];
   };
 
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case "expiration":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "maintenance":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "rotation":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "battery_replacement":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
-    }
-  };
-
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   };
@@ -89,18 +80,20 @@ export default function CalendarPage() {
           <div className="flex items-center space-x-4">
             <button
               onClick={previousMonth}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Previous month"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {format(currentMonth, "MMMM yyyy")}
             </h2>
             <button
               onClick={nextMonth}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Next month"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -126,7 +119,7 @@ export default function CalendarPage() {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700 p-2 ${
+                  className={`min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700 p-2 overflow-hidden ${
                     isToday ? "bg-blue-50 dark:bg-blue-900" : ""
                   }`}
                 >
@@ -139,24 +132,27 @@ export default function CalendarPage() {
                   >
                     {format(day, "d")}
                   </div>
-                  <div className="space-y-1">
+                  <ul className="space-y-1 list-none p-0 m-0">
                     {dayEvents.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        className={`text-xs px-2 py-1 rounded truncate ${getEventColor(
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          aria-label={`${getEventLabel(event.type)}: ${event.title} on ${format(day, "MMMM d, yyyy")}`}
+                          title={event.title}
+                          className={`w-full text-left text-xs px-2 py-1 rounded truncate block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${getEventBadgeClass(
                           event.type
                         )}`}
-                        title={event.title}
                       >
                         {event.title}
-                      </div>
+                      </button>
+                      </li>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <li className="text-xs text-gray-500 dark:text-gray-400">
                         +{dayEvents.length - 3} more
-                      </div>
+                      </li>
                     )}
-                  </div>
+                  </ul>
                 </div>
               );
             })}
@@ -168,30 +164,14 @@ export default function CalendarPage() {
             Event Legend
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-red-100 dark:bg-red-900 rounded mr-2" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Expiration
-              </span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-yellow-100 dark:bg-yellow-900 rounded mr-2" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Maintenance
-              </span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-100 dark:bg-blue-900 rounded mr-2" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Rotation
-              </span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-purple-100 dark:bg-purple-900 rounded mr-2" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Battery Replacement
-              </span>
-            </div>
+            {(["expiration", "maintenance", "rotation", "battery_replacement"] as EventType[]).map((type) => (
+              <div key={type} className="flex items-center">
+                <div className={`w-4 h-4 rounded mr-2 ${getEventSwatchClass(type)}`} />
+                <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                  {getEventLabel(type)}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
     </main>

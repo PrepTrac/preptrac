@@ -1,4 +1,4 @@
-import { Github, Youtube } from "lucide-react";
+import { CodeXml, Video } from "lucide-react";
 
 import pkg from "../../package.json";
 
@@ -17,7 +17,7 @@ export default function Footer() {
             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
             aria-label="PrepTrac on GitHub"
           >
-            <Github className="h-5 w-5" aria-hidden />
+            <CodeXml className="h-5 w-5" aria-hidden />
             <span>GitHub</span>
           </a>
           <span className="text-gray-400 dark:text-gray-500" aria-hidden>
@@ -36,7 +36,7 @@ export default function Footer() {
             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors"
             aria-label="HardenedSite on YouTube"
           >
-            <Youtube className="h-5 w-5" aria-hidden />
+            <Video className="h-5 w-5" aria-hidden />
             <span>YouTube</span>
           </a>
         </div>

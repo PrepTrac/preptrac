@@ -1,6 +1,7 @@
 # Dependencies and build
 node_modules
 .next
+src/generated/prisma
 out
 build
 
@@ -20,8 +21,10 @@ build
 coverage
 *.test.ts
 *.test.tsx
-vitest.config.ts
-.eslintrc.json
+vitest.config.*
+eslint.config.*
+playwright.config.*
+e2e
 
 # Scripts (replaced by Docker)
 install.sh

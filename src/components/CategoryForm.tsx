@@ -4,12 +4,19 @@ import { useState } from "react";
 import { api, type RouterOutputs } from "~/utils/api";
 import { useForm } from "react-hook-form";
 import { Plus, X, Edit, Trash2 } from "lucide-react";
+import {
+  CATEGORY_KINDS,
+  CATEGORY_KIND_LABELS,
+  type CategoryKind,
+} from "~/utils/inventory";
+import ConfirmDialog from "~/components/ConfirmDialog";
 
 interface CategoryFormData {
   name: string;
   description?: string;
   color?: string;
   icon?: string;
+  kind?: CategoryKind;
   targetQuantity?: number;
 }
 
@@ -24,12 +31,14 @@ export default function CategoryForm() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CategoryFormData>();
 
   const onSubmit = (data: CategoryFormData) => {
     const submitData = {
       ...data,
+      ...(data.kind ? { kind: data.kind } : {}),
       targetQuantity: Number(data.targetQuantity) || 0,
     };
 
@@ -63,22 +72,21 @@ export default function CategoryForm() {
       description: category.description ?? "",
       color: category.color ?? "",
       icon: category.icon ?? "",
+      kind: (category.kind as CategoryKind | null | undefined) ?? undefined,
       targetQuantity: category.targetQuantity ?? 0,
     });
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this category?")) {
-      deleteCategory.mutate(
-        { id },
-        {
-          onSuccess: () => {
-            utils.categories.getAll.invalidate();
-          },
-        }
-      );
-    }
+    deleteCategory.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          utils.categories.getAll.invalidate();
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -152,6 +160,26 @@ export default function CategoryForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Kind
+              </label>
+              <select
+                {...register("kind")}
+                defaultValue=""
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              >
+                <option value="">Auto (infer from name)</option>
+                {CATEGORY_KINDS.map((k) => (
+                  <option key={k} value={k}>
+                    {CATEGORY_KIND_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Controls how this category maps to dashboard goals (ammo, water, food, fuel). Leave on Auto to infer from the name.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Target Quantity (Goal)
               </label>
               <input
@@ -215,20 +243,36 @@ export default function CategoryForm() {
             <div className="flex space-x-2">
               <button
                 onClick={() => handleEdit(category)}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                aria-label={`Edit category ${category.name}`}
+                title={`Edit ${category.name}`}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4" aria-hidden="true" />
               </button>
               <button
-                onClick={() => handleDelete(category.id)}
-                className="p-2 text-red-400 hover:text-red-600"
+                onClick={() => setPendingDelete(category.id)}
+                aria-label={`Delete category ${category.name}`}
+                title={`Delete ${category.name}`}
+                className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete category"
+        message="Are you sure you want to delete this category?"
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          if (pendingDelete) handleDelete(pendingDelete);
+          setPendingDelete(null);
+        }}
+        onClose={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

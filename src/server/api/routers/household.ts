@@ -1,18 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-
-/** Mifflin-St Jeor equation: BMR (basal metabolic rate) in kcal/day */
-function bmr(weightKg: number, heightCm: number, age: number, sex: string): number {
-  const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
-  const b = sex.toLowerCase() === "female" ? base - 161 : base + 5;
-  return Math.max(0, Math.round(b));
-}
-
-const ACTIVITY_CALORIE_FACTOR: Record<string, number> = {
-  moderate: 1.55,
-  very_active: 1.725,
-  extra_active: 1.9,
-};
+import {
+  bmr,
+  calorieFactorFor,
+  type ActivityLevel,
+} from "~/utils/household";
 
 export const householdRouter = createTRPCRouter({
   getActivityLevel: protectedProcedure.query(async ({ ctx }) => {
@@ -48,7 +40,7 @@ export const householdRouter = createTRPCRouter({
         select: { activityLevel: true },
       }),
     ]);
-    const factor = user?.activityLevel ? (ACTIVITY_CALORIE_FACTOR[user.activityLevel] ?? 1) : 1;
+    const factor = calorieFactorFor(user?.activityLevel);
     return members.map((m) => {
       const bmrVal = bmr(m.weightKg, m.heightCm, m.age, m.sex);
       return {
@@ -66,7 +58,7 @@ export const householdRouter = createTRPCRouter({
         select: { activityLevel: true },
       }),
     ]);
-    const factor = user?.activityLevel ? (ACTIVITY_CALORIE_FACTOR[user.activityLevel] ?? 1) : 1;
+    const factor = calorieFactorFor(user?.activityLevel);
     const total = members.reduce(
       (sum, m) => sum + bmr(m.weightKg, m.heightCm, m.age, m.sex) * factor,
       0
@@ -110,17 +102,29 @@ export const householdRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      return ctx.prisma.familyMember.update({
-        where: { id },
+      // Ownership scoping: only update a household member owned by this user.
+      const result = await ctx.prisma.familyMember.updateMany({
+        where: { id, userId: ctx.userId },
         data,
+      });
+      if (result.count === 0) {
+        throw new Error("Family member not found");
+      }
+      return ctx.prisma.familyMember.findFirstOrThrow({
+        where: { id, userId: ctx.userId },
       });
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.familyMember.delete({
-        where: { id: input.id },
+      // Ownership scoping: only delete a household member owned by this user.
+      const result = await ctx.prisma.familyMember.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
       });
+      if (result.count === 0) {
+        throw new Error("Family member not found");
+      }
+      return { success: true };
     }),
 });

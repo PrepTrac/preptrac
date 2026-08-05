@@ -1,8 +1,9 @@
 "use client";
 
 import { format } from "date-fns";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar } from "lucide-react";
 import type { RouterOutputs } from "~/utils/api";
+import { getEventBadgeClass, getEventLabel } from "~/utils/eventStyles";
 
 type Event = RouterOutputs["events"]["getAll"][0];
 
@@ -21,21 +22,6 @@ export default function UpcomingEvents({ events }: UpcomingEventsProps) {
       </div>
     );
   }
-
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case "expiration":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "maintenance":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "rotation":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "battery_replacement":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
-    }
-  };
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
@@ -63,11 +49,11 @@ export default function UpcomingEvents({ events }: UpcomingEventsProps) {
               </div>
               <div className="flex items-center space-x-3">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventColor(
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventBadgeClass(
                     event.type
                   )}`}
                 >
-                  {event.type.replace("_", " ")}
+                  {getEventLabel(event.type)}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {format(new Date(event.date), "MMM d, yyyy")}

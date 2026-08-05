@@ -4,6 +4,7 @@ import { api } from "~/utils/api";
 import { useState, useEffect } from "react";
 import { Users, Plus, Pencil, Trash2, Flame } from "lucide-react";
 import { useDialogDismiss } from "~/hooks/useDialogDismiss";
+import ConfirmDialog from "~/components/ConfirmDialog";
 
 const HOUSEHOLD_UNITS_KEY = "preptrac-household-units";
 
@@ -36,6 +37,7 @@ export default function HouseholdPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [units, setUnits] = useState<HouseholdUnits>("metric");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setUnits(getStoredUnits());
@@ -113,7 +115,7 @@ export default function HouseholdPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
             Adjusts calorie and water estimates. The base calculation (Mifflin-St Jeor) is for maintaining at rest; these options add a multiplier for higher activity. This is not 100% accurate but helps be conservative when planning for strenuous activity.
           </p>
-          <div className="space-y-3">
+          <div className="space-y-3 [&_p]:text-gray-600 dark:[&_p]:text-gray-300">
             <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
               <input
                 type="radio"
@@ -234,22 +236,20 @@ export default function HouseholdPage() {
                     setEditingId(m.id);
                     setShowForm(true);
                   }}
-                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  aria-label={`Edit ${m.name || "family member"}`}
                   title="Edit"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (window.confirm("Remove this family member?")) {
-                      deleteMember.mutate({ id: m.id });
-                    }
-                  }}
-                  className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"
+                  onClick={() => setPendingDeleteId(m.id)}
+                  className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  aria-label={`Remove ${m.name || "family member"}`}
                   title="Remove"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </li>
@@ -283,6 +283,18 @@ export default function HouseholdPage() {
             }}
           />
         )}
+        <ConfirmDialog
+          open={pendingDeleteId !== null}
+          title="Remove family member"
+          message="Remove this family member?"
+          confirmLabel="Remove"
+          destructive
+          onConfirm={() => {
+            if (pendingDeleteId) deleteMember.mutate({ id: pendingDeleteId });
+            setPendingDeleteId(null);
+          }}
+          onClose={() => setPendingDeleteId(null)}
+        />
     </main>
   );
 }
