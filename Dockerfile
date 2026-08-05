@@ -13,6 +13,15 @@ COPY prisma ./prisma/
 RUN npm ci
 
 COPY . .
+
+# `next build` imports route modules (e.g. /api/cron/notifications) during
+# page-data collection; those import src/env.mjs, which throws when
+# DATABASE_URL is unset. This placeholder satisfies build-time validation only
+# — no database is opened during the build (CI sets the same var via .env).
+# The real value is set as an ENV in the runner stage below and provided by the
+# deployment platform.
+ENV DATABASE_URL="file:/tmp/build.db"
+
 RUN npm run build
 # Keep only runtime dependencies for the runner. Prisma CLI is a production
 # dependency because migrations run at container startup.
