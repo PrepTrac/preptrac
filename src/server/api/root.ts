@@ -5,7 +5,6 @@ import { locationsRouter } from "~/server/api/routers/locations";
 import { eventsRouter } from "~/server/api/routers/events";
 import { dashboardRouter } from "~/server/api/routers/dashboard";
 import { notificationsRouter } from "~/server/api/routers/notifications";
-import { authRouter } from "~/server/api/routers/auth";
 import { settingsRouter } from "~/server/api/routers/settings";
 import { householdRouter } from "~/server/api/routers/household";
 
@@ -16,7 +15,6 @@ export const appRouter = createTRPCRouter({
   events: eventsRouter,
   dashboard: dashboardRouter,
   notifications: notificationsRouter,
-  auth: authRouter,
   settings: settingsRouter,
   household: householdRouter,
 });

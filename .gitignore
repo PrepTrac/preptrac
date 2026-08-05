@@ -46,3 +46,6 @@ next-env.d.ts
 FutureUpdates.txt
 OPTIMIZATIONS.md
 .cursorrules
+
+# subagent artifacts
+/.pi-subagents

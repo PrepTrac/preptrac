@@ -32,6 +32,7 @@ model User {
   events            Event[]
   consumptionLogs   ConsumptionLog[]
   notificationSettings NotificationSettings?
+  notificationLogs   NotificationLog[]
   testDataRecords   TestDataRecord[]
   familyMembers     FamilyMember[]
 }
@@ -193,5 +194,26 @@ model NotificationSettings {
   smtpFrom              String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+// Durable record of each delivered email/webhook alert.
+// The unique `dedupKey` makes the scheduled runner idempotent: an alert is sent at
+// most once for a given (user, channel, type, item, event-date) combination, so
+// re-running the Coolify scheduled task (or a retry) never produces duplicates.
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dedupKey  String   @unique // e.g. "<userId>:email:expiration:<itemId>:2026-01-15"
+  channel   String   // "email" | "webhook"
+  type      String   // "expiration" | "maintenance" | "rotation" | "low_inventory"
+  itemId    String?
+  message   String
+  success   Boolean  @default(true)
+  error     String?
+  sentAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([sentAt])
 }
 

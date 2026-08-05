@@ -8,6 +8,9 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().optional(),
+  // Shared secret that gates the /api/cron/notifications runner. Optional at boot
+  // (the app still starts), but the cron endpoint rejects requests when unset.
+  CRON_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

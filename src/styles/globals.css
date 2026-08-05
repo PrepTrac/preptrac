@@ -17,7 +17,9 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Inter is loaded via next/font and exposed as --font-sans on <body>. */
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer utilities {
@@ -26,3 +28,18 @@ body {
   }
 }
 
+/*
+ * Reduced-motion default: honor the user's OS preference by collapsing
+ * non-essential animation/transition duration. Functional transitions
+ * (e.g. focus rings) remain instant. Added as an app-level a11y default.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { sendWebhook, type WebhookPayload } from "~/utils/webhooks";
+import {
+  collectDueAlerts,
+  type AlertableItem,
+} from "~/server/notifications";
 import { env } from "~/env.mjs";
 import * as nodemailer from "nodemailer";
 
@@ -182,71 +186,47 @@ export const notificationsRouter = createTRPCRouter({
       return [];
     }
 
-    const notifications: Array<{
-      type: string;
-      message: string;
-      date: Date;
-      itemId?: string;
-      eventId?: string;
-    }> = [];
-
     const now = new Date();
 
-    // Expiration notifications
-    if (settings.emailExpirationDays) {
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + settings.emailExpirationDays);
+    // In-app view reuses the email lead-time preferences (the single set of lead
+    // times exposed in the UI) and the shared compute functions so the in-app
+    // list stays consistent with the scheduled email/webhook deliveries.
+    const items = await ctx.prisma.item.findMany({
+      where: { userId: ctx.userId },
+      include: { category: true, location: true },
+    });
 
-      const expiringItems = await ctx.prisma.item.findMany({
-        where: {
-          userId: ctx.userId,
-          expirationDate: {
-            lte: expirationDate,
-            gte: now,
-          },
-        },
-      });
+    const alertable: AlertableItem[] = items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      quantity: i.quantity,
+      unit: i.unit,
+      minQuantity: i.minQuantity,
+      expirationDate: i.expirationDate,
+      maintenanceInterval: i.maintenanceInterval,
+      lastMaintenanceDate: i.lastMaintenanceDate,
+      rotationSchedule: i.rotationSchedule,
+      lastRotationDate: i.lastRotationDate,
+    }));
 
-      for (const item of expiringItems) {
-        const expirationDate = item.expirationDate;
-        if (!expirationDate) continue;
-        notifications.push({
-          type: "expiration",
-          message: `${item.name} expires on ${expirationDate.toLocaleDateString()}`,
-          date: expirationDate,
-          itemId: item.id,
-        });
-      }
-    }
+    const alerts = collectDueAlerts(
+      alertable,
+      {
+        expirationDays: settings.emailExpirationDays,
+        maintenanceDays: settings.emailMaintenanceDays,
+        rotationDays: settings.emailRotationDays,
+        lowInventory: settings.emailLowInventory,
+      },
+      now,
+    ).map((a) => ({
+      type: a.type,
+      message: a.message,
+      date: a.date,
+      itemId: a.itemId,
+    }));
 
-    // Maintenance notifications
-    if (settings.emailMaintenanceDays) {
-      const items = await ctx.prisma.item.findMany({
-        where: {
-          userId: ctx.userId,
-          maintenanceInterval: { not: null },
-        },
-      });
-
-      for (const item of items) {
-        if (!item.lastMaintenanceDate || !item.maintenanceInterval) continue;
-        const nextMaintenance = new Date(item.lastMaintenanceDate);
-        nextMaintenance.setDate(nextMaintenance.getDate() + item.maintenanceInterval);
-        const notificationDate = new Date(nextMaintenance);
-        notificationDate.setDate(notificationDate.getDate() - settings.emailMaintenanceDays);
-
-        if (notificationDate <= now && nextMaintenance >= now) {
-          notifications.push({
-            type: "maintenance",
-            message: `${item.name} needs maintenance by ${nextMaintenance.toLocaleDateString()}`,
-            date: nextMaintenance,
-            itemId: item.id,
-          });
-        }
-      }
-    }
-
-    // Upcoming events
+    // Also surface upcoming calendar events within a 7-day window so the in-app
+    // list reflects the calendar view (events may carry battery_replacement etc).
     const upcomingEvents = await ctx.prisma.event.findMany({
       where: {
         userId: ctx.userId,
@@ -258,17 +238,22 @@ export const notificationsRouter = createTRPCRouter({
       },
     });
 
-    for (const event of upcomingEvents) {
-      notifications.push({
-        type: event.type,
-        message: event.title,
-        date: event.date,
-        eventId: event.id,
-        itemId: event.itemId ?? undefined,
-      });
-    }
+    const eventAlerts = upcomingEvents.map((event) => ({
+      type: event.type,
+      message: event.title,
+      date: event.date,
+      eventId: event.id,
+      itemId: event.itemId ?? undefined,
+    }));
 
-    return notifications.sort((a, b) => a.date.getTime() - b.date.getTime());
+    // De-duplicate item-driven alerts that also appear as events (same item+type).
+    const seen = new Set(alerts.map((a) => `${a.itemId}:${a.type}`));
+    const merged = [
+      ...alerts,
+      ...eventAlerts.filter((a) => !a.itemId || !seen.has(`${a.itemId}:${a.type}`)),
+    ];
+
+    return merged.sort((a, b) => a.date.getTime() - b.date.getTime());
   }),
 });
 

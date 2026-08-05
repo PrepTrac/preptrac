@@ -380,21 +380,27 @@ export const itemsRouter = createTRPCRouter({
           `Not enough quantity. Available: ${item.quantity} ${item.unit}`
         );
       }
-      const newQuantity = item.quantity - input.quantity;
-      await ctx.prisma.$transaction([
-        ctx.prisma.item.update({
-          where: { id: input.itemId },
-          data: { quantity: newQuantity },
-        }),
-        ctx.prisma.consumptionLog.create({
+      // Decrement atomically at the DB level, guarded so quantity can never go
+      // negative (rejects the update if available stock changed since the read).
+      await ctx.prisma.$transaction(async (tx) => {
+        const result = await tx.item.updateMany({
+          where: { id: input.itemId, userId, quantity: { gte: input.quantity } },
+          data: { quantity: { decrement: input.quantity } },
+        });
+        if (result.count !== 1) {
+          throw new Error(
+            `Not enough quantity. Available: ${item.quantity} ${item.unit}`
+          );
+        }
+        await tx.consumptionLog.create({
           data: {
             itemId: input.itemId,
             userId,
             quantity: input.quantity,
             note: input.note ?? null,
           },
-        }),
-      ]);
+        });
+      });
       return ctx.prisma.item.findFirstOrThrow({
         where: { id: input.itemId, userId },
         include: { category: true, location: true },
@@ -418,8 +424,6 @@ export const itemsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId;
       const isAddition = input.activityType === "addition";
-      const results: { itemId: string; success: boolean; error?: string }[] = [];
-      const updates: Prisma.PrismaPromise<unknown>[] = [];
       const items = await ctx.prisma.item.findMany({
         where: {
           id: { in: input.entries.map((e) => e.itemId) },
@@ -428,30 +432,50 @@ export const itemsRouter = createTRPCRouter({
         include: { category: true, location: true },
       });
       const itemMap = new Map(items.map((i) => [i.id, i]));
+
+      // Pre-validate every entry so nothing is applied if any entry is invalid.
+      const failures: string[] = [];
       for (const entry of input.entries) {
         const item = itemMap.get(entry.itemId);
         if (!item) {
-          results.push({ itemId: entry.itemId, success: false, error: "Item not found" });
+          failures.push("Item not found");
           continue;
         }
         if (!isAddition && entry.quantity > item.quantity) {
-          results.push({
-            itemId: entry.itemId,
-            success: false,
-            error: `Not enough quantity. Available: ${item.quantity} ${item.unit}`,
-          });
-          continue;
+          failures.push(
+            `Not enough quantity. Available: ${item.quantity} ${item.unit}`
+          );
         }
-        results.push({ itemId: entry.itemId, success: true });
-        const newQuantity = isAddition
-          ? item.quantity + entry.quantity
-          : item.quantity - entry.quantity;
-        updates.push(
-          ctx.prisma.item.update({
-            where: { id: entry.itemId },
-            data: { quantity: newQuantity },
-          }),
-          ctx.prisma.consumptionLog.create({
+      }
+      if (failures.length > 0) {
+        const messages = failures.filter(Boolean);
+        throw new Error(messages.join("; ") || "Validation failed");
+      }
+
+      // Apply all updates atomically in one transaction. Consumption uses a
+      // conditional updateMany so quantity can never drop below zero, even under
+      // concurrent requests.
+      await ctx.prisma.$transaction(async (tx) => {
+        for (const entry of input.entries) {
+          const item = itemMap.get(entry.itemId);
+          if (!item) continue;
+          if (isAddition) {
+            await tx.item.update({
+              where: { id: entry.itemId },
+              data: { quantity: { increment: entry.quantity } },
+            });
+          } else {
+            const result = await tx.item.updateMany({
+              where: { id: entry.itemId, userId, quantity: { gte: entry.quantity } },
+              data: { quantity: { decrement: entry.quantity } },
+            });
+            if (result.count !== 1) {
+              throw new Error(
+                `Not enough quantity. Available: ${item.quantity} ${item.unit}`
+              );
+            }
+          }
+          await tx.consumptionLog.create({
             data: {
               itemId: entry.itemId,
               userId,
@@ -459,15 +483,9 @@ export const itemsRouter = createTRPCRouter({
               type: input.activityType,
               note: entry.note ?? null,
             },
-          })
-        );
-      }
-      const failed = results.filter((r) => !r.success);
-      if (failed.length > 0) {
-        const messages = failed.map((f) => f.error).filter(Boolean);
-        throw new Error(messages.join("; ") || "Validation failed");
-      }
-      await ctx.prisma.$transaction(updates);
+          });
+        }
+      });
       return ctx.prisma.item.findMany({
         where: {
           id: { in: input.entries.map((e) => e.itemId) },

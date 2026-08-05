@@ -23,6 +23,8 @@ If you like this project and want to support it, [buy me a coffee :)](https://bu
 
 No sign-in required. Open the app and start using it.
 
+> ⚠️ **No authentication.** PrepTrac is single-user by design — there is no login. Anyone who can reach the app can read and edit everything. Keep it on a trusted LAN, or put it behind access control (e.g. Coolify Basic Auth or a reverse proxy) before exposing it beyond your home network. See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for guidance.
+
 ---
 
 ## Get Started
@@ -49,8 +51,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll la
 ### Production deployment (Docker)
 
 - **Port**: The app listens on **8008** inside the container; `docker-compose.yml` maps `8008:8008`. Change the host port in `ports` if you need a different external port.
-- **Data**: The SQLite database is stored in a Docker volume (`preptrac-data`). It persists across `docker compose down` and `docker compose up -d`. To wipe data and start fresh: `docker compose down -v` then `docker compose up -d`.
+- **Data**: The SQLite database is stored in a Docker volume (`preptrac-data` → `/app/data/dev.db`). It persists across `docker compose down` and `docker compose up -d`. To wipe data and start fresh: `docker compose down -v` then `docker compose up -d`.
 - **Logs**: `docker compose logs -f preptrac` to follow container logs.
+- **Health**: The image has a built-in `HEALTHCHECK` probing `GET /api/health`.
+
+#### Deploying on Coolify
+
+See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the full guide. Key points: mount the persistent volume at `/app/data`, set `DATABASE_URL=file:/app/data/dev.db`, set `CRON_SECRET` for scheduled notifications, and **enable Basic Auth / keep it on a trusted network** because there is no login.
 
 #### Updating PrepTrac
 
@@ -122,7 +129,10 @@ Expirations, maintenance due dates, and rotation schedules from your items show 
 
 ### Notifications
 
-Under **Settings → Notifications** you can turn on in-app or email alerts for expirations, maintenance, and low inventory, and choose how many days in advance to be reminded.
+Under **Settings → Notifications** you can turn on in-app or email/webhook alerts for expirations, maintenance, rotations, and low inventory, and choose how many days in advance to be reminded for each channel.
+
+- **In-app** — A 🔔 bell in the sidebar shows a live count of pending alerts; open it to review expiration, maintenance, rotation, low-inventory, and upcoming calendar reminders.
+- **Email & webhooks** — Scheduled delivery runs through an idempotent runner at `/api/cron/notifications`, triggered by a Coolify Scheduled Task (or any cron). It never sends duplicates. Set `CRON_SECRET` and schedule it as described in [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
 
 ### Goals (Settings → Goals)
 

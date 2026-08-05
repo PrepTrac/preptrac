@@ -1,12 +1,14 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import path from "path";
+
+const srcDirectory = fileURLToPath(new URL("./src", import.meta.url));
 
 export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
     alias: {
-      "~": path.resolve(__dirname, "./src"),
+      "~": srcDirectory,
     },
   },
 });

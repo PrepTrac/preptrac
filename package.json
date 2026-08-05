@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:push": "prisma db push",
@@ -22,11 +22,9 @@
     "@trpc/next": "^10.45.0",
     "@trpc/react-query": "^10.45.0",
     "@trpc/server": "^10.45.0",
-    "bcryptjs": "^2.4.3",
     "date-fns": "^3.0.6",
     "lucide-react": "^0.303.0",
     "next": "^15.0.8",
-    "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
     "nodemailer": "^8.0.7",
     "qrcode": "^1.5.3",
@@ -37,7 +35,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.10.6",
     "@types/nodemailer": "^7.0.9",
     "@types/qrcode": "^1.5.5",
@@ -54,9 +51,6 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "postcss": "$postcss",
-    "next-auth": {
-      "nodemailer": "$nodemailer"
-    }
+    "postcss": "$postcss"
   }
 }

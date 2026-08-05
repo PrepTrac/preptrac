@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Edit, AlertCircle, Wrench } from "lucide-react";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
+import { isLowInventory } from "~/utils/inventory";
 
 type Item = RouterOutputs["items"]["getAll"][0];
 
@@ -34,9 +35,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         item.maintenanceInterval * 24 * 60 * 60 * 1000
     ) <= new Date();
 
-  const isLowInventory = item.minQuantity > 0
-    ? item.quantity <= item.minQuantity
-    : item.quantity <= 10;
+  const lowInventory = isLowInventory(item);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow flex flex-col h-full">
@@ -91,7 +90,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         )}
       </div>
 
-      {(isExpiringSoon || needsMaintenance || isLowInventory) && (
+      {(isExpiringSoon || needsMaintenance || lowInventory) && (
         <div className="mt-3 space-y-1">
           {isExpiringSoon && item.expirationDate && (
             <div className="flex items-center text-sm text-red-600 dark:text-red-400">
@@ -105,7 +104,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
               Needs Maintenance
             </div>
           )}
-          {isLowInventory && (
+          {lowInventory && (
             <div className="flex items-center text-sm text-orange-600 dark:text-orange-400">
               <AlertCircle className="h-4 w-4 mr-1" />
               Low Inventory

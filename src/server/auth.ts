@@ -1,8 +1,9 @@
 import { prisma } from "~/server/db";
-import bcrypt from "bcryptjs";
 
 const DEFAULT_USER_EMAIL = "default@preptrac.local";
-const DEFAULT_USER_PASSWORD = "preptrac-default";
+// Authentication is intentionally disabled: PrepTrac is single-user/self-hosted.
+// The legacy User.password column is kept (NOT NULL) but no longer holds a usable
+// credential. New default users get an empty placeholder instead of a hashed secret.
 
 const DEFAULT_CATEGORIES = [
   { name: "Food", description: "Canned goods, MREs, dried food, etc.", color: "#F59E0B", icon: "utensils" },
@@ -27,12 +28,12 @@ const DEFAULT_LOCATIONS = [
 
 /** Get the single default user, creating with default categories/locations if none exists. */
 export async function getOrCreateDefaultUser(): Promise<{ id: string }> {
-  const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
   const user = await prisma.user.upsert({
     where: { email: DEFAULT_USER_EMAIL },
     create: {
       email: DEFAULT_USER_EMAIL,
-      password: hashedPassword,
+      // Vestigial column; auth is disabled. Empty placeholder (not a real credential).
+      password: "",
       name: "Default User",
     },
     update: {},
