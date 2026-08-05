@@ -1,8 +1,18 @@
 # Deploying PrepTrac (Coolify / Docker)
 
 PrepTrac is a self-hosted, single-user preparedness-inventory app built with
-Next.js (standalone build) + Prisma + SQLite. This guide covers running it on
-**Coolify** (or plain Docker) and enabling scheduled notifications.
+Next.js + Prisma + SQLite. This guide covers running it on **Coolify** (or plain
+Docker) and enabling scheduled notifications.
+
+There are two supported Coolify Build Packs. Pick **one**:
+
+- **Nixpacks** — the default, zero-Dockerfile path. Configured via
+  [`nixpacks.toml`](../nixpacks.toml); see [§0](#0-nixpacks-build-coolify-default).
+- **Dockerfile** — the multi-stage standalone build defined in [`Dockerfile`](../Dockerfile).
+  Uses the standalone Next.js output and a smaller runtime image.
+
+Both produce the same running app. The rest of this guide (persistent volume,
+env vars, health, notifications, HTTPS) applies to **both** paths.
 
 > ⚠️ **No login, no authentication.** PrepTrac is intentionally single-user and
 > has **no sign-in**. Anyone who can reach the app can read and edit all data.
@@ -100,6 +110,51 @@ Because PrepTrac has **no authentication** (see the warning above), when exposin
 it beyond a trusted LAN you **must** add an access layer. On Coolify, enable
 **Basic Authentication** on the resource (a Traefik basic-auth middleware,
 independent of the app), or use **Custom Labels** for IP allow-listing.
+
+## 0. Nixpacks build (Coolify default)
+
+Nixpacks builds directly from the source — there is no `Dockerfile` involved.
+The repo's [`nixpacks.toml`](../nixpacks.toml) handles the three things Nixpacks
+can't infer on its own:
+
+1. **Node 22 LTS** — set via `NIXPACKS_NODE_VERSION` (see below).
+   `better-sqlite3@13` ships prebuilt binaries for Node 22's ABI. Without a pin,
+   Nixpacks resolves `engines.node` (`">=22.0.0"`) to the newest available Node
+   (24), whose newer ABI forces a from-source native compile.
+2. **Native build toolchain** — `better-sqlite3` is a native addon. When no
+   prebuilt binary matches the platform/ABI, npm rebuilds it with `node-gyp`,
+   which needs **Python 3 + a C/C++ compiler + make**. The toolchain
+   (`python3`, `gcc`, `gnumake`) is added in `nixpacks.toml` so the build never
+   fails with `gyp ERR! find Python You need to install the latest version of
+   Python.`
+3. **Build-time `DATABASE_URL`** — `next build` imports route handlers that
+   import `src/env.mjs`, which throws when `DATABASE_URL` is empty. The build
+   phase supplies a throwaway placeholder (`file:/tmp/build.db`); no database is
+   opened during the build. The real value comes from Coolify at runtime.
+
+The start command (`scripts/start-nixpacks.sh`) applies migrations on every
+start, then runs `next start` (which honors the `PORT` env var and binds to
+`0.0.0.0`).
+
+### Required Coolify settings for the Nixpacks build
+
+- **Build Pack:** Nixpacks.
+- **Environment variables (build + runtime):** set `NIXPACKS_NODE_VERSION=22`.
+  This guarantees the Node pin even though `engines.node` is a range.
+- **Persistent Storage:** add a volume mounted at **`/app/data`** (see [§1](#1-persistent-volume-sqlite-at-appdata)).
+- **`DATABASE_URL`:** point it at the mounted volume, e.g. `file:/app/data/dev.db`.
+  Do **not** use a relative path like `file:./database.db` — it resolves under
+  `/app`, which is rebuilt from the image on every redeploy, so the database
+  would be wiped (silent data loss) on each deploy.
+- **Port:** set `PORT=8008` (or whatever the resource exposes) so `next start`
+  listens where Coolify's proxy and the health/cron examples in this guide expect.
+
+> The remaining sections (1–6) apply unchanged to the Nixpacks build, with one
+> exception: Nixpacks does **not** embed a `HEALTHCHECK` in the image. Configure
+> Coolify's health check against `GET /api/health` in the resource settings
+> instead (see [§3](#3-health-checking)).
+
+---
 
 ## 6. Notes
 

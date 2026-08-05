@@ -1,0 +1,40 @@
+# Nixpacks build plan for PrepTrac.
+#
+# Used by Coolify when the resource's Build Pack is "Nixpacks". The repo also
+# ships a multi-stage Dockerfile (standalone build) for the Docker Build Pack;
+# these two paths are independent.
+#
+# Docs: https://nixpacks.com/docs/configuration/file
+
+# Pin Node 22 LTS. This matches the repo's Dockerfile and CI, and
+# better-sqlite3@13 publishes prebuilt binaries for Node 22's ABI (so the native
+# compile below is often skipped entirely). Without a pin, Nixpacks resolves
+# engines.node (">=22.0.0") to the newest available (24), whose newer ABI has no
+# prebuild and forces a from-source compile.
+#
+# For guaranteed pinning, ALSO set NIXPACKS_NODE_VERSION=22 in the resource's
+# Coolify environment variables — process env takes priority over this file.
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.setup]
+# The "..." EXTENDS the provider's default packages (nodejs, npm) instead of
+# replacing them. better-sqlite3 is a native addon: when no prebuilt binary
+# matches the platform/Node ABI, npm rebuilds it with node-gyp, which requires
+# Python 3, a C/C++ compiler, and make. These are only used when a prebuilt is
+# unavailable.
+nixPkgs = ["...", "python3", "gcc", "gnumake"]
+
+[phases.build]
+# `next build` imports route handlers (e.g. /api/cron/notifications) that import
+# src/env.mjs, which throws when DATABASE_URL is empty. This placeholder is
+# build-time only — no database is opened during the build (the same trick the
+# Dockerfile uses). The real value is provided by Coolify at runtime.
+cmds = ['DATABASE_URL="file:/tmp/build.db" npm run build']
+
+[start]
+# Apply Prisma migrations on every start (creates tables on first deploy, and
+# reconciles legacy db-push databases without migration history), then start
+# Next.js. `npm start` runs `next start`, which honors the PORT env var Coolify
+# injects and binds to 0.0.0.0.
+cmd = "./scripts/start-nixpacks.sh"

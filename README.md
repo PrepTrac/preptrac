@@ -57,7 +57,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll la
 
 #### Deploying on Coolify
 
-See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the full guide. Key points: mount the persistent volume at `/app/data`, set `DATABASE_URL=file:/app/data/dev.db`, set `CRON_SECRET` for scheduled notifications, and **enable Basic Auth / keep it on a trusted network** because there is no login.
+See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the full guide. Coolify supports two Build Packs, both fully configured in the repo: **Nixpacks** (the default; configured via [`nixpacks.toml`](./nixpacks.toml)) or the **Dockerfile**. Key points: set `NIXPACKS_NODE_VERSION=22` (Nixpacks), mount the persistent volume at `/app/data`, set `DATABASE_URL=file:/app/data/dev.db`, set `CRON_SECRET` for scheduled notifications, and **enable Basic Auth / keep it on a trusted network** because there is no login.
 
 #### Updating PrepTrac
 
