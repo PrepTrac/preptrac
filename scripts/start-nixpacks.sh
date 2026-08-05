@@ -14,6 +14,15 @@
 BASELINE_MIGRATION="20240101000000_init"
 set -e
 
+# Ensure the SQLite file's parent directory exists before Prisma opens it.
+# Unlike the Dockerfile (which pre-creates /app/data), the Nixpacks image does
+# not, so a DATABASE_URL like file:/app/data/dev.db crashes at startup with
+# "directory does not exist" when nothing has created that folder. Mounting a
+# persistent volume at the path is still required for data to survive redeploy.
+db_path="${DATABASE_URL#file:}"
+db_dir="$(dirname "$db_path")"
+[ -n "$db_dir" ] && mkdir -p "$db_dir"
+
 echo "[start] Applying database migrations..."
 
 migration_output=$(npx prisma migrate deploy 2>&1) && migration_status=0 || migration_status=$?
