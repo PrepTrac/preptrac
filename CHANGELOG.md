@@ -6,6 +6,13 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+---
+
+## [0.2.2] — 2026-08-06
+
+- **Inventory & Locations** — New dense table view (default) with a shared Table/Cards toggle; the Locations page also auto-selects the first location on load instead of showing a blank dropdown.
+- **Activity** — Redesigned into a single consistent-width column with a one-line log entry and friendly empty states for no-items/no-activity.
+- **Code quality** — Extracted a shared `needsMaintenance()` helper so the maintenance-due badge is computed once and stays consistent between card and table views; associated form labels for accessibility.
 - **App modes** — New `PREPTRAC_MODE` env var selects how the app starts: `demo` (pre-seeded sample data and fully read-only), `seeded` (pre-seeded sample data with full usage), or `clean` (default; empty slate). Demo mode blocks every write server-side, shows a read-only banner, and disables/hides all add/edit/delete controls across the app. Seeding reuses the existing "Fill test data" dataset and runs automatically and idempotently on first request. Invalid or unrecognized values fall back to `clean`.
 - **Refactor** — Extracted the sample-data seeder into `src/server/seedData.ts` (`seedDemoData` / `ensureSeededOnce`) so the "Fill test data" button and automatic demo/seeded-mode seeding share one dataset.
 
