@@ -19,6 +19,9 @@ services:
       - SMTP_USER=
       - SMTP_PASSWORD=
       - SMTP_FROM=
+      # App mode: "demo" = seeded + read-only, "seeded" = seeded + full usage,
+      # "clean" or unset/empty = empty slate. See README → App modes.
+      - PREPTRAC_MODE=
     volumes:
       - preptrac-data:/app/data
     restart: unless-stopped

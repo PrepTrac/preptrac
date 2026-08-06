@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Users, Plus, Pencil, Trash2, Flame } from "lucide-react";
 import { useDialogDismiss } from "~/hooks/useDialogDismiss";
 import ConfirmDialog from "~/components/ConfirmDialog";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 const HOUSEHOLD_UNITS_KEY = "preptrac-household-units";
 
@@ -34,6 +35,7 @@ function getStoredUnits(): HouseholdUnits {
 }
 
 export default function HouseholdPage() {
+  const { readOnly } = useDemoMode();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [units, setUnits] = useState<HouseholdUnits>("metric");
@@ -122,7 +124,8 @@ export default function HouseholdPage() {
                 name="activityLevel"
                 checked={activityData?.activityLevel === null || activityData?.activityLevel === undefined}
                 onChange={() => setActivityLevel.mutate({ activityLevel: null })}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                disabled={readOnly}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-white">Base (sedentary)</span>
@@ -135,7 +138,8 @@ export default function HouseholdPage() {
                 name="activityLevel"
                 checked={activityData?.activityLevel === "moderate"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "moderate" })}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                disabled={readOnly}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-white">Moderately active</span>
@@ -148,7 +152,8 @@ export default function HouseholdPage() {
                 name="activityLevel"
                 checked={activityData?.activityLevel === "very_active"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "very_active" })}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                disabled={readOnly}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-white">Very active</span>
@@ -161,7 +166,8 @@ export default function HouseholdPage() {
                 name="activityLevel"
                 checked={activityData?.activityLevel === "extra_active"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "extra_active" })}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                disabled={readOnly}
+                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-white">Extra active</span>
@@ -190,17 +196,19 @@ export default function HouseholdPage() {
                 Rest of world (kg, cm)
               </button>
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(null);
-                setShowForm(true);
-              }}
-              className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add member
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setShowForm(true);
+                }}
+                className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add member
+              </button>
+            )}
           </div>
         </div>
 
@@ -230,27 +238,31 @@ export default function HouseholdPage() {
                 </span>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingId(m.id);
-                    setShowForm(true);
-                  }}
-                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  aria-label={`Edit ${m.name || "family member"}`}
-                  title="Edit"
-                >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingDeleteId(m.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                  aria-label={`Remove ${m.name || "family member"}`}
-                  title="Remove"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(m.id);
+                      setShowForm(true);
+                    }}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label={`Edit ${m.name || "family member"}`}
+                    title="Edit"
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeleteId(m.id)}
+                    className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                    aria-label={`Remove ${m.name || "family member"}`}
+                    title="Remove"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
               </div>
             </li>
           ))}

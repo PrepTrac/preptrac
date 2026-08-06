@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "~/utils/api";
 import { Target } from "lucide-react";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 type GoalsData = {
   ammoGoalRounds: number | null;
@@ -24,6 +25,7 @@ const KWH_PER_GALLON = 6;
  * invalidates the dashboard stats query.
  */
 export default function GoalsSection() {
+  const { readOnly } = useDemoMode();
   const { data: goals } = api.settings.getGoals.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
@@ -84,7 +86,14 @@ export default function GoalsSection() {
       <p className="text-sm text-gray-600 dark:text-gray-400">
         Set overall targets here. When a goal is set, the dashboard uses it for that category. Item-level target (goal) fields for matching units are disabled so this page is the single place to manage those goals.
       </p>
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+      {readOnly && (
+        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+          Demo mode is read-only — goals are view-only.
+        </p>
+      )}
+      <form onSubmit={handleSubmit}>
+      {/* fieldset[disabled] disables every input and the submit button at once */}
+      <fieldset disabled={readOnly} className="space-y-5 max-w-md">
         <div>
           <label htmlFor="goals-ammo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Ammo (rounds)
@@ -196,6 +205,7 @@ export default function GoalsSection() {
         >
           {updateGoalsMutation.isPending ? "Saving…" : "Save goals"}
         </button>
+      </fieldset>
       </form>
     </div>
   );

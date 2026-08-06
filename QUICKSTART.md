@@ -23,6 +23,8 @@ Get PrepTrac up and running in a few minutes!
 
 You’re taken straight to the **Dashboard** — there is no sign-in or registration.
 
+> 💡 **Want a read-only demo with sample data already loaded?** Set `PREPTRAC_MODE=demo` in your `.env` (or Docker env) before starting. The app seeds itself and blocks all changes — great for showing it off. See [README → App modes](./README.md#app-modes-demoseeded--clean) for all three modes (`demo`, `seeded`, `clean`).
+
 ## Step 6: Set Up Your First Data
 
 You can either try the app with sample data first, or set up your own data.

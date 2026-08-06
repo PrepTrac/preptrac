@@ -8,6 +8,7 @@ import {
   DEFAULT_MAINTENANCE_DAYS,
   DEFAULT_ROTATION_DAYS,
 } from "~/utils/notificationDefaults";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 /**
  * Notification preferences editor (Settings → Notifications): email/SMTP,
@@ -15,6 +16,7 @@ import {
  * mutations, and test-delivery actions.
  */
 export default function NotificationsSection() {
+  const { readOnly } = useDemoMode();
   const { data: notificationSettings } = api.notifications.getSettings.useQuery();
   const updateSettings = api.notifications.updateSettings.useMutation();
   const sendTestWebhook = api.notifications.sendTestWebhook.useMutation();
@@ -108,7 +110,14 @@ export default function NotificationsSection() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {readOnly && (
+        <p className="mb-4 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+          Demo mode is read-only — notification settings cannot be changed and test deliveries are disabled.
+        </p>
+      )}
+      {/* fieldset[disabled] turns off every input, test button, and Save at once */}
+      <fieldset disabled={readOnly} className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
           Notification Preferences
@@ -395,6 +404,7 @@ export default function NotificationsSection() {
           Save Settings
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

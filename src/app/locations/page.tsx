@@ -3,6 +3,8 @@
 import { api } from "~/utils/api";
 import { useState } from "react";
 import ItemCard from "~/components/ItemCard";
+import ItemTable from "~/components/ItemTable";
+import ItemViewToggle, { type ItemView } from "~/components/ItemViewToggle";
 import ItemForm from "~/components/ItemForm";
 import { MapPin, Package, History, Edit, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
@@ -11,21 +13,33 @@ export default function LocationsPage() {
   const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>();
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
+  // Table is the default view for the items list, matching the Inventory page.
+  const [viewMode, setViewMode] = useState<ItemView>("table");
 
   const { data: locations, isLoading: locationsLoading } = api.locations.getAll.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
+  // Resolve the active location: keep an explicit selection when it still
+  // exists, otherwise default to the first location. Defaulting here means the
+  // page shows real data immediately on load instead of a blank screen with an
+  // unselected dropdown. (Derived rather than useEffect-set so there is no
+  // empty first paint or extra render cycle.)
+  const activeLocationId =
+    selectedLocationId && locations?.some((l) => l.id === selectedLocationId)
+      ? selectedLocationId
+      : locations?.[0]?.id;
+
   const { data: items, isLoading: itemsLoading } = api.items.getAll.useQuery(
-    { locationId: selectedLocationId ?? undefined },
-    { enabled: !!selectedLocationId }
+    { locationId: activeLocationId ?? undefined },
+    { enabled: !!activeLocationId }
   );
   const { data: consumption, isLoading: consumptionLoading } =
     api.locations.getConsumptionByLocation.useQuery(
-      { locationId: selectedLocationId ?? "", limit: 50 },
-      { enabled: !!selectedLocationId }
+      { locationId: activeLocationId ?? "", limit: 50 },
+      { enabled: !!activeLocationId }
     );
 
-  const selectedLocation = locations?.find((l) => l.id === selectedLocationId);
+  const selectedLocation = locations?.find((l) => l.id === activeLocationId);
 
   if (locationsLoading) {
     return (
@@ -45,18 +59,19 @@ export default function LocationsPage() {
           Select a location to see what you have stored there and activity (consumption or additions) from it.
         </p>
 
-        {/* Location selector */}
+        {/* Location selector — hidden when there are no locations; the empty
+            state below handles that case instead of showing an empty dropdown. */}
+        {(locations?.length ?? 0) > 0 && (
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select location
           </label>
           <div className="relative">
             <select
-              value={selectedLocationId ?? ""}
-              onChange={(e) => setSelectedLocationId(e.target.value || undefined)}
+              value={activeLocationId ?? ""}
+              onChange={(e) => setSelectedLocationId(e.target.value)}
               className="block w-full max-w-md px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
-              <option value="">Choose a location...</option>
               {locations?.map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name}
@@ -66,8 +81,9 @@ export default function LocationsPage() {
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           </div>
         </div>
+        )}
 
-        {!selectedLocationId && locations?.length === 0 && (
+        {locations?.length === 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
             <p className="text-gray-500 dark:text-gray-400">
               No locations yet. Add locations in Settings, then assign items to them from Inventory.
@@ -81,7 +97,7 @@ export default function LocationsPage() {
           </div>
         )}
 
-        {selectedLocationId && selectedLocation && (
+        {activeLocationId && selectedLocation && (
           <>
             {/* Location header */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
@@ -98,20 +114,23 @@ export default function LocationsPage() {
 
             {/* Items at this location */}
             <section className="mb-10">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Package className="h-5 w-5 text-emerald-500" />
                   Items at this location
                 </h3>
-                <button
-                  onClick={() => {
-                    setEditingItem(null);
-                    setShowItemForm(true);
-                  }}
-                  className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
-                >
-                  Add item here
-                </button>
+                <div className="flex items-center gap-2">
+                  <ItemViewToggle value={viewMode} onChange={setViewMode} />
+                  <button
+                    onClick={() => {
+                      setEditingItem(null);
+                      setShowItemForm(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    Add item here
+                  </button>
+                </div>
               </div>
 
               {itemsLoading ? (
@@ -129,6 +148,14 @@ export default function LocationsPage() {
                     Go to Inventory →
                   </a>
                 </div>
+              ) : viewMode === "table" ? (
+                <ItemTable
+                  items={items ?? []}
+                  onEdit={(id) => {
+                    setEditingItem(id);
+                    setShowItemForm(true);
+                  }}
+                />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {items?.map((item) => (
@@ -205,7 +232,7 @@ export default function LocationsPage() {
         {showItemForm && (
           <ItemForm
             itemId={editingItem}
-            defaultLocationId={selectedLocationId}
+            defaultLocationId={activeLocationId}
             onClose={() => {
               setShowItemForm(false);
               setEditingItem(null);

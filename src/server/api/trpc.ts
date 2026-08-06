@@ -1,7 +1,9 @@
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getOrCreateDefaultUser } from "~/server/auth";
 import { prisma } from "~/server/db";
+import { isReadOnly } from "~/server/appMode";
+import { ensureSeededOnce } from "~/server/seedData";
 
 /**
  * Canonical tRPC module for the app.
@@ -24,6 +26,9 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
 
 export const createTRPCContext = async (_opts: CreateNextContextOptions) => {
   const defaultUser = await getOrCreateDefaultUser();
+  // Auto-seed sample data once per process when PREPTRAC_MODE is demo/seeded.
+  // Cheap on the hot path: ensureSeededOnce short-circuits after the first call.
+  await ensureSeededOnce(prisma, defaultUser.id);
   return createInnerTRPCContext({
     userId: defaultUser.id,
   });
@@ -50,7 +55,26 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
+/**
+ * Rejects every mutation when the app is in read-only (demo) mode. Queries are
+ * always allowed. This is the single server-side enforcement point: every write
+ * in the app goes through `protectedProcedure`, so gating it here covers all
+ * tRPC mutations regardless of router. Defense in depth — the client also
+ * hides/disables write controls, but the server is the authority.
+ */
+const enforceReadOnly = t.middleware(async ({ type, next }) => {
+  if (type === "mutation" && isReadOnly()) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Demo mode is read-only — adding, editing, and deleting are disabled.",
+    });
+  }
+  return next();
+});
+
 /** Procedure that provides ctx.userId (always the default user; auth removed). */
-export const protectedProcedure = t.procedure.use(({ ctx, next }) =>
-  next({ ctx: { userId: ctx.userId } })
-);
+export const protectedProcedure = t.procedure
+  .use(enforceReadOnly)
+  .use(({ ctx, next }) =>
+    next({ ctx: { userId: ctx.userId } })
+  );

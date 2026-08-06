@@ -5,6 +5,8 @@ import { Providers } from "./providers";
 import Footer from "~/components/Footer";
 import Navigation from "~/components/Navigation";
 import ServiceWorkerRegister from "~/components/ServiceWorkerRegister";
+import { DemoModeProvider } from "~/components/DemoModeProvider";
+import { getAppMode } from "~/server/appMode";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +40,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Resolved on the server (single source of truth) and passed to the client
+  // provider so the UI can hide/disable write controls with no extra request.
+  const mode = getAppMode();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable} min-h-screen bg-gray-50 dark:bg-gray-900`}>
@@ -58,7 +63,7 @@ export default function RootLayout({
                 className="flex-1 overflow-y-auto outline-none bg-gray-50 dark:bg-gray-900"
               >
                 <div className="flex min-h-full flex-col">
-                  {children}
+                  <DemoModeProvider mode={mode}>{children}</DemoModeProvider>
                   <Footer />
                 </div>
               </div>

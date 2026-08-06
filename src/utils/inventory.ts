@@ -106,3 +106,30 @@ export function isExpiringSoon(
   const horizon = new Date(now.getTime() + EXPIRING_SOON_DAYS * DAY_MS);
   return date >= now && date <= horizon;
 }
+
+/** Fields needed to evaluate whether an item is due for maintenance. */
+export interface MaintenanceSchedule {
+  maintenanceInterval: number | null;
+  lastMaintenanceDate: Date | string | null;
+}
+
+/**
+ * True when an item is due for maintenance: its last service date plus the
+ * interval has passed. Matches the server-side filter in `items.getAll({
+ * needsMaintenance })` (`datetime(lastMaintenanceDate, '+' || interval || ' days')
+ * <= datetime('now')`), so the UI badge and the query stay consistent. Items
+ * with no interval or no recorded service date are never flagged.
+ */
+export function needsMaintenance(
+  item: MaintenanceSchedule,
+  now: Date = new Date(),
+): boolean {
+  if (!item.maintenanceInterval || !item.lastMaintenanceDate) return false;
+  const last =
+    item.lastMaintenanceDate instanceof Date
+      ? item.lastMaintenanceDate
+      : new Date(item.lastMaintenanceDate);
+  if (isNaN(last.getTime())) return false;
+  const due = new Date(last.getTime() + item.maintenanceInterval * DAY_MS);
+  return due <= now;
+}

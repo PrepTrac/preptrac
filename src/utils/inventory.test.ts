@@ -4,6 +4,7 @@ import {
   resolveCategoryKind,
   inferCategoryKindFromName,
   isExpiringSoon,
+  needsMaintenance,
   EXPIRING_SOON_DAYS,
 } from "./inventory";
 
@@ -84,5 +85,60 @@ describe("isExpiringSoon / EXPIRING_SOON_DAYS", () => {
   it("handles null and invalid dates", () => {
     expect(isExpiringSoon({ expirationDate: null })).toBe(false);
     expect(isExpiringSoon({ expirationDate: "not-a-date" })).toBe(false);
+  });
+});
+
+describe("needsMaintenance", () => {
+  const now = new Date("2026-01-10T00:00:00.000Z");
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it("flags items whose last service + interval is in the past", () => {
+    // Serviced 30 days ago, interval 20 days => due 10 days ago.
+    expect(
+      needsMaintenance(
+        {
+          maintenanceInterval: 20,
+          lastMaintenanceDate: new Date(now.getTime() - 30 * DAY),
+        },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it("does not flag items still within their interval", () => {
+    // Serviced 5 days ago, interval 20 days => due in 15 days.
+    expect(
+      needsMaintenance(
+        {
+          maintenanceInterval: 20,
+          lastMaintenanceDate: new Date(now.getTime() - 5 * DAY),
+        },
+        now,
+      ),
+    ).toBe(false);
+  });
+
+  it("treats exactly the interval boundary as due (matches server <= now)", () => {
+    expect(
+      needsMaintenance(
+        {
+          maintenanceInterval: 20,
+          lastMaintenanceDate: new Date(now.getTime() - 20 * DAY),
+        },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it("never flags items with no interval or no service date", () => {
+    expect(needsMaintenance({ maintenanceInterval: null, lastMaintenanceDate: now }, now)).toBe(false);
+    expect(needsMaintenance({ maintenanceInterval: 20, lastMaintenanceDate: null }, now)).toBe(false);
+    expect(needsMaintenance({ maintenanceInterval: 0, lastMaintenanceDate: now }, now)).toBe(false);
+  });
+
+  it("handles invalid dates", () => {
+    expect(
+      needsMaintenance({ maintenanceInterval: 20, lastMaintenanceDate: "not-a-date" }, now),
+    ).toBe(false);
   });
 });

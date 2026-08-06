@@ -3,11 +3,14 @@
 import { api } from "~/utils/api";
 import { useState, useEffect } from "react";
 import ItemCard from "~/components/ItemCard";
+import ItemTable from "~/components/ItemTable";
+import ItemViewToggle, { type ItemView } from "~/components/ItemViewToggle";
 import ItemForm from "~/components/ItemForm";
 import CategoryNav from "~/components/CategoryNav";
 import LocationNav from "~/components/LocationNav";
 import { Plus, Search, Filter, Download } from "lucide-react";
 import { exportToCSV, exportToJSON } from "~/utils/export";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 const DEBOUNCE_MS = 300;
 
@@ -21,6 +24,9 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 export default function InventoryPage() {
+  const { readOnly } = useDemoMode();
+  // Table is the default view; users can switch to the denser card grid.
+  const [viewMode, setViewMode] = useState<ItemView>("table");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [selectedLocation, setSelectedLocation] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,16 +85,18 @@ export default function InventoryPage() {
               <Download className="h-4 w-4 mr-2" />
               JSON
             </button>
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                setShowItemForm(true);
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => {
+                  setEditingItem(null);
+                  setShowItemForm(true);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </button>
+            )}
           </div>
         </div>
 
@@ -117,6 +125,11 @@ export default function InventoryPage() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
+            <ItemViewToggle
+              value={viewMode}
+              onChange={setViewMode}
+              className="self-start sm:self-auto"
+            />
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -201,17 +214,29 @@ export default function InventoryPage() {
             </div>
           ) : (
             <>
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 transition-opacity ${isFetching ? "opacity-70" : ""}`}>
-                {items?.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onEdit={() => {
-                      setEditingItem(item.id);
+              <div className={`transition-opacity ${isFetching ? "opacity-70" : ""}`}>
+                {viewMode === "table" ? (
+                  <ItemTable
+                    items={items ?? []}
+                    onEdit={(id) => {
+                      setEditingItem(id);
                       setShowItemForm(true);
                     }}
                   />
-                ))}
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {items?.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        onEdit={() => {
+                          setEditingItem(item.id);
+                          setShowItemForm(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {items?.length === 0 && (

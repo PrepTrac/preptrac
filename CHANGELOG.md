@@ -6,6 +6,9 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ## [Unreleased]
 
+- **App modes** — New `PREPTRAC_MODE` env var selects how the app starts: `demo` (pre-seeded sample data and fully read-only), `seeded` (pre-seeded sample data with full usage), or `clean` (default; empty slate). Demo mode blocks every write server-side, shows a read-only banner, and disables/hides all add/edit/delete controls across the app. Seeding reuses the existing "Fill test data" dataset and runs automatically and idempotently on first request. Invalid or unrecognized values fall back to `clean`.
+- **Refactor** — Extracted the sample-data seeder into `src/server/seedData.ts` (`seedDemoData` / `ensureSeededOnce`) so the "Fill test data" button and automatic demo/seeded-mode seeding share one dataset.
+
 ---
 
 ## [0.2.1] — 2026-08-05

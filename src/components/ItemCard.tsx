@@ -6,8 +6,9 @@ import Image from "next/image";
 import { Edit, AlertCircle, Wrench } from "lucide-react";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
-import { isLowInventory, isExpiringSoon as isItemExpiringSoon } from "~/utils/inventory";
+import { isLowInventory, isExpiringSoon as isItemExpiringSoon, needsMaintenance } from "~/utils/inventory";
 import ConfirmDialog from "~/components/ConfirmDialog";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 type Item = RouterOutputs["items"]["getAll"][0];
 
@@ -17,6 +18,7 @@ interface ItemCardProps {
 }
 
 export default function ItemCard({ item, onEdit }: ItemCardProps) {
+  const { readOnly } = useDemoMode();
   const utils = api.useUtils();
   const deleteItem = api.items.delete.useMutation({
     onSuccess: () => {
@@ -27,13 +29,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
 
   const isExpiringSoon = isItemExpiringSoon(item);
 
-  const needsMaintenance =
-    item.maintenanceInterval &&
-    item.lastMaintenanceDate &&
-    new Date(
-      new Date(item.lastMaintenanceDate).getTime() +
-        item.maintenanceInterval * 24 * 60 * 60 * 1000
-    ) <= new Date();
+  const needsMaint = needsMaintenance(item);
 
   const lowInventory = isLowInventory(item);
 
@@ -59,14 +55,16 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
             {item.category.name} • {item.location.name}
           </p>
         </div>
-        <button
-          onClick={onEdit}
-          aria-label={`Edit ${item.name}`}
-          title={`Edit ${item.name}`}
-          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <Edit className="h-4 w-4" aria-hidden="true" />
-        </button>
+        {!readOnly && (
+          <button
+            onClick={onEdit}
+            aria-label={`Edit ${item.name}`}
+            title={`Edit ${item.name}`}
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <Edit className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div className="mt-3">
@@ -92,7 +90,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         )}
       </div>
 
-      {(isExpiringSoon || needsMaintenance || lowInventory) && (
+      {(isExpiringSoon || needsMaint || lowInventory) && (
         <div className="mt-3 space-y-1">
           {isExpiringSoon && item.expirationDate && (
             <div className="flex items-center text-sm text-red-600 dark:text-red-400">
@@ -100,7 +98,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
               Expires: {format(new Date(item.expirationDate), "MMM d, yyyy")}
             </div>
           )}
-          {needsMaintenance && (
+          {needsMaint && (
             <div className="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
               <Wrench className="h-4 w-4 mr-1" />
               Needs Maintenance
@@ -122,12 +120,14 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
       )}
 
       <div className="mt-auto pt-4 flex justify-end">
-        <button
-          onClick={() => setConfirmDelete(true)}
-          className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-        >
-          Delete
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+          >
+            Delete
+          </button>
+        )}
       </div>
       <ConfirmDialog
         open={confirmDelete}

@@ -10,6 +10,7 @@ import {
   type CategoryKind,
 } from "~/utils/inventory";
 import ConfirmDialog from "~/components/ConfirmDialog";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 interface CategoryFormData {
   name: string;
@@ -21,6 +22,7 @@ interface CategoryFormData {
 }
 
 export default function CategoryForm() {
+  const { readOnly } = useDemoMode();
   const { data: categories, isLoading } = api.categories.getAll.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
@@ -99,17 +101,19 @@ export default function CategoryForm() {
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
           Categories
         </h3>
-        <button
-          onClick={() => {
-            setEditingId(null);
-            reset();
-            setShowForm(true);
-          }}
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Category
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => {
+              setEditingId(null);
+              reset();
+              setShowForm(true);
+            }}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Category
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -207,7 +211,8 @@ export default function CategoryForm() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                disabled={readOnly}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingId ? "Update" : "Create"}
               </button>
@@ -241,22 +246,26 @@ export default function CategoryForm() {
               </div>
             </div>
             <div className="flex space-x-2">
-              <button
-                onClick={() => handleEdit(category)}
-                aria-label={`Edit category ${category.name}`}
-                title={`Edit ${category.name}`}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                <Edit className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => setPendingDelete(category.id)}
-                aria-label={`Delete category ${category.name}`}
-                title={`Delete ${category.name}`}
-                className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => handleEdit(category)}
+                  aria-label={`Edit category ${category.name}`}
+                  title={`Edit ${category.name}`}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <Edit className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
+              {!readOnly && (
+                <button
+                  onClick={() => setPendingDelete(category.id)}
+                  aria-label={`Delete category ${category.name}`}
+                  title={`Delete ${category.name}`}
+                  className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
         ))}

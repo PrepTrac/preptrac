@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { env } from "~/env.mjs";
 import { runScheduledNotifications } from "~/server/notifications";
 import { logger } from "~/server/logger";
+import { isReadOnly } from "~/server/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,12 @@ async function handle(request: NextRequest) {
   const provided = providedSecret(request);
   if (!provided || !safeEqual(provided, configured)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Demo instances are read-only: do not deliver emails/webhooks or write
+  // delivery logs. Return a clean no-op so a scheduled task still succeeds.
+  if (isReadOnly()) {
+    return NextResponse.json({ ok: true, skipped: "demo", reason: "Demo mode is read-only; notifications are not delivered." });
   }
 
   try {

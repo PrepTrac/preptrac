@@ -11,6 +11,11 @@ const envSchema = z.object({
   // Shared secret that gates the /api/cron/notifications runner. Optional at boot
   // (the app still starts), but the cron endpoint rejects requests when unset.
   CRON_SECRET: z.string().optional(),
+  // App mode toggle. "demo" = pre-seeded sample data AND read-only,
+  // "seeded" = pre-seeded sample data with full usage, "clean" (or unset/empty)
+  // = normal empty slate. Unrecognized values fall back to "clean" at runtime
+  // (see src/server/appMode.ts) so a bad value never blocks startup.
+  PREPTRAC_MODE: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

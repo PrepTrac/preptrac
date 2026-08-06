@@ -27,6 +27,34 @@ No sign-in required. Open the app and start using it.
 
 ---
 
+## App modes (demo / seeded / clean)
+
+A single env var, `PREPTRAC_MODE`, changes how PrepTrac starts. It's useful for trying the app, showcasing it read-only, or starting from a known sample state. Unset or empty defaults to normal behavior.
+
+| Value | Sample data | Writes |
+| --- | --- | --- |
+| `clean` *(default; also when unset/empty)* | None | Allowed — normal empty-slate app |
+| `seeded` | Seeded automatically on first start | Allowed — explore **and** modify the sample data |
+| `demo` | Seeded automatically on first start | **Blocked** — the whole app is read-only |
+
+- **Seeding** reuses the same dataset as **Settings → Test data → Fill test data** (every category kind, items with expiration/maintenance/rotation, consumption + addition history, a household, and goals). It runs once and is idempotent: it never re-seeds a database that already has the sample-data marker, even after a restart.
+- **Read-only (`demo`)** is enforced on the server — every API mutation is rejected with `403 Forbidden` — and reflected in the UI with a banner and disabled/hidden add, edit, delete, import, and consume controls. Scheduled email/webhook notifications are also skipped in demo mode.
+- **Invalid values** (e.g. a typo) fall back to `clean` and log a warning, so a bad value never prevents startup.
+
+Examples:
+
+```bash
+# .env — run a read-only demo
+PREPTRAC_MODE=demo
+
+# Docker — showcase with full usage
+PREPTRAC_MODE=seeded
+```
+
+> 💡 To get a clean demo, start from a fresh database (`docker compose down -v` for Docker, or delete `dev.db` locally). Switching an existing database with real items to `demo` will **not** wipe it.
+
+---
+
 ## Get Started
 
 **Docker (recommended for production and quick runs)** — one command to run PrepTrac with a persistent database:

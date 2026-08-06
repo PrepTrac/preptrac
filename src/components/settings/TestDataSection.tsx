@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "~/utils/api";
 import ConfirmDialog from "~/components/ConfirmDialog";
 import { FlaskConical, Trash2 } from "lucide-react";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 /** Invalidate every query that test data affects (add + remove both use this). */
 function invalidateTestData(utils: ReturnType<typeof api.useUtils>) {
@@ -26,6 +27,7 @@ function invalidateTestData(utils: ReturnType<typeof api.useUtils>) {
  * Extracted from the settings page so the page is a thin shell over its tabs.
  */
 export default function TestDataSection() {
+  const { readOnly } = useDemoMode();
   return (
     <div className="space-y-6">
       <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
@@ -35,10 +37,16 @@ export default function TestDataSection() {
           tracking real preparedness inventory.
         </p>
       </div>
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-        <FlaskConical className="h-5 w-5 text-amber-500" />
-        Fill test data
-      </h3>
+      {readOnly ? (
+        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+          This instance is running in demo mode and is already seeded with sample data. The fill/remove tools are disabled because demo mode is read-only.
+        </p>
+      ) : (
+        <>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+            <FlaskConical className="h-5 w-5 text-amber-500" />
+            Fill test data
+          </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">
         Add a sample preparedness inventory so you can see how the app looks with data.
         Creates categories, locations, items (food, water, ammo, medical, shelter, etc.),
@@ -61,6 +69,8 @@ export default function TestDataSection() {
         </p>
         <RemoveTestDataButton />
       </div>
+        </>
+      )}
     </div>
   );
 }

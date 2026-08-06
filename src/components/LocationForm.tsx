@@ -5,6 +5,7 @@ import { api, type RouterOutputs } from "~/utils/api";
 import { useForm } from "react-hook-form";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ConfirmDialog from "~/components/ConfirmDialog";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 interface LocationFormData {
   name: string;
@@ -12,6 +13,7 @@ interface LocationFormData {
 }
 
 export default function LocationForm() {
+  const { readOnly } = useDemoMode();
   const { data: locations, isLoading } = api.locations.getAll.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
@@ -80,17 +82,19 @@ export default function LocationForm() {
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
           Locations
         </h3>
-        <button
-          onClick={() => {
-            setEditingId(null);
-            reset();
-            setShowForm(true);
-          }}
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Location
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => {
+              setEditingId(null);
+              reset();
+              setShowForm(true);
+            }}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Location
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -131,7 +135,8 @@ export default function LocationForm() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                disabled={readOnly}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingId ? "Update" : "Create"}
               </button>
@@ -157,22 +162,26 @@ export default function LocationForm() {
               )}
             </div>
             <div className="flex space-x-2">
-              <button
-                onClick={() => handleEdit(location)}
-                aria-label={`Edit location ${location.name}`}
-                title={`Edit ${location.name}`}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                <Edit className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => setPendingDelete(location.id)}
-                aria-label={`Delete location ${location.name}`}
-                title={`Delete ${location.name}`}
-                className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => handleEdit(location)}
+                  aria-label={`Edit location ${location.name}`}
+                  title={`Edit ${location.name}`}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <Edit className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
+              {!readOnly && (
+                <button
+                  onClick={() => setPendingDelete(location.id)}
+                  aria-label={`Delete location ${location.name}`}
+                  title={`Delete ${location.name}`}
+                  className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
         ))}

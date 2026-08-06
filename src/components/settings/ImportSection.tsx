@@ -4,12 +4,14 @@ import { useRef, useState } from "react";
 import { api } from "~/utils/api";
 import { downloadCSVTemplate } from "~/utils/export";
 import { Download, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 /**
  * CSV inventory import (Settings → Import). Owns the file read + the
  * `importFromCSV` mutation and result rendering.
  */
 export default function ImportSection() {
+  const { readOnly } = useDemoMode();
   const importFileInputRef = useRef<HTMLInputElement>(null);
   const [importResult, setImportResult] = useState<{
     created: number;
@@ -38,34 +40,42 @@ export default function ImportSection() {
           <Download className="h-5 w-5 mr-2" />
           Download template
         </button>
-        <input
-          ref={importFileInputRef}
-          type="file"
-          accept=".csv"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            setImportResult(null);
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const text = ev.target?.result;
-              if (typeof text === "string") importFromCSV.mutate({ csvContent: text });
-            };
-            reader.readAsText(file, "UTF-8");
-            e.target.value = "";
-          }}
-          className="hidden"
-          aria-label="Choose CSV file"
-        />
-        <button
-          type="button"
-          onClick={() => importFileInputRef.current?.click()}
-          disabled={importFromCSV.isPending}
-          className="inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Upload className="h-5 w-5 mr-2" />
-          {importFromCSV.isPending ? "Importing…" : "Upload CSV"}
-        </button>
+        {!readOnly ? (
+          <>
+            <input
+              ref={importFileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setImportResult(null);
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const text = ev.target?.result;
+                  if (typeof text === "string") importFromCSV.mutate({ csvContent: text });
+                };
+                reader.readAsText(file, "UTF-8");
+                e.target.value = "";
+              }}
+              className="hidden"
+              aria-label="Choose CSV file"
+            />
+            <button
+              type="button"
+              onClick={() => importFileInputRef.current?.click()}
+              disabled={importFromCSV.isPending}
+              className="inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="h-5 w-5 mr-2" />
+              {importFromCSV.isPending ? "Importing…" : "Upload CSV"}
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-amber-700 dark:text-amber-300 self-center">
+            Importing is disabled in demo mode.
+          </p>
+        )}
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
         <FileSpreadsheet className="h-4 w-4 flex-shrink-0" />
