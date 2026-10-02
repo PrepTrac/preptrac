@@ -1,26 +1,34 @@
 # PrepTrac
 
-**Track your preparedness inventory in one place.** Know what you have, where it is, when it expires, and how many days of food your household can cover.
+**Track your preparedness inventory in one place.** Know what you have, where it is, when it expires, and how many days of food and water your household can cover.
 
 PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more—by category and location—so you can see your full picture at a glance and keep everything up to date.
 
-
 ![PrepTrac Dashboard](docs/images/Dashboard%20Page.png)
+
+<details>
+<summary>View the dashboard in dark mode</summary>
+
+![PrepTrac Dashboard in dark mode](docs/images/Dashboard%20Dark.png)
+
+</details>
 
 ---
 
 ## What You Can Do
 
-- **Dashboard** — See total water (click to toggle gallons/days), **fuel & energy** (click to cycle: gallons → total kWh → battery kWh), **days of food** (based on your household’s calorie needs), ammo count, total items, and upcoming expirations or maintenance. **Category Progress** shows goal progress for water, food, ammo, and fuel/energy with units (gallons, days, rounds, kWh) and hover tooltips with category colors. A **Recent activity** section shows consumption and additions with configurable rows (5, 10, 25), pagination, and filters (type and category); use **View all** to open the full Activity page.
-- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Filter by category, location, expiring soon, or low stock. **Export** to CSV or JSON (user-friendly columns; dates in simple form like 1/1/2026).
-- **Import** — Download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name.
+- **Dashboard** — See **food and water coverage** in days, recorded water gallons, fuel/energy, ammunition, and total items. **Needs attention** brings together expirations, maintenance, low stock, and upcoming events beside your storage locations. **Category Progress Goals** shows progress for water, food, ammo, and fuel/energy. **Recent activity** shows consumption and additions with configurable rows (5, 10, 25), pagination, and filters; use **View all** to open Activity.
+- **Inventory** — Add and edit items with quantity, unit (jar, can, bag, etc.), and for food items, calories per unit. Browse a table or switch to cards. Search and filter by category, location, expiring soon, low stock, or maintenance due. **Export** to CSV or JSON (user-friendly columns; dates in simple form like 1/1/2026).
+- **Import** — Under **Settings → Import**, download a **CSV template** (same columns as export), fill it in, then upload to create many items at once. Category and location are matched by name.
 - **Household** — Add family members (age, weight, height, sex). PrepTrac estimates each person’s daily calorie need and uses that to show how many **days of food** your pantry can cover, and to show how many **days of water** your inventory can cover.
-- **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and what’s been consumed from that spot.
+- **Locations** — Pick a location (e.g. Home, Garage, Bug-out Bag) to see everything stored there and its consumption and addition history.
 - **Activity** — Log when you use something (consume) or add to inventory (e.g. refuel). Your totals update and you can review consumption and additions over time with charts. The **Recent activity** list supports configurable rows per page (5, 10, 25), pagination, and filters by type (All / Used / Added) and category.
 - **Calendar** — Expiration dates, maintenance, and rotations appear automatically so you don’t miss a beat.
 - **Settings** — Manage **Goals** (ammo rounds, water gallons, food days, and fuel: fuel gallons, total kWh, battery kWh), categories, locations, and notifications. Use **Test data** to load sample inventory and a sample household (2 parents, 2 kids) so you can try the app before adding your own data.
 
 No sign-in required. Open the app and start using it.
+
+Switch between light and dark themes from the sidebar.
 
 > ⚠️ **No authentication.** PrepTrac is single-user by design — there is no login. Anyone who can reach the app can read and edit everything. Keep it on a trusted LAN, or put it behind access control (e.g. Coolify Basic Auth or a reverse proxy) before exposing it beyond your home network. See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for guidance.
 
@@ -50,7 +58,7 @@ PREPTRAC_MODE=demo
 PREPTRAC_MODE=seeded
 ```
 
-> 💡 To get a clean demo, start from a fresh database (`docker compose down -v` for Docker, or delete `dev.db` locally). Switching an existing database with real items to `demo` will **not** wipe it.
+> 💡 For a fresh demo, use a separate instance with a new database or Docker volume. Switching an existing database with real items to `demo` will **not** wipe it.
 
 ---
 
@@ -64,7 +72,7 @@ docker compose up -d
 
 Then open [http://localhost:8008](http://localhost:8008). To stop: `docker compose down`.
 
-**Or run locally** (Node.js 20.19+), e.g. for development:
+**Or run locally** (Node.js 22+), e.g. for development:
 
 ```bash
 npm install
@@ -78,7 +86,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You’ll la
 ### Production deployment (Docker)
 
 - **Port**: The app listens on **8008** inside the container; `docker-compose.yml` maps `8008:8008`. Change the host port in `ports` if you need a different external port.
-- **Data**: The SQLite database is stored in a Docker volume (`preptrac-data` → `/app/data/dev.db`). It persists across `docker compose down` and `docker compose up -d`. To wipe data and start fresh: `docker compose down -v` then `docker compose up -d`.
+- **Data**: The SQLite database is stored in a Docker volume (`preptrac-data` → `/app/data/dev.db`). It persists across `docker compose down` and `docker compose up -d`. Back up this volume before changing your deployment.
 - **Logs**: `docker compose logs -f preptrac` to follow container logs.
 - **Health**: The image has a built-in `HEALTHCHECK` probing `GET /api/health`.
 
@@ -118,22 +126,24 @@ Your database and volume (`preptrac-data`) are **not touched**; only the app ima
 
 ### Dashboard
 
-Your at-a-glance view: **Water** (click to switch between gallons and days), **Fuel / Energy** (click to cycle: gallons → total kWh → battery kWh), **Days of Food** (when you’ve set up household and food calories), ammo count, total items, and lists of what’s expiring or needs maintenance. When Days of Food or Water (in days) is based on your household, it will say “Based on your household.” Below the metrics, **Category Progress** shows progress toward your goals (Settings → Goals) for each category, with units (gallons, rounds, days, kWh) and hover tooltips that use each category’s color.
+**Household coverage** puts food and water days first, with goal progress and expandable supply breakdowns. Food uses your household’s daily calorie needs when available; water shows both estimated days and recorded gallons. **Fuel / Energy** starts with total kWh; use its measurement button to cycle through battery/solar kWh, fuel gallons, and total kWh. Ammunition and inventory counts sit below coverage.
+
+**Needs attention** combines expiring supplies, maintenance, items below their configured minimum quantity, and upcoming events. **Storage locations** sits alongside it. Further down, **Category Progress Goals** tracks your targets from **Settings → Goals**, and **Recent activity** lists inventory additions and consumption.
 
 ### Adding Items
 
 Go to **Inventory** → **Add Item**. Enter name, quantity, unit (e.g. jars, cans, bags), category, and location. For **food** items, enter **Calories per unit** (the calories in one unit—e.g. one jar). That way the app can total your pantry calories and compute days of food. You can also add expiration dates, maintenance reminders, and notes.
 
 ### Household, Days of Food, and Water in Days
-In **Household**, add each family member (name optional, age, sex, weight in kg, height in cm). PrepTrac estimates daily calorie needs and sums them. On the Dashboard, **Days of Food** = your total inventory calories ÷ that household total. Add calories per unit to your food items so the number is meaningful.
+In **Household**, add each family member (name optional, age, sex, weight, and height). Choose US units (lb, ft/in) or metric units (kg, cm). PrepTrac estimates daily calorie needs and sums them. On the Dashboard, **Food coverage** = your total inventory calories ÷ that household total. Add calories per unit to your food items so the number is meaningful.
 
-**Water in days** uses your household too: the app sums everyone’s body weight (in lbs) and, with your chosen activity level, computes daily water need (oz per lb of body weight → daily gallons). **Water in days** = your total water inventory (gallons) ÷ that daily need. When this is used, the dashboard water metric (in “days” mode) shows “Based on your household.”
+**Water coverage** uses your household too: the app sums everyone’s body weight (in lbs) and, with your chosen activity level, computes daily water need (oz per lb of body weight → daily gallons). **Water coverage in days** = your total water inventory (gallons) ÷ that daily need. When this is used, the dashboard shows “Based on your household” alongside recorded gallons.
 
 ![Household](docs/images/Household.png)
 
 ### Locations
 
-In **Locations**, choose a place from the dropdown. You’ll see all items there and their quantities, plus a history of what was consumed from that location. You can add a new item and assign it to that location with **Add item here**.
+In **Locations**, choose a place from the dropdown. You’ll see all items there and their quantities, plus consumption and addition history for that location. You can add a new item and assign it to that location with **Add item here**.
 
 ### Logging Activity (Consume or Add)
 
@@ -147,12 +157,12 @@ Review consumption and additions over a chosen time range with bar and pie chart
 
 ### Calendar
 
-Expirations, maintenance due dates, and rotation schedules from your items show up on the **Calendar**. You can also add or edit events there.
+Expirations, maintenance due dates, and rotation schedules from your items show up on the **Calendar**. Browse by month to review scheduled events.
 
 ### Import and Export
 
 - **Export** — On the **Inventory** page, use **CSV** or **JSON** to download your current (filtered) inventory. The CSV uses user-friendly columns only (name, quantity, unit, category, location, expiration, maintenance, rotation, notes, etc.) with dates in simple form (e.g. 1/1/2026).
-- **Import** — Go to **Import**, click **Download template** to get an empty CSV with the same columns. Fill in rows (name, unit, category, and location are required; category and location must match the exact names in Settings). Use simple dates like 1/1/2026 for expiration and maintenance fields. Then click **Upload CSV**. The app reports how many items were created and any row-level errors.
+- **Import** — Go to **Settings → Import**, click **Download template** to get an empty CSV with the same columns. Fill in rows (name, unit, category, and location are required; category and location must match the exact names in Settings). Use simple dates like 1/1/2026 for expiration and maintenance fields. Then click **Upload CSV**. The app reports how many items were created and any row-level errors.
 
 ### Notifications
 
