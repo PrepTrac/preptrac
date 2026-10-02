@@ -47,7 +47,7 @@ export function DemoModeProvider({
         <div
           role="status"
           aria-live="polite"
-          className="sticky top-0 z-40 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 border-b border-amber-300 dark:border-amber-700"
+          className="sticky top-0 z-40 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-caution bg-caution-soft border-b border-caution"
         >
           <Lock className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
           Demo mode — this instance is read-only. Adding, editing, and deleting are disabled.

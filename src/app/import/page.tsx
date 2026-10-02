@@ -10,8 +10,8 @@ export default function ImportPage() {
     router.replace("/settings?tab=import");
   }, [router]);
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <p className="text-gray-500 dark:text-gray-400">Redirecting to Settings…</p>
+    <div className="min-h-screen flex items-center justify-center bg-paper">
+      <p className="text-muted">Redirecting to Settings…</p>
     </div>
   );
 }

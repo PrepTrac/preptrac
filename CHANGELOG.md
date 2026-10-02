@@ -8,6 +8,16 @@ All notable changes to PrepTrac are documented here. The format is based on [Kee
 
 ---
 
+## [0.3.0] — 2026-10-02
+
+- **Readiness index** — App-wide olive identity, stacked-supply P mark and install icons, warm neutral light theme and complete dark theme. Open page layouts, ledger tables, compact inventory filters and restrained dialogs retain existing routes and workflows.
+- **Dashboard** — Food and water coverage lead with explicit household/fallback assumptions and segmented scales. Food targets remain days and water targets remain gallons. Secondary fuel measurements, ammunition breakdowns, category goals and recent activity remain available.
+- **Supply checks** — Merge expiration, maintenance, low inventory and calendar records by item/type; show at most six checks beside actual storage locations. Counts describe returned records and remain independent of notification preferences.
+- **Accessibility** — Preserve keyboard navigation and focus management, associate form labels, improve dark selection/hover contrast, contain mobile notification panels and wrap long names. Hide the Locations add control in read-only demo mode.
+- **Verification infrastructure** — Browser runs create separate synthetic SQLite databases and dedicated servers. Integration tests apply checked-in migrations without destructive schema-push flags. No dependency, schema, calculation or API changes.
+
+---
+
 ## [0.2.2] — 2026-08-06
 
 - **Inventory & Locations** — New dense table view (default) with a shared Table/Cards toggle; the Locations page also auto-selects the first location on load instead of showing a blank dropdown.

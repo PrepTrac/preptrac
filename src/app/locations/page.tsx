@@ -6,10 +6,12 @@ import ItemCard from "~/components/ItemCard";
 import ItemTable from "~/components/ItemTable";
 import ItemViewToggle, { type ItemView } from "~/components/ItemViewToggle";
 import ItemForm from "~/components/ItemForm";
-import { MapPin, Package, History, Edit, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { format } from "date-fns";
+import { useDemoMode } from "~/components/DemoModeProvider";
 
 export default function LocationsPage() {
+  const { readOnly } = useDemoMode();
   const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>();
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
@@ -51,11 +53,10 @@ export default function LocationsPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
-          <MapPin className="h-8 w-8 text-emerald-500" />
+        <h1 className="text-3xl font-semibold text-ink flex items-center gap-2 mb-6">
           Locations
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           Select a location to see what you have stored there and activity (consumption or additions) from it.
         </p>
 
@@ -63,14 +64,15 @@ export default function LocationsPage() {
             state below handles that case instead of showing an empty dropdown. */}
         {(locations?.length ?? 0) > 0 && (
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="active-storage-location" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-2">
             Select location
           </label>
-          <div className="relative">
+          <div className="relative max-w-md">
             <select
+              id="active-storage-location"
               value={activeLocationId ?? ""}
               onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="block w-full max-w-md px-4 py-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="block w-full max-w-md px-4 py-3 pr-10 border border-line rounded-[3px] bg-raised text-ink appearance-none focus:ring-2 focus:ring-action focus:border-action"
             >
               {locations?.map((loc) => (
                 <option key={loc.id} value={loc.id}>
@@ -78,19 +80,19 @@ export default function LocationsPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted pointer-events-none" />
           </div>
         </div>
         )}
 
         {locations?.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
+          <div className="bg-raised rounded-[3px] p-8 text-center">
+            <p className="text-muted">
               No locations yet. Add locations in Settings, then assign items to them from Inventory.
             </p>
             <a
               href="/settings"
-              className="mt-4 inline-block text-emerald-600 dark:text-emerald-400 hover:underline"
+              className="mt-4 inline-block text-action hover:underline"
             >
               Go to Settings →
             </a>
@@ -100,13 +102,12 @@ export default function LocationsPage() {
         {activeLocationId && selectedLocation && (
           <>
             {/* Location header */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-emerald-500" />
+            <div className="open-section py-6 mb-8">
+              <h2 className="text-xl font-semibold text-ink [overflow-wrap:anywhere] flex items-center gap-2">
                 {selectedLocation.name}
               </h2>
               {selectedLocation.description && (
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                <p className="mt-2 text-muted [overflow-wrap:anywhere]">
                   {selectedLocation.description}
                 </p>
               )}
@@ -115,35 +116,34 @@ export default function LocationsPage() {
             {/* Items at this location */}
             <section className="mb-10">
               <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Package className="h-5 w-5 text-emerald-500" />
+                <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
                   Items at this location
                 </h3>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <ItemViewToggle value={viewMode} onChange={setViewMode} />
-                  <button
+                  {!readOnly && <button
                     onClick={() => {
                       setEditingItem(null);
                       setShowItemForm(true);
                     }}
-                    className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
+                    className="inline-flex items-center px-3 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover"
                   >
                     Add item here
-                  </button>
+                  </button>}
                 </div>
               </div>
 
               {itemsLoading ? (
-                <div className="text-gray-500 dark:text-gray-400 py-8">Loading items...</div>
+                <div className="text-muted py-8">Loading items...</div>
               ) : items?.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
+                <div className="bg-raised rounded-[3px] p-8 text-center">
+                  <p className="text-muted">
                     No items at this location. Add items from Inventory and assign them to this
                     location, or use &ldquo;Add item here&rdquo; above.
                   </p>
                   <a
                     href="/inventory"
-                    className="mt-4 inline-block text-emerald-600 dark:text-emerald-400 hover:underline"
+                    className="mt-4 inline-block text-action hover:underline"
                   >
                     Go to Inventory →
                   </a>
@@ -172,47 +172,46 @@ export default function LocationsPage() {
               )}
             </section>
 
-            {/* Activity from this location */}
+            {/* from this location */}
             <section>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <History className="h-5 w-5 text-amber-500" />
+              <h3 className="text-lg font-semibold text-ink flex items-center gap-2 mb-4">
                 Activity from this location
               </h3>
 
               {consumptionLoading ? (
-                <div className="text-gray-500 dark:text-gray-400 py-8">Loading activity...</div>
+                <div className="text-muted py-8">Loading activity...</div>
               ) : consumption?.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
+                <div className="bg-raised rounded-[3px] p-8 text-center">
+                  <p className="text-muted">
                     No consumption or additions recorded from this location yet.
                   </p>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="bg-raised rounded-[3px] overflow-hidden">
+                  <ul className="divide-y divide-line">
                     {consumption?.map((log) => (
                       <li
                         key={log.id}
                         className="px-4 py-3 flex flex-wrap items-baseline justify-between gap-2"
                       >
                         <div>
-                          <span className="font-medium text-gray-900 dark:text-white">
+                          <span className="font-medium text-ink [overflow-wrap:anywhere]">
                             {log.item.name}
                           </span>
-                          <span className="text-gray-600 dark:text-gray-400 ml-2">
+                          <span className="text-muted ml-2">
                             {log.quantity} {log.item.unit}
                           </span>
                           <span
                             className={`ml-2 text-xs font-medium px-2 py-0.5 rounded ${
                               log.type === "addition"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                ? "bg-success-soft text-action bg-success-soft text-action"
+                                : "bg-danger-soft text-danger bg-danger-soft text-danger"
                             }`}
                           >
                             {log.type === "addition" ? "Added" : "Used"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-3 text-sm text-muted">
                           {log.note && (
                             <span className="italic">&ldquo;{log.note}&rdquo;</span>
                           )}

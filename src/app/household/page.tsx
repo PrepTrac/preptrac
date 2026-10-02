@@ -2,7 +2,7 @@
 
 import { api } from "~/utils/api";
 import { useState, useEffect } from "react";
-import { Users, Plus, Pencil, Trash2, Flame } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useDialogDismiss } from "~/hooks/useDialogDismiss";
 import ConfirmDialog from "~/components/ConfirmDialog";
 import { useDemoMode } from "~/components/DemoModeProvider";
@@ -86,11 +86,10 @@ export default function HouseholdPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
-          <Users className="h-8 w-8 text-indigo-500" />
+      <h1 className="text-3xl font-semibold text-ink flex items-center gap-2 mb-2">
           Household Profile
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           Add family members with age, weight, and height. The app uses the Mifflin-St Jeor
           equation to estimate each person&apos;s daily calorie needs. &ldquo;Days of Food&rdquo; on
           the dashboard is then calculated as total food calories in your inventory divided by your
@@ -101,97 +100,96 @@ export default function HouseholdPage() {
         </p>
 
         {totalDaily > 0 && (
-          <div className="mb-6 p-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
-            <div className="flex items-center gap-2 text-indigo-800 dark:text-indigo-200">
-              <Flame className="h-5 w-5" />
+          <div className="mb-6 p-4 rounded-[3px] bg-selected border border-action">
+            <div className="flex items-center gap-2 text-action">
               <span className="font-medium">Total daily calorie needs (household): {totalDaily.toLocaleString()} kcal/day</span>
             </div>
-            <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-2">
-              The same household and activity level are used for water-in-days when you view the dashboard water metric in &ldquo;days&rdquo; mode.
+            <p className="text-sm text-action mt-2">
+              The same household and activity level are used for water-in-days in the dashboard coverage estimate.
             </p>
           </div>
         )}
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Activity level</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-2">Activity level</h2>
+          <p className="text-sm text-muted mb-3">
             Adjusts calorie and water estimates. The base calculation (Mifflin-St Jeor) is for maintaining at rest; these options add a multiplier for higher activity. This is not 100% accurate but helps be conservative when planning for strenuous activity.
           </p>
-          <div className="space-y-3 [&_p]:text-gray-600 dark:[&_p]:text-gray-300">
-            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+          <div className="space-y-3 [&_p]:text-muted dark:[&_p]:text-muted">
+            <label className="flex items-start gap-3 p-3 rounded-[3px] border border-line cursor-pointer hover:bg-paper dark:hover:bg-raised has-[:checked]:border-action has-[:checked]:bg-selected dark:has-[:checked]:bg-selected">
               <input
                 type="radio"
                 name="activityLevel"
                 checked={activityData?.activityLevel === null || activityData?.activityLevel === undefined}
                 onChange={() => setActivityLevel.mutate({ activityLevel: null })}
                 disabled={readOnly}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                className="mt-1 border-line text-action focus:ring-action disabled:opacity-50"
               />
-              <div>
-                <span className="font-medium text-gray-900 dark:text-white">Base (sedentary)</span>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">BMR only; 0.5 oz water per lb. Default if no activity level is set.</p>
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="font-medium text-ink [overflow-wrap:anywhere]">Base (sedentary)</span>
+                <p className="text-xs text-muted mt-0.5">BMR only; 0.5 oz water per lb. Default if no activity level is set.</p>
               </div>
             </label>
-            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+            <label className="flex items-start gap-3 p-3 rounded-[3px] border border-line cursor-pointer hover:bg-paper dark:hover:bg-raised has-[:checked]:border-action has-[:checked]:bg-selected dark:has-[:checked]:bg-selected">
               <input
                 type="radio"
                 name="activityLevel"
                 checked={activityData?.activityLevel === "moderate"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "moderate" })}
                 disabled={readOnly}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                className="mt-1 border-line text-action focus:ring-action disabled:opacity-50"
               />
-              <div>
-                <span className="font-medium text-gray-900 dark:text-white">Moderately active</span>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">3–5 exercise days per week. Food: BMR × 1.55 · Water: 0.65 oz per lb.</p>
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="font-medium text-ink [overflow-wrap:anywhere]">Moderately active</span>
+                <p className="text-xs text-muted mt-0.5">3–5 exercise days per week. Food: BMR × 1.55 · Water: 0.65 oz per lb.</p>
               </div>
             </label>
-            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+            <label className="flex items-start gap-3 p-3 rounded-[3px] border border-line cursor-pointer hover:bg-paper dark:hover:bg-raised has-[:checked]:border-action has-[:checked]:bg-selected dark:has-[:checked]:bg-selected">
               <input
                 type="radio"
                 name="activityLevel"
                 checked={activityData?.activityLevel === "very_active"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "very_active" })}
                 disabled={readOnly}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                className="mt-1 border-line text-action focus:ring-action disabled:opacity-50"
               />
-              <div>
-                <span className="font-medium text-gray-900 dark:text-white">Very active</span>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Hard exercise 6–7 days per week. Food: BMR × 1.725 · Water: 0.75 oz per lb.</p>
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="font-medium text-ink [overflow-wrap:anywhere]">Very active</span>
+                <p className="text-xs text-muted mt-0.5">Hard exercise 6–7 days per week. Food: BMR × 1.725 · Water: 0.75 oz per lb.</p>
               </div>
             </label>
-            <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20">
+            <label className="flex items-start gap-3 p-3 rounded-[3px] border border-line cursor-pointer hover:bg-paper dark:hover:bg-raised has-[:checked]:border-action has-[:checked]:bg-selected dark:has-[:checked]:bg-selected">
               <input
                 type="radio"
                 name="activityLevel"
                 checked={activityData?.activityLevel === "extra_active"}
                 onChange={() => setActivityLevel.mutate({ activityLevel: "extra_active" })}
                 disabled={readOnly}
-                className="mt-1 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                className="mt-1 border-line text-action focus:ring-action disabled:opacity-50"
               />
-              <div>
-                <span className="font-medium text-gray-900 dark:text-white">Extra active</span>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Very hard exercise &amp; physical job. Food: BMR × 1.9 · Water: 0.85 oz per lb.</p>
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="font-medium text-ink [overflow-wrap:anywhere]">Extra active</span>
+                <p className="text-xs text-muted mt-0.5">Very hard exercise &amp; physical job. Food: BMR × 1.9 · Water: 0.85 oz per lb.</p>
               </div>
             </label>
           </div>
         </section>
 
         <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Family members</h2>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex rounded-md shadow-sm border border-gray-300 dark:border-gray-600 overflow-hidden">
+          <h2 className="text-lg font-semibold text-ink">Family members</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-[3px] border border-line overflow-hidden">
               <button
                 type="button"
                 onClick={() => setUnitsAndStore("us")}
-                className={`inline-flex items-center px-3 py-2 text-sm font-medium border-r border-gray-300 dark:border-gray-600 ${units === "us" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200" : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium border-r border-line ${units === "us" ? "bg-selected text-action" : "bg-raised text-ink hover:bg-paper dark:hover:bg-surface"}`}
               >
                 US (lb, ft)
               </button>
               <button
                 type="button"
                 onClick={() => setUnitsAndStore("metric")}
-                className={`inline-flex items-center px-3 py-2 text-sm font-medium ${units === "metric" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200" : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"}`}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium ${units === "metric" ? "bg-selected text-action" : "bg-raised text-ink hover:bg-paper dark:hover:bg-surface"}`}
               >
                 Rest of world (kg, cm)
               </button>
@@ -203,7 +201,7 @@ export default function HouseholdPage() {
                   setEditingId(null);
                   setShowForm(true);
                 }}
-                className="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-3 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add member
@@ -216,13 +214,13 @@ export default function HouseholdPage() {
           {members?.map((m) => (
             <li
               key={m.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-wrap items-center justify-between gap-2"
+              className="border-b border-line py-4 flex flex-wrap items-center justify-between gap-2"
             >
-              <div>
-                <span className="font-medium text-gray-900 dark:text-white">
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="font-medium text-ink [overflow-wrap:anywhere]">
                   {m.name || "Unnamed"}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400 ml-2">
+                <span className="text-muted ml-2">
                   {m.age}y,{" "}
                   {units === "metric"
                     ? `${m.weightKg} kg, ${m.heightCm} cm`
@@ -233,7 +231,7 @@ export default function HouseholdPage() {
                       })()}
                   , {m.sex}
                 </span>
-                <span className="block text-sm text-indigo-600 dark:text-indigo-400 mt-1">
+                <span className="block text-sm text-action mt-1">
                   ~{m.dailyCalories} kcal/day
                 </span>
               </div>
@@ -245,7 +243,7 @@ export default function HouseholdPage() {
                       setEditingId(m.id);
                       setShowForm(true);
                     }}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    className="p-2 text-muted hover:text-ink dark:hover:text-muted rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
                     aria-label={`Edit ${m.name || "family member"}`}
                     title="Edit"
                   >
@@ -256,7 +254,7 @@ export default function HouseholdPage() {
                   <button
                     type="button"
                     onClick={() => setPendingDeleteId(m.id)}
-                    className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                    className="p-2 text-muted hover:text-danger dark:hover:text-danger rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                     aria-label={`Remove ${m.name || "family member"}`}
                     title="Remove"
                   >
@@ -269,7 +267,7 @@ export default function HouseholdPage() {
         </ul>
 
         {members?.length === 0 && !showForm && (
-          <p className="text-gray-500 dark:text-gray-400 py-6">
+          <p className="text-muted py-6">
             No family members yet. Add members to get an accurate &ldquo;Days of Food&rdquo; on the
             dashboard.{" "}
             {units === "metric"
@@ -446,7 +444,7 @@ function HouseholdMemberForm({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -457,30 +455,32 @@ function HouseholdMemberForm({
         aria-modal="true"
         aria-label={editing ? "Edit family member" : "Add family member"}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 outline-none"
+        className="bg-raised rounded-[3px] shadow-xl max-w-md w-full p-6 outline-none"
       >
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-ink mb-4">
           {editing ? "Edit family member" : "Add family member"}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="household-member-name" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
               Name (optional)
             </label>
             <input
+              id="household-member-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Mom, Child 1"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="household-page-field-1" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                 Age (years) *
               </label>
               <input
+                id="household-page-field-1"
                 type="number"
                 min={0}
                 max={120}
@@ -489,20 +489,21 @@ function HouseholdMemberForm({
                   setAge(e.target.value);
                   if (fieldErrors.age) setFieldErrors((prev) => { const next = { ...prev }; delete next.age; return next; });
                 }}
-                className={`w-full px-3 py-2 border ${fieldErrors.age ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${fieldErrors.age ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               />
               {fieldErrors.age && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.age}</p>
+                <p className="mt-1 text-sm text-danger">{fieldErrors.age}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="household-page-field-2" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                 Sex *
               </label>
               <select
+                id="household-page-field-2"
                 value={sex}
                 onChange={(e) => setSex(e.target.value as "male" | "female")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -512,10 +513,11 @@ function HouseholdMemberForm({
           {units === "metric" ? (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="household-page-field-3" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                   Weight (kg) *
                 </label>
-                <input
+              <input
+                id="household-page-field-3"
                   type="number"
                   step="0.1"
                   min="0.1"
@@ -525,17 +527,18 @@ function HouseholdMemberForm({
                     if (fieldErrors.weightKg) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightKg; return next; });
                   }}
                   placeholder="e.g. 70"
-                  className={`w-full px-3 py-2 border ${fieldErrors.weightKg ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  className={`w-full px-3 py-2 border ${fieldErrors.weightKg ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                 />
                 {fieldErrors.weightKg && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightKg}</p>
+                  <p className="mt-1 text-sm text-danger">{fieldErrors.weightKg}</p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="household-page-field-4" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                   Height (cm) *
                 </label>
-                <input
+              <input
+                id="household-page-field-4"
                   type="number"
                   step="0.1"
                   min={1}
@@ -545,20 +548,21 @@ function HouseholdMemberForm({
                     if (fieldErrors.heightCm) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightCm; return next; });
                   }}
                   placeholder="e.g. 170"
-                  className={`w-full px-3 py-2 border ${fieldErrors.heightCm ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  className={`w-full px-3 py-2 border ${fieldErrors.heightCm ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                 />
                 {fieldErrors.heightCm && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.heightCm}</p>
+                  <p className="mt-1 text-sm text-danger">{fieldErrors.heightCm}</p>
                 )}
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="household-page-field-5" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                   Weight (lb) *
                 </label>
-                <input
+              <input
+                id="household-page-field-5"
                   type="number"
                   step="0.1"
                   min="0.1"
@@ -568,24 +572,25 @@ function HouseholdMemberForm({
                     if (fieldErrors.weightLb) setFieldErrors((prev) => { const next = { ...prev }; delete next.weightLb; return next; });
                   }}
                   placeholder="e.g. 154"
-                  className={`w-full px-3 py-2 border ${fieldErrors.weightLb ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  className={`w-full px-3 py-2 border ${fieldErrors.weightLb ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                 />
                 {fieldErrors.weightLb && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.weightLb}</p>
+                  <p className="mt-1 text-sm text-danger">{fieldErrors.weightLb}</p>
                 )}
               </div>
               <div className="flex gap-2 items-end">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="household-page-field-6" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                     Height (ft) *
                   </label>
-                  <select
+              <select
+                id="household-page-field-6"
                     value={heightFt}
                     onChange={(e) => {
                       setHeightFt(Number(e.target.value));
                       if (fieldErrors.heightFt) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightFt; return next; });
                     }}
-                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                   >
                     {Array.from({ length: HEIGHT_FT_MAX - HEIGHT_FT_MIN + 1 }, (_, i) => HEIGHT_FT_MIN + i).map((ft) => (
                       <option key={ft} value={ft}>
@@ -595,16 +600,17 @@ function HouseholdMemberForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="household-page-field-7" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                     Inches *
                   </label>
-                  <select
+              <select
+                id="household-page-field-7"
                     value={heightIn}
                     onChange={(e) => {
                       setHeightIn(Number(e.target.value));
                       if (fieldErrors.heightFt) setFieldErrors((prev) => { const next = { ...prev }; delete next.heightFt; return next; });
                     }}
-                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                    className={`w-full px-3 py-2 border ${fieldErrors.heightFt ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                   >
                     {Array.from({ length: HEIGHT_IN_MAX + 1 }, (_, i) => i).map((inVal) => (
                       <option key={inVal} value={inVal}>
@@ -614,12 +620,12 @@ function HouseholdMemberForm({
                   </select>
                 </div>
                 {fieldErrors.heightFt && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 col-span-2">{fieldErrors.heightFt}</p>
+                  <p className="mt-1 text-sm text-danger col-span-2">{fieldErrors.heightFt}</p>
                 )}
               </div>
             </div>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-muted">
             {units === "metric"
               ? "Use metric: weight in kilograms, height in centimeters. (1 lb ≈ 0.45 kg, 1 in ≈ 2.54 cm)"
               : "Using US units: weight in lb, height in ft and in."}
@@ -628,20 +634,20 @@ function HouseholdMemberForm({
             <button
               type="submit"
               disabled={createMember.isPending || updateMember.isPending}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              className="px-4 py-2 bg-action text-on-action rounded-[3px] hover:bg-action-hover disabled:opacity-50"
             >
               {editing ? "Save" : "Add"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-4 py-2 border border-line rounded-[3px] text-ink hover:bg-paper dark:hover:bg-surface"
             >
               Cancel
             </button>
           </div>
           {(createMember.isError || updateMember.isError) && (
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-danger">
               {createMember.error?.message ?? updateMember.error?.message}
             </p>
           )}

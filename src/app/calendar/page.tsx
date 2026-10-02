@@ -75,37 +75,37 @@ export default function CalendarPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="page-header">
+          <h1 className="text-3xl font-semibold text-ink">
             Calendar
           </h1>
           <div className="flex items-center space-x-4">
             <button
               onClick={previousMonth}
               aria-label="Previous month"
-              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="p-2 rounded-[3px] text-muted hover:text-muted dark:hover:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-ink">
               {format(currentMonth, "MMMM yyyy")}
             </h2>
             <button
               onClick={nextMonth}
               aria-label="Next month"
-              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="p-2 rounded-[3px] text-muted hover:text-muted dark:hover:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+        <div className="border-t border-line overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-line">
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="px-4 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700"
+                className="px-0.5 sm:px-4 py-3 text-center text-sm font-medium text-ink bg-surface"
               >
                 {day}
               </div>
@@ -113,7 +113,7 @@ export default function CalendarPage() {
           </div>
           <div className="grid grid-cols-7">
             {emptyDays.map((_, index) => (
-              <div key={`empty-${index}`} className="min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700" />
+              <div key={`empty-${index}`} className="min-h-[80px] sm:min-h-[100px] border-r border-b border-line" />
             ))}
             {daysInMonth.map((day) => {
               const dayEvents = getEventsForDay(day);
@@ -121,15 +121,15 @@ export default function CalendarPage() {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700 p-2 overflow-hidden ${
-                    isToday ? "bg-blue-50 dark:bg-blue-900" : ""
+                  className={`min-h-[80px] sm:min-h-[100px] border-r border-b border-line p-1 sm:p-2 overflow-hidden ${
+                    isToday ? "bg-selected" : ""
                   }`}
                 >
                   <div
                     className={`text-sm font-medium mb-1 ${
                       isToday
-                        ? "text-blue-600 dark:text-blue-300"
-                        : "text-gray-900 dark:text-white"
+                        ? "text-action"
+                        : "text-ink"
                     }`}
                   >
                     {format(day, "d")}
@@ -141,7 +141,7 @@ export default function CalendarPage() {
                           type="button"
                           aria-label={`${getEventLabel(event.type)}: ${event.title} on ${format(day, "MMMM d, yyyy")}`}
                           title={event.title}
-                          className={`w-full text-left text-xs px-2 py-1 rounded truncate block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${getEventBadgeClass(
+                          className={`w-full text-left text-xs px-2 py-1 rounded truncate block focus:outline-none focus-visible:ring-2 focus-visible:ring-action ${getEventBadgeClass(
                           event.type
                         )}`}
                       >
@@ -150,7 +150,7 @@ export default function CalendarPage() {
                       </li>
                     ))}
                     {dayEvents.length > 3 && (
-                      <li className="text-xs text-gray-500 dark:text-gray-400">
+                      <li className="text-xs text-muted">
                         +{dayEvents.length - 3} more
                       </li>
                     )}
@@ -161,15 +161,15 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        <div className="mt-6 border-t border-line py-6">
+          <h3 className="text-lg font-medium text-ink mb-4">
             Event Legend
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {(["expiration", "maintenance", "rotation", "battery_replacement"] as EventType[]).map((type) => (
               <div key={type} className="flex items-center">
                 <div className={`w-4 h-4 rounded mr-2 ${getEventSwatchClass(type)}`} />
-                <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                <span className="text-sm text-ink capitalize">
                   {getEventLabel(type)}
                 </span>
               </div>

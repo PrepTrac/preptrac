@@ -25,17 +25,17 @@ export default function ImportSection() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+      <h3 className="text-lg font-medium text-ink">
         Import inventory from CSV
       </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-muted">
         Download the template, fill in your items (name, unit, category, and location are required), then upload the CSV here.
       </p>
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           type="button"
           onClick={() => downloadCSVTemplate()}
-          className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="inline-flex items-center justify-center px-4 py-3 border border-line rounded-[3px] text-sm font-medium text-ink bg-raised hover:bg-paper dark:hover:bg-surface"
         >
           <Download className="h-5 w-5 mr-2" />
           Download template
@@ -65,34 +65,34 @@ export default function ImportSection() {
               type="button"
               onClick={() => importFileInputRef.current?.click()}
               disabled={importFromCSV.isPending}
-              className="inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Upload className="h-5 w-5 mr-2" />
               {importFromCSV.isPending ? "Importing…" : "Upload CSV"}
             </button>
           </>
         ) : (
-          <p className="text-sm text-amber-700 dark:text-amber-300 self-center">
+          <p className="text-sm text-caution self-center">
             Importing is disabled in demo mode.
           </p>
         )}
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+      <p className="text-sm text-muted flex items-center gap-2">
         <FileSpreadsheet className="h-4 w-4 flex-shrink-0" />
         Use the same category and location names as in Settings. Use simple dates like 1/1/2026 for expiration and maintenance fields.
       </p>
       {importResult && (
-        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <p className="font-medium text-gray-900 dark:text-white mb-2">
+        <div className="p-4 rounded-[3px] border border-line bg-paper">
+          <p className="font-medium text-ink mb-2">
             {importResult.created} item{importResult.created !== 1 ? "s" : ""} created.
           </p>
           {importResult.errors.length > 0 && (
             <div className="mt-3">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-2">
+              <p className="text-sm font-medium text-caution flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4" />
                 Row errors
               </p>
-              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc list-inside">
+              <ul className="text-sm text-muted text-ink space-y-1 list-disc list-inside">
                 {importResult.errors.map((e, i) => (
                   <li key={i}>
                     Row {e.row}: {e.message}

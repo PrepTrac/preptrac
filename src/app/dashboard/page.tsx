@@ -3,10 +3,9 @@
 import { api } from "~/utils/api";
 import { useEffect } from "react";
 import Link from "next/link";
-import { Package, MapPin, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import DashboardMetrics from "~/components/DashboardMetrics";
 import CategoryGoals from "~/components/CategoryGoals";
-import UpcomingEvents from "~/components/UpcomingEvents";
+import AttentionList from "~/components/AttentionList";
 import RecentActivityList from "~/components/RecentActivityList";
 import { useDemoMode } from "~/components/DemoModeProvider";
 
@@ -24,7 +23,11 @@ export default function DashboardPage() {
       void utils.dashboard.getStats.invalidate();
     },
   });
-  const { data: stats, isLoading } = api.dashboard.getStats.useQuery();
+  const { data: stats, isLoading, isError } = api.dashboard.getStats.useQuery();
+  const { data: goals, isError: goalsError } = api.settings.getGoals.useQuery();
+  const { data: household } = api.household.getAll.useQuery();
+  const { data: locations, isLoading: locationsLoading, isError: locationsError } = api.locations.getAll.useQuery();
+  const { data: lowItems, isLoading: lowLoading, isError: lowError } = api.items.getAll.useQuery({ lowInventory: true });
 
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
@@ -44,102 +47,39 @@ export default function DashboardPage() {
     );
   }
 
+  if (isError || !stats) return <main className="page-shell"><h1 className="text-3xl font-semibold mb-6">Dashboard</h1><p role="alert" className="text-danger">Unable to load preparedness metrics. Please try again.</p></main>;
+
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Dashboard
-      </h1>
-      {stats && stats.totalItems === 0 ? (
-          <OnboardingCard />
-        ) : (
-          <>
-            <DashboardMetrics stats={stats} />
-            <CategoryGoals
-              categoryStats={stats?.categoryStats ?? []}
-              ammoBreakdown={stats?.ammoBreakdown}
-              foodBreakdown={stats?.foodBreakdown}
-              waterBreakdown={stats?.waterBreakdown}
-            />
-            <UpcomingEvents events={stats?.upcomingEvents ?? []} />
-            <div className="mt-10">
-              <RecentActivityList
-                defaultPageSize={10}
-                showTitle={true}
-                compact={true}
-                activityPageHref="/activity"
-              />
-            </div>
-          </>
-      )}
+    <main className="page-shell">
+      <header className="page-header">
+        <div><p className="index-label mb-2">PREPTRAC / READINESS INDEX</p><h1 className="text-3xl font-semibold">Dashboard</h1></div>
+        <Link href="/household" className="text-sm text-muted hover:text-action">{household ? `${household.length} household member${household.length === 1 ? "" : "s"}` : "Household profile"} →</Link>
+      </header>
+      {stats.totalItems === 0 ? <OnboardingCard /> : <>
+        {goalsError && <p role="alert" className="text-danger text-sm mb-4">Goals could not load. Coverage still shows recorded supply estimates.</p>}
+        <DashboardMetrics stats={stats} goals={goals} />
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 mb-10">
+          <AttentionList stats={stats} lowItems={lowItems} loading={lowLoading} error={lowError} />
+          <section aria-labelledby="storage-heading" className="min-w-0">
+            <div className="section-heading"><h2 id="storage-heading">Storage locations</h2><Link href="/locations" className="text-xs text-action hover:underline">View all →</Link></div>
+            {locationsLoading ? <p className="text-muted">Loading locations…</p> : locationsError ? <p role="alert" className="text-danger">Locations could not load.</p> : locations?.length ? <ul className="divide-y divide-line">{locations.map((location, i) => <li key={location.id} className="py-3"><Link href="/locations" className="flex gap-3 hover:text-action"><span className="index-label pt-0.5">{String(i + 1).padStart(2, "0")}</span><span className="min-w-0"><span className="block font-medium [overflow-wrap:anywhere]">{location.name}</span>{location.description && <span className="block text-xs text-muted mt-1 [overflow-wrap:anywhere]">{location.description}</span>}</span></Link></li>)}</ul> : <p className="text-sm text-muted">No storage locations recorded.</p>}
+          </section>
+        </div>
+        <CategoryGoals categoryStats={stats.categoryStats} ammoBreakdown={stats.ammoBreakdown} foodBreakdown={stats.foodBreakdown} waterBreakdown={stats.waterBreakdown} />
+        <div className="mt-10"><RecentActivityList defaultPageSize={10} showTitle compact activityPageHref="/activity" /></div>
+      </>}
     </main>
   );
 }
 
-/** Shown when there is no inventory yet: guides the user to first-run setup. */
 function OnboardingCard() {
-  const steps = [
-    {
-      href: "/inventory",
-      icon: Package,
-      title: "Add your first item",
-      body: "Catalog supplies, food, water, ammo, fuel — anything you want to track.",
-    },
-    {
-      href: "/locations",
-      icon: MapPin,
-      title: "Organize by location",
-      body: "Create storage locations (pantry, garage, bug-out bag) to keep things tidy.",
-    },
-    {
-      href: "/settings",
-      icon: SettingsIcon,
-      title: "Set your preparedness goals",
-      body: "Define goals for water, food days, ammo and fuel so the dashboard tracks progress.",
-    },
-  ];
-  return (
-    <section
-      aria-labelledby="onboarding-title"
-      className="rounded-lg border border-blue-100 bg-white p-6 shadow-sm dark:border-blue-900/40 dark:bg-gray-800"
-    >
-      <div className="mb-5 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white">
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <h2
-          id="onboarding-title"
-          className="text-lg font-semibold text-gray-900 dark:text-white"
-        >
-          Welcome to PrepTrac
-        </h2>
-      </div>
-      <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
-        Your inventory is empty. Once you add items and set goals, this dashboard
-        will show your preparedness metrics, category progress and upcoming events.
-      </p>
-      <ol className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {steps.map((step, i) => {
-          const Icon = step.icon;
-          return (
-            <li key={step.href}>
-              <Link
-                href={step.href}
-                className="flex h-full flex-col gap-2 rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-700"
-              >
-                <span className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                  <span className="text-blue-600 dark:text-blue-400">{i + 1}.</span>
-                  <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-                  {step.title}
-                </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {step.body}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  );
+  return <section aria-labelledby="onboarding-title" className="open-section py-6">
+    <h2 id="onboarding-title" className="text-xl font-semibold mb-2">Build your readiness picture</h2>
+    <p className="text-muted mb-6">Your inventory is empty. Start with your household, record supplies and storage, then set goals.</p>
+    <ol className="divide-y divide-line">
+      <li className="py-4 flex gap-4"><span className="index-label">01</span><div><Link href="/household" className="font-medium text-action hover:underline">Set up your household →</Link><p className="text-sm text-muted mt-1">Add members to estimate daily food and water needs.</p></div></li>
+      <li className="py-4 flex gap-4"><span className="index-label">02</span><div><Link href="/inventory" className="font-medium text-action hover:underline">Record your supplies →</Link><p className="text-sm text-muted mt-1">Add food, water, fuel and other essentials. <Link href="/settings?tab=locations" className="text-action hover:underline">Set up storage locations</Link> and assign supplies to them.</p></div></li>
+      <li className="py-4 flex gap-4"><span className="index-label">03</span><div><Link href="/settings?tab=goals" className="font-medium text-action hover:underline">Set preparedness goals →</Link><p className="text-sm text-muted mt-1">Choose food days, water gallons, ammunition and energy targets.</p></div></li>
+    </ol>
+  </section>;
 }
-

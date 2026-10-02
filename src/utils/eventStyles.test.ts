@@ -27,12 +27,12 @@ describe("event styles", () => {
     }
   });
 
-  it("falls back to a gray badge for unknown types", () => {
-    expect(getEventBadgeClass("unknown")).toContain("bg-gray-100");
+  it("falls back to a neutral badge for unknown types", () => {
+    expect(getEventBadgeClass("unknown")).toContain("bg-surface");
   });
 
-  it("falls back to a gray swatch for unknown types", () => {
-    expect(getEventSwatchClass("unknown")).toContain("bg-gray-100");
+  it("falls back to a neutral swatch for unknown types", () => {
+    expect(getEventSwatchClass("unknown")).toContain("bg-surface");
   });
 
   it("humanizes the label", () => {

@@ -30,8 +30,8 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           padding: "1rem",
-          backgroundColor: "#f9fafb",
-          color: "#111827",
+          backgroundColor: "var(--background, #f3f2e9)",
+          color: "var(--foreground, #293126)",
           fontFamily:
             'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         }}
@@ -54,9 +54,9 @@ export default function GlobalError({
               width: "3rem",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: "0.5rem",
-              backgroundColor: "#2563eb",
-              color: "#fff",
+              borderRadius: "3px",
+              backgroundColor: "var(--action, #425b31)",
+              color: "var(--on-action, #ffffff)",
             }}
           >
             <AlertTriangle width={26} height={26} aria-hidden="true" />
@@ -65,7 +65,7 @@ export default function GlobalError({
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>
               PrepTrac hit an unexpected error
             </h1>
-            <p style={{ marginTop: "0.5rem", color: "#4b5563", fontSize: "0.875rem" }}>
+            <p style={{ marginTop: "3px", color: "var(--muted, #596151)", fontSize: "0.875rem" }}>
               The application couldn’t start. You can try reloading — your data is
               safe.
             </p>
@@ -76,11 +76,11 @@ export default function GlobalError({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.5rem",
-              borderRadius: "0.375rem",
+              gap: "3px",
+              borderRadius: "3px",
               border: "1px solid transparent",
-              backgroundColor: "#2563eb",
-              color: "#fff",
+              backgroundColor: "var(--action, #425b31)",
+              color: "var(--on-action, #ffffff)",
               padding: "0.5rem 1rem",
               fontSize: "0.875rem",
               fontWeight: 500,
@@ -91,7 +91,7 @@ export default function GlobalError({
             Try again
           </button>
           {error?.digest && (
-            <p style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "#9ca3af" }}>
+            <p style={{ fontFamily: "monospace", fontSize: "0.75rem", color: "var(--muted, #596151)" }}>
               Reference: {error.digest}
             </p>
           )}

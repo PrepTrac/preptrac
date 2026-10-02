@@ -30,16 +30,16 @@ export default function ItemViewToggle({
     <div
       role="group"
       aria-label="Items view"
-      className={`inline-flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden ${className}`}
+      className={`inline-flex rounded-[3px] border border-line overflow-hidden ${className}`}
     >
       <button
         type="button"
         aria-pressed={value === "table"}
         onClick={() => onChange("table")}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-action ${
           value === "table"
-            ? "bg-blue-600 text-white"
-            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            ? "bg-action text-on-action"
+            : "bg-raised text-ink hover:bg-paper dark:hover:bg-surface"
         }`}
       >
         <Table className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -49,10 +49,10 @@ export default function ItemViewToggle({
         type="button"
         aria-pressed={value === "cards"}
         onClick={() => onChange("cards")}
-        className={`inline-flex items-center px-3 py-2 text-sm font-medium border-l border-gray-300 dark:border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
+        className={`inline-flex items-center px-3 py-2 text-sm font-medium border-line border-line focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-action ${
           value === "cards"
-            ? "bg-blue-600 text-white"
-            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            ? "bg-action text-on-action"
+            : "bg-raised text-ink hover:bg-paper dark:hover:bg-surface"
         }`}
       >
         <LayoutGrid className="h-4 w-4 mr-1.5" aria-hidden="true" />

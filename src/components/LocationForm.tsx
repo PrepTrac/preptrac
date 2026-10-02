@@ -79,7 +79,7 @@ export default function LocationForm() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+        <h3 className="text-lg font-medium text-ink [overflow-wrap:anywhere]">
           Locations
         </h3>
         {!readOnly && (
@@ -89,7 +89,7 @@ export default function LocationForm() {
               reset();
               setShowForm(true);
             }}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-[3px] text-on-action bg-action hover:bg-action-hover"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Location
@@ -98,27 +98,29 @@ export default function LocationForm() {
       </div>
 
       {showForm && (
-        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="mb-4 p-4 bg-surface rounded-[3px]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="locationform-name" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                 Name *
               </label>
               <input
+                id="locationform-name"
                 {...register("name", { required: true })}
-                className={`w-full px-3 py-2 border ${errors.name ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${errors.name ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Name is required</p>
+                <p className="mt-1 text-sm text-danger">Name is required</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="locationform-description" className="block text-sm font-medium text-ink [overflow-wrap:anywhere] mb-1">
                 Description
               </label>
               <input
+                id="locationform-description"
                 {...register("description")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
             <div className="flex justify-end space-x-2">
@@ -129,14 +131,14 @@ export default function LocationForm() {
                   setEditingId(null);
                   reset();
                 }}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800"
+                className="px-4 py-2 border border-line rounded-[3px] text-sm font-medium text-ink [overflow-wrap:anywhere] bg-raised"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={readOnly}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingId ? "Update" : "Create"}
               </button>
@@ -149,14 +151,14 @@ export default function LocationForm() {
         {locations?.map((location) => (
           <div
             key={location.id}
-            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+            className="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface rounded-[3px]"
           >
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">
+              <div className="font-medium text-ink [overflow-wrap:anywhere]">
                 {location.name}
               </div>
               {location.description && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-muted [overflow-wrap:anywhere]">
                   {location.description}
                 </div>
               )}
@@ -167,7 +169,7 @@ export default function LocationForm() {
                   onClick={() => handleEdit(location)}
                   aria-label={`Edit location ${location.name}`}
                   title={`Edit ${location.name}`}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="p-2 text-muted hover:text-muted dark:hover:text-muted rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
                 >
                   <Edit className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -177,7 +179,7 @@ export default function LocationForm() {
                   onClick={() => setPendingDelete(location.id)}
                   aria-label={`Delete location ${location.name}`}
                   title={`Delete ${location.name}`}
-                  className="p-2 text-red-400 hover:text-red-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  className="p-2 text-danger hover:text-danger rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>

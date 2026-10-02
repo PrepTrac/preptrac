@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { api } from "~/utils/api";
-import { Target } from "lucide-react";
 import { useDemoMode } from "~/components/DemoModeProvider";
 
 type GoalsData = {
@@ -78,16 +77,15 @@ export default function GoalsSection() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Target className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+        <h3 className="text-lg font-medium text-ink">
           Inventory goals
         </h3>
       </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-muted">
         Set overall targets here. When a goal is set, the dashboard uses it for that category. Item-level target (goal) fields for matching units are disabled so this page is the single place to manage those goals.
       </p>
       {readOnly && (
-        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+        <p className="rounded-[3px] bg-caution-soft border border-caution p-3 text-sm text-caution">
           Demo mode is read-only — goals are view-only.
         </p>
       )}
@@ -95,7 +93,7 @@ export default function GoalsSection() {
       {/* fieldset[disabled] disables every input and the submit button at once */}
       <fieldset disabled={readOnly} className="space-y-5 max-w-md">
         <div>
-          <label htmlFor="goals-ammo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="goals-ammo" className="block text-sm font-medium text-ink mb-1">
             Ammo (rounds)
           </label>
           <input
@@ -105,12 +103,12 @@ export default function GoalsSection() {
             step={1}
             value={ammo}
             onChange={(e) => setAmmo(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             placeholder="e.g. 1000"
           />
         </div>
         <div>
-          <label htmlFor="goals-water" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="goals-water" className="block text-sm font-medium text-ink mb-1">
             Water (gallons)
           </label>
           <input
@@ -120,15 +118,15 @@ export default function GoalsSection() {
             step={0.1}
             value={water}
             onChange={(e) => setWater(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             placeholder="e.g. 20"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-muted">
             Items in gallons or bottles are counted (bottles converted to gallons).
           </p>
         </div>
         <div>
-          <label htmlFor="goals-food" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="goals-food" className="block text-sm font-medium text-ink mb-1">
             Food (days)
           </label>
           <input
@@ -138,34 +136,34 @@ export default function GoalsSection() {
             step={1}
             value={food}
             onChange={(e) => setFood(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             placeholder="e.g. 30"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-muted">
             Target is based on your household and activity level (Settings / profile). Goal = daily calories × days.
           </p>
         </div>
         <div className="space-y-4">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-sm font-medium text-ink">
             Fuel / energy goals
           </p>
           <div>
-            <label id="goals-fuel-kwh-label" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <label id="goals-fuel-kwh-label" className="block text-sm font-medium text-muted mb-1">
               Total kWh
             </label>
             <div
               id="goals-fuel-kwh"
               aria-labelledby="goals-fuel-kwh-label"
-              className="w-full px-3 py-2.5 rounded-md bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white font-semibold text-lg tabular-nums"
+              className="w-full px-3 py-2.5 rounded-[3px] bg-surface border border-line text-ink font-semibold text-lg tabular-nums"
             >
               {totalKwh.toFixed(1)}
             </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Generator (6 kWh/gal × fuel gallons) + battery + solar kWh.
             </p>
           </div>
           <div>
-            <label htmlFor="goals-fuel-gal" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <label htmlFor="goals-fuel-gal" className="block text-sm font-medium text-muted mb-1">
               Fuel (gallons)
             </label>
             <input
@@ -175,12 +173,12 @@ export default function GoalsSection() {
               step={0.1}
               value={fuelGallons}
               onChange={(e) => setFuelGallons(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               placeholder="e.g. 10"
             />
           </div>
           <div>
-            <label htmlFor="goals-fuel-battery" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <label htmlFor="goals-fuel-battery" className="block text-sm font-medium text-muted mb-1">
               battery + solar kWh
             </label>
             <input
@@ -190,10 +188,10 @@ export default function GoalsSection() {
               step={0.1}
               value={fuelBatteryKwh}
               onChange={(e) => setFuelBatteryKwh(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               placeholder="e.g. 50"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Items in Fuel &amp; Energy with unit &quot;kWh&quot; (e.g. portable battery banks, solar).
             </p>
           </div>
@@ -201,7 +199,7 @@ export default function GoalsSection() {
         <button
           type="submit"
           disabled={updateGoalsMutation.isPending}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover disabled:opacity-50"
         >
           {updateGoalsMutation.isPending ? "Saving…" : "Save goals"}
         </button>

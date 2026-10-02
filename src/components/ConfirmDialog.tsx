@@ -47,7 +47,7 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -58,20 +58,20 @@ export default function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         tabIndex={-1}
-        className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl outline-none dark:bg-gray-800"
+        className="w-full max-w-md rounded-[3px] bg-raised p-6 shadow-xl outline-none bg-raised"
       >
         <h2
           id="confirm-dialog-title"
-          className="mb-2 text-lg font-semibold text-gray-900 dark:text-white"
+          className="mb-2 text-lg font-semibold text-ink"
         >
           {title}
         </h2>
-        <div className="mb-5 text-sm text-gray-600 dark:text-gray-300">{message}</div>
+        <div className="mb-5 text-sm text-muted text-ink">{message}</div>
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            className="rounded-[3px] border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-action border-line bg-surface text-ink dark:hover:bg-surface"
           >
             {cancelLabel}
           </button>
@@ -80,8 +80,8 @@ export default function ConfirmDialog({
             onClick={onConfirm}
             className={
               destructive
-                ? "rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                : "rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                ? "rounded-[3px] border border-transparent px-4 py-2 text-sm font-medium text-on-action bg-danger hover:bg-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+                : "rounded-[3px] border border-transparent px-4 py-2 text-sm font-medium text-on-action bg-action hover:bg-action-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
             }
           >
             {confirmLabel}

@@ -76,7 +76,7 @@ export default function ActivityCharts({
   return (
     <>
       <div>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <h3 className="text-sm font-medium text-ink mb-2">
           Consumption vs additions over last {clampedDays} days
         </h3>
         <div className="h-64 sm:h-80 w-full">
@@ -89,7 +89,7 @@ export default function ActivityCharts({
                 contentStyle={t.tooltipStyle}
                 itemStyle={t.tooltipItemStyle}
                 labelStyle={t.tooltipLabelStyle}
-                cursor={{ fill: "rgba(156, 163, 175, 0.15)" }}
+                cursor={{ fill: t.grid }}
               />
               <Legend wrapperStyle={{ color: t.legend, fontSize: 12 }} />
               <Bar dataKey="consumption" name="Consumed" fill={CONSUMPTION_COLOR} stackId="a" />
@@ -100,7 +100,7 @@ export default function ActivityCharts({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <h3 className="text-sm font-medium text-ink mb-2">
             Consumption by item (last {clampedDays} days)
           </h3>
           <div className="h-72 sm:h-80 w-full max-w-md mx-auto">
@@ -133,7 +133,7 @@ export default function ActivityCharts({
           </div>
         </div>
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <h3 className="text-sm font-medium text-ink mb-2">
             Additions by item (last {clampedDays} days)
           </h3>
           <div className="h-72 sm:h-80 w-full max-w-md mx-auto">

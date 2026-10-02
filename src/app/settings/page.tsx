@@ -32,14 +32,14 @@ function SettingsPageContent() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 className="text-3xl font-semibold text-ink mb-8">
         Settings
       </h1>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="open-section ">
+        <div className="border-b border-line">
           <nav
-            className="flex -mb-px"
+            className="flex flex-wrap -mb-px"
             role="tablist"
             aria-label="Settings sections"
             onKeyDown={onTabKeyDown}
@@ -54,10 +54,10 @@ function SettingsPageContent() {
                 aria-controls={`panel-${tab}`}
                 tabIndex={activeTab === tab ? 0 : -1}
                 onClick={() => setActiveTab(tab)}
-                className={`py-4 px-6 text-sm font-medium border-b-2 capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`py-3 px-3 sm:px-5 text-sm font-medium border-b-2 capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-action ${
                   activeTab === tab
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    ? "border-action text-action"
+                    : "border-transparent text-muted hover:text-ink hover:border-line text-muted dark:hover:text-muted"
                 }`}
               >
                 {tabLabel(tab)}
@@ -71,7 +71,7 @@ function SettingsPageContent() {
           role="tabpanel"
           aria-labelledby={`tab-${activeTab}`}
           tabIndex={0}
-          className="p-6 focus:outline-none"
+          className="py-6 focus-visible:outline-2"
         >
           {activeTab === "goals" && <GoalsSection />}
           {activeTab === "notifications" && <NotificationsSection />}
@@ -88,8 +88,8 @@ function SettingsPageContent() {
 function SettingsPageFallback() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
-      <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+      <h1 className="text-3xl font-semibold text-ink mb-8">Settings</h1>
+      <p className="text-muted">Loading…</p>
     </main>
   );
 }

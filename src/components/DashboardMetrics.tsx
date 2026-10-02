@@ -1,365 +1,88 @@
 "use client";
 
 import { useState } from "react";
-import { Droplet, UtensilsCrossed, Target, Package, Flame } from "lucide-react";
-import type { AmmoBreakdownItem, FoodBreakdownItem, WaterBreakdownItem } from "~/utils/api";
+import Link from "next/link";
+import type { RouterOutputs } from "~/utils/api";
 
+type Stats = Partial<RouterOutputs["dashboard"]["getStats"]>;
 interface DashboardMetricsProps {
-  stats: {
-    totalWater?: number;
-    waterBreakdown?: WaterBreakdownItem[];
-    totalWaterDays?: number;
-    useHouseholdForWater?: boolean;
-    totalFuelGallons?: number;
-    totalKwh?: number;
-    batteryKwh?: number;
-    totalFoodDays?: number;
-    totalAmmo?: number;
-    totalItems?: number;
-    useHouseholdCalculation?: boolean;
-    ammoBreakdown?: AmmoBreakdownItem[];
-    foodBreakdown?: FoodBreakdownItem[];
-  } | undefined;
+  stats: Stats | undefined;
+  goals?: { foodGoalDays?: number | null; waterGoalGallons?: number | null };
 }
+const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 
-function BreakdownTooltip<T extends { name: string; quantity: number; unit: string }>({
-  children,
-  title,
-  items,
-  renderItem,
-  getBarTotal,
-  barColorClass = "bg-gray-500 dark:bg-gray-400",
-  interactiveContent = false,
-}: {
-  children: React.ReactNode;
-  title: string;
-  items: T[];
-  renderItem?: (item: T) => React.ReactNode;
-  /** If set, use this to get the value for the bar percentage (e.g. gallonsEquivalent for water). */
-  getBarTotal?: (item: T) => number;
-  /** Tailwind class for the progress bar fill (e.g. bg-blue-500). Uses category color when set. */
-  barColorClass?: string;
-  /**
-   * When true the wrapped card is itself an interactive control (e.g. the
-   * water/fuel metric cards that cycle units on click). In that case this
-   * wrapper stays non-focusable and the breakdown appears on hover/focus of
-   * the card. When false the wrapper is the keyboard/touch target for
-   * revealing the breakdown.
-   */
-  interactiveContent?: boolean;
-}) {
-  const [show, setShow] = useState(false);
-  if (!items || items.length === 0) return <>{children}</>;
-  const total = getBarTotal
-    ? items.reduce((s, i) => s + getBarTotal(i), 0)
-    : items.reduce((s, i) => s + i.quantity, 0);
+function GoalScale({ current, target, unit, label }: { current: number; target?: number | null; unit: string; label: string }) {
+  if (target == null || !Number.isFinite(target) || target <= 0) return <Link href="/settings?tab=goals" className="text-sm text-action hover:underline">Set a {label.toLowerCase()} goal →</Link>;
+  const percent = Math.max(0, Math.min(100, (current / target) * 100));
   return (
-    <div
-      className={`relative h-full ${
-        interactiveContent
-          ? ""
-          : "rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 cursor-pointer"
-      }`}
-      tabIndex={interactiveContent ? undefined : 0}
-      role={interactiveContent ? undefined : "button"}
-      aria-expanded={interactiveContent ? undefined : show}
-      aria-label={interactiveContent ? undefined : `${title}: toggle details`}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onFocus={() => setShow(true)}
-      onBlur={() => setShow(false)}
-      onClick={interactiveContent ? undefined : () => setShow((v) => !v)}
-      onKeyDown={
-        interactiveContent
-          ? undefined
-          : (e) => {
-              if (e.key === " " || e.key === "Enter") {
-                e.preventDefault();
-                setShow((v) => !v);
-              } else if (e.key === "Escape") {
-                setShow(false);
-              }
-            }
-      }
-    >
-      {children}
-      {show && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{title}</div>
-          <ul className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
-            {items.map((item, i) => {
-              const barVal = getBarTotal ? getBarTotal(item) : item.quantity;
-              const pct = total > 0 ? (barVal / total) * 100 : 0;
-              return (
-                <li key={i}>
-                  <div className="flex justify-between gap-2 mb-0.5">
-                    {renderItem ? renderItem(item) : (
-                      <>
-                        <span className="truncate">{item.name}</span>
-                        <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
-                          {item.quantity} {item.unit}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                    <div
-                      className={`h-1.5 rounded-full ${barColorClass}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-type FuelDisplayMode = 0 | 1 | 2; // 0 = gallons, 1 = kWh total, 2 = kWh battery + solar
-
-export default function DashboardMetrics({ stats }: DashboardMetricsProps) {
-  const [waterDisplayGallons, setWaterDisplayGallons] = useState(true);
-  const [fuelDisplayMode, setFuelDisplayMode] = useState<FuelDisplayMode>(1);
-
-  const cycleFuelDisplay = () =>
-    setFuelDisplayMode((m) => ((m + 1) % 3) as FuelDisplayMode);
-
-  const fuelValue =
-    fuelDisplayMode === 0
-      ? (stats?.totalFuelGallons?.toFixed(1) ?? "0")
-      : fuelDisplayMode === 1
-        ? (stats?.totalKwh?.toFixed(1) ?? "0")
-        : (stats?.batteryKwh?.toFixed(1) ?? "0");
-  const fuelUnit =
-    fuelDisplayMode === 0 ? "gallons" : "kWh";
-  const fuelSubtitle =
-    fuelDisplayMode === 1 ? "generator + battery + solar" : fuelDisplayMode === 2 ? "battery + solar" : undefined;
-  const fuelAriaNext =
-    fuelDisplayMode === 0 ? "kWh total" : fuelDisplayMode === 1 ? "kWh battery + solar" : "gallons";
-
-  const foodDaysValue =
-    typeof stats?.totalFoodDays === "number"
-      ? Number.isInteger(stats.totalFoodDays)
-        ? stats.totalFoodDays
-        : stats.totalFoodDays.toFixed(1)
-      : 0;
-
-  const waterValue = waterDisplayGallons
-    ? (stats?.totalWater?.toFixed(1) ?? "0")
-    : (stats?.totalWaterDays != null ? stats.totalWaterDays.toFixed(1) : "—");
-  const waterUnit = waterDisplayGallons ? "gallons" : "days";
-  const waterSubtitle =
-    !waterDisplayGallons && stats?.useHouseholdForWater ? "Based on your household" : undefined;
-
-  const waterCard = (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => setWaterDisplayGallons((g) => !g)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          setWaterDisplayGallons((g) => !g);
-        }
-      }}
-      className="h-full bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg cursor-pointer hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      aria-label={`Water: ${waterValue} ${waterUnit}. Click to switch to ${waterDisplayGallons ? "days" : "gallons"}.`}
-    >
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-            <Droplet className="h-6 w-6 text-white" />
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                Total Water
-              </dt>
-              <dd className="flex items-baseline">
-                <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {waterValue}
-                </div>
-                <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">{waterUnit}</div>
-              </dd>
-              {waterSubtitle && (
-                <dd className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{waterSubtitle}</dd>
-              )}
-            </dl>
-          </div>
-        </div>
+    <div className="mt-4">
+      <div className="flex flex-wrap justify-between gap-2 text-xs text-muted mb-2">
+        <span>{number(current)} / {number(target)} {unit}</span><span>{Math.round(percent)}% of goal</span>
+      </div>
+      <div role="progressbar" aria-label={`${label} goal`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-valuetext={`${number(current)} of ${number(target)} ${unit}`} className="goal-scale">
+        <span className="goal-fill" style={{ width: `${percent}%` }} />
+        <div aria-hidden="true" className="goal-segments">{Array.from({ length: 10 }, (_, i) => <span key={i} />)}</div>
       </div>
     </div>
   );
+}
 
-  const fuelCard = (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={cycleFuelDisplay}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          cycleFuelDisplay();
-        }
-      }}
-      className="h-full bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg cursor-pointer hover:ring-2 hover:ring-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
-      aria-label={`Fuel/energy: ${fuelValue} ${fuelUnit}. Click to switch to ${fuelAriaNext}.`}
-    >
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 bg-amber-500 rounded-md p-3">
-            <Flame className="h-6 w-6 text-white" />
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                Fuel / Energy
-              </dt>
-              <dd className="flex items-baseline">
-                <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {fuelValue}
-                </div>
-                <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">{fuelUnit}</div>
-              </dd>
-              {fuelSubtitle && (
-                <dd className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{fuelSubtitle}</dd>
-              )}
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const metrics = [
-    {
-      name: "Food Days",
-      value: foodDaysValue,
-      unit: "days",
-      subtitle: stats?.useHouseholdCalculation ? "Based on your household" : undefined,
-      icon: UtensilsCrossed,
-      color: "bg-green-500",
-      breakdown: stats?.foodBreakdown ?? null,
-    },
-    {
-      name: "Ammo Count",
-      value: stats?.totalAmmo ?? 0,
-      unit: "rounds",
-      subtitle:
-        stats?.ammoBreakdown && stats.ammoBreakdown.length > 0
-          ? `${stats.ammoBreakdown.length} caliber${stats.ammoBreakdown.length === 1 ? "" : "s"}`
-          : undefined,
-      icon: Target,
-      color: "bg-red-500",
-      breakdown: stats?.ammoBreakdown ?? null,
-    },
-    {
-      name: "Total Items",
-      value: stats?.totalItems ?? 0,
-      unit: "items",
-      icon: Package,
-      color: "bg-purple-500",
-      breakdown: null as AmmoBreakdownItem[] | FoodBreakdownItem[] | null,
-    },
-  ];
-
+function Breakdown({ title, items }: { title: string; items?: { name: string; quantity: number; unit: string; gallonsEquivalent?: number; contributionDays?: number; calories?: number }[] }) {
+  if (!items?.length) return null;
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
-      {stats?.waterBreakdown && stats.waterBreakdown.length > 0 ? (
-        <BreakdownTooltip
-          title="By source"
-          items={stats.waterBreakdown}
-          interactiveContent
-          getBarTotal={(item: WaterBreakdownItem) => item.gallonsEquivalent}
-          barColorClass="bg-blue-500"
-          renderItem={(item: WaterBreakdownItem) => (
-            <>
-              <span className="truncate">{item.name}</span>
-              <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
-                {item.quantity} {item.unit}
-                {item.gallonsEquivalent > 0 && item.unit.toLowerCase().includes("bottle")
-                  ? ` (${item.gallonsEquivalent.toFixed(1)} gal)`
-                  : ""}
-              </span>
-            </>
-          )}
-        >
-          {waterCard}
-        </BreakdownTooltip>
-      ) : (
-        waterCard
-      )}
-      {fuelCard}
-      {metrics.map((metric) => {
-        const Icon = metric.icon;
-        const card = (
-          <div
-            key={metric.name}
-            className="h-full bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg"
-          >
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className={`flex-shrink-0 ${metric.color} rounded-md p-3`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                      {metric.name}
-                    </dt>
-                    <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                        {metric.value}
-                      </div>
-                      <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                        {metric.unit}
-                      </div>
-                    </dd>
-                    {"subtitle" in metric && metric.subtitle && (
-                      <dd className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {metric.subtitle}
-                      </dd>
-                    )}
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-        if (metric.breakdown && metric.breakdown.length > 0) {
-          const isFood = metric.name === "Food Days";
-          const breakdownItems = metric.breakdown as Array<{ name: string; quantity: number; unit: string }>;
-          return (
-            <BreakdownTooltip
-              key={metric.name}
-              title={isFood ? "By calories" : "By type"}
-              items={breakdownItems}
-              getBarTotal={isFood ? (item) => (item as FoodBreakdownItem).calories ?? item.quantity : undefined}
-              barColorClass={metric.color}
-              renderItem={isFood ? (item) => {
-                const food = item as FoodBreakdownItem;
-                return (
-                  <>
-                    <span className="truncate">{food.name}</span>
-                    <span className="flex-shrink-0 text-gray-500 dark:text-gray-400">
-                      {food.quantity} {food.unit}
-                      {food.contributionDays != null ? ` (~${food.contributionDays} days)` : ""}
-                    </span>
-                  </>
-                );
-              } : undefined}
-            >
-              {card}
-            </BreakdownTooltip>
-          );
-        }
-        return card;
-      })}
-    </div>
+    <details className="metric-details mt-3 text-sm">
+      <summary className="cursor-pointer text-action py-1">{title}</summary>
+      <ul className="mt-2 divide-y divide-line">
+        {items.map((item, i) => <li key={i} className="py-2 flex flex-wrap justify-between gap-2">
+          <span className="[overflow-wrap:anywhere] min-w-0">{item.name}</span>
+          <span className="text-muted tabular-nums">{number(item.quantity)} {item.unit}{item.gallonsEquivalent != null ? ` (${number(item.gallonsEquivalent)} gal)` : ""}{item.calories != null ? ` · ${number(item.calories)} kcal` : ""}{item.contributionDays != null ? ` · ~${number(item.contributionDays)} days` : ""}</span>
+        </li>)}
+      </ul>
+    </details>
   );
 }
 
+export default function DashboardMetrics({ stats, goals }: DashboardMetricsProps) {
+  const [fuelMode, setFuelMode] = useState(1);
+  const fuel = [stats?.totalFuelGallons ?? 0, stats?.totalKwh ?? 0, stats?.batteryKwh ?? 0][fuelMode]!;
+  const fuelLabel = ["Stored fuel · gallons", "Generator + battery + solar · kWh", "Battery + solar · kWh"][fuelMode];
+  const waterDays = stats?.totalWaterDays;
+  return (
+    <section aria-label="Household coverage" className="mb-8">
+      <div className="section-heading"><h2>Household coverage</h2><span className="index-label">READINESS / SUPPLIES</span></div>
+      <p className="text-sm text-muted mb-4">Coverage is estimated from recorded supplies and household needs.</p>
+      <div className="coverage-band grid grid-cols-1 sm:grid-cols-2">
+        <div className="min-w-0 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold" >Food coverage</h3>
+          <p className="mt-2"><span className="coverage-number">{number(stats?.totalFoodDays ?? 0)}</span> <span className="text-muted text-sm">days</span></p>
+          <p className="text-xs text-muted mt-2">{stats?.useHouseholdCalculation ? "Based on your household calorie needs" : "Fallback estimate: recorded food quantity ÷ 3"}</p>
+          <GoalScale label="Food" current={stats?.totalFoodDays ?? 0} target={goals?.foodGoalDays} unit="days" />
+          <Breakdown title="Food calorie breakdown" items={stats?.foodBreakdown} />
+        </div>
+        <div className="min-w-0 p-5 sm:p-6 border-t sm:border-t-0 sm:border-line">
+          <h3 className="text-sm font-semibold">Water coverage</h3>
+          <p className="mt-2"><span className="coverage-number">{waterDays != null ? number(waterDays) : "—"}</span> <span className="text-muted text-sm">days</span></p>
+          <p className="text-xs text-muted mt-2">{number(stats?.totalWater ?? 0)} gallons recorded{stats?.useHouseholdForWater ? " · Based on your household" : ""}</p>
+          {waterDays == null && ((stats?.householdDailyCalories ?? 0) > 0 ? <Link href="/inventory" className="block text-xs text-action mt-2 hover:underline">Review recorded water supplies to estimate days →</Link> : <Link href="/household" className="block text-xs text-action mt-2 hover:underline">Set up household to estimate water days →</Link>)}
+          <GoalScale label="Water" current={stats?.totalWater ?? 0} target={goals?.waterGoalGallons} unit="gallons" />
+          <Breakdown title="Water source breakdown" items={stats?.waterBreakdown} />
+        </div>
+      </div>
+      <dl className="secondary-metrics grid grid-cols-1 sm:grid-cols-3 border-b border-line">
+        <div className="py-4 sm:pr-4 min-w-0">
+          <dt className="text-xs text-muted">Fuel / Energy</dt>
+          <dd className="text-2xl font-semibold tabular-nums mt-1">{number(fuel)} <span className="text-xs font-normal text-muted">{fuelMode === 0 ? "gallons" : "kWh"}</span></dd>
+          <dd><button type="button" aria-label="Switch fuel measurement" onClick={() => setFuelMode(m => (m + 1) % 3)} className="text-xs text-action text-left mt-1 py-1 hover:underline">{fuelLabel} ↻</button></dd>
+        </div>
+        <div className="py-4 sm:px-4 sm:border-line min-w-0">
+          <dt className="text-xs text-muted">Ammunition</dt><dd className="text-2xl font-semibold tabular-nums mt-1">{number(stats?.totalAmmo ?? 0)} <span className="text-xs font-normal text-muted">rounds</span></dd>
+          <dd><Breakdown title="Ammunition breakdown" items={stats?.ammoBreakdown} /></dd>
+        </div>
+        <div className="py-4 sm:pl-4 sm:border-line">
+          <dt className="text-xs text-muted">Inventory</dt><dd className="text-2xl font-semibold tabular-nums mt-1">{number(stats?.totalItems ?? 0)} <span className="text-xs font-normal text-muted">items</span></dd>
+          <dd><Link href="/inventory" className="text-xs text-action hover:underline">Review supplies →</Link></dd>
+        </div>
+      </dl>
+    </section>
+  );
+}

@@ -30,40 +30,40 @@ export default function TestDataSection() {
   const { readOnly } = useDemoMode();
   return (
     <div className="space-y-6">
-      <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-        <p className="text-sm text-amber-800 dark:text-amber-200">
+      <div className="p-3 rounded-[3px] bg-caution-soft border border-caution">
+        <p className="text-sm text-caution">
           <strong>Disclaimer:</strong> This test data tool is only for visualizing the
           capability of this web app. It is not intended for production use or for
           tracking real preparedness inventory.
         </p>
       </div>
       {readOnly ? (
-        <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+        <p className="rounded-[3px] bg-caution-soft border border-caution p-3 text-sm text-caution">
           This instance is running in demo mode and is already seeded with sample data. The fill/remove tools are disabled because demo mode is read-only.
         </p>
       ) : (
         <>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-            <FlaskConical className="h-5 w-5 text-amber-500" />
+          <h3 className="text-lg font-medium text-ink flex items-center gap-2">
+            <FlaskConical className="h-5 w-5 text-caution" />
             Fill test data
           </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-muted">
         Add a sample preparedness inventory so you can see how the app looks with data.
         Creates categories, locations, items (food, water, ammo, medical, shelter, etc.),
         some consumption history over the last 6 months, and upcoming expiration/maintenance
         events. Safe to run multiple times — existing categories and locations are reused.
       </p>
       <FillTestDataButton />
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-2">
-          <Trash2 className="h-5 w-5 text-red-500" />
+      <div className="border-t border-line pt-6 mt-6">
+        <h3 className="text-lg font-medium text-ink flex items-center gap-2 mb-2">
+          <Trash2 className="h-5 w-5 text-danger" />
           Remove test data
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        <p className="text-sm text-muted mb-3">
           Removes only data that was added by &ldquo;Fill test data&rdquo;. Your real
           categories, locations, and items are never touched.
         </p>
-        <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+        <p className="text-sm text-caution mb-3">
           If you have been modifying or tracking your preps using the data populated by
           this app and you click Remove test data, all of that will be removed.
         </p>
@@ -87,13 +87,13 @@ function FillTestDataButton() {
         type="button"
         onClick={() => fillTestData.mutate()}
         disabled={fillTestData.isPending}
-        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center px-4 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-caution hover:bg-caution focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caution disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <FlaskConical className="h-4 w-4 mr-2" />
         {fillTestData.isPending ? "Adding test data…" : "Fill test data"}
       </button>
       {fillTestData.isSuccess && fillTestData.data && (
-        <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm space-y-1">
+        <div className="p-3 rounded-[3px] bg-success-soft text-action text-sm space-y-1">
           <p>
             Done. Created {fillTestData.data.categories} categories, {fillTestData.data.locations}{" "}
             locations, {fillTestData.data.items} items, and{" "}
@@ -111,7 +111,7 @@ function FillTestDataButton() {
         </div>
       )}
       {fillTestData.isError && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">
+        <div className="p-3 rounded-[3px] bg-danger-soft text-danger text-sm">
           {fillTestData.error.message}
         </div>
       )}
@@ -133,23 +133,23 @@ function RemoveTestDataButton() {
         type="button"
         onClick={() => setConfirmRemove(true)}
         disabled={removeTestData.isPending || !testDataStatus?.hasTestData}
-        className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center px-4 py-2 border border-danger rounded-[3px] text-sm font-medium text-danger bg-raised hover:bg-danger-soft dark:hover:bg-danger-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-danger disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
         {removeTestData.isPending ? "Removing…" : "Remove test data"}
       </button>
       {!testDataStatus?.hasTestData && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-muted">
           No test data to remove. Use &ldquo;Fill test data&rdquo; first.
         </p>
       )}
       {removeTestData.isSuccess && removeTestData.data && (
-        <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">
+        <div className="p-3 rounded-[3px] bg-success-soft text-action text-sm">
           {removeTestData.data.message}
         </div>
       )}
       {removeTestData.isError && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">
+        <div className="p-3 rounded-[3px] bg-danger-soft text-danger text-sm">
           {removeTestData.error.message}
         </div>
       )}

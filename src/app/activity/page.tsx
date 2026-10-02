@@ -179,11 +179,10 @@ export default function ActivityPage() {
   return (
     <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full max-w-5xl">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Activity className="h-8 w-8 text-amber-500" />
+        <h1 className="text-3xl font-semibold text-ink flex items-center gap-2">
           Activity
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-muted">
           Log when you use items (consume) or restock them (add) — the same form
           handles both. Then review your trends and recent history below.
         </p>
@@ -193,30 +192,30 @@ export default function ActivityPage() {
         {/* Log activity */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {readOnly && (
-            <p className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+            <p className="rounded-[3px] bg-caution-soft border border-caution p-3 text-sm text-caution">
               Demo mode is read-only — logging consumption or additions is disabled.
             </p>
           )}
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 space-y-4">
+          <div className="open-section py-5 space-y-4">
             {/* Type toggle */}
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-ink">
                 Type
               </span>
               <div
                 role="group"
                 aria-label="Activity type"
-                className="flex rounded-lg border border-gray-300 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-700"
+                className="flex rounded-[3px] border border-line p-0.5 bg-surface"
               >
                 <button
                   type="button"
                   onClick={() => setActivityType("consumption")}
                   aria-pressed={activityType === "consumption"}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-[3px] text-sm font-medium transition-colors ${
                     activityType === "consumption"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                      ? "bg-raised text-ink "
+                      : "text-muted hover:text-ink dark:hover:text-muted"
                   }`}
                 >
                   <MinusCircle className="h-4 w-4" aria-hidden="true" />
@@ -226,10 +225,10 @@ export default function ActivityPage() {
                   type="button"
                   onClick={() => setActivityType("addition")}
                   aria-pressed={activityType === "addition"}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-[3px] text-sm font-medium transition-colors ${
                     activityType === "addition"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                      ? "bg-raised text-ink "
+                      : "text-muted hover:text-ink dark:hover:text-muted"
                   }`}
                 >
                   <Plus className="h-4 w-4" aria-hidden="true" />
@@ -243,12 +242,12 @@ export default function ActivityPage() {
               {rows.map((row) => (
                 <div
                   key={row.id}
-                  className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0"
+                  className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end border-b border-line pb-3 last:border-0 last:pb-0"
                 >
                   <div className="sm:col-span-5">
                     <label
                       htmlFor={`activity-item-${row.id}`}
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-ink mb-1"
                     >
                       Item
                     </label>
@@ -258,7 +257,7 @@ export default function ActivityPage() {
                       onChange={(e) =>
                         updateRow(row.id, "itemId", e.target.value)
                       }
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="block w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
                       required={rows.length === 1}
                     >
                       <option value="">Select item…</option>
@@ -272,7 +271,7 @@ export default function ActivityPage() {
                   <div className="sm:col-span-2">
                     <label
                       htmlFor={`activity-amount-${row.id}`}
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-ink mb-1"
                     >
                       Amount
                     </label>
@@ -290,13 +289,13 @@ export default function ActivityPage() {
                           ? `max ${getItem(row.itemId)?.quantity ?? "—"}`
                           : "0"
                       }
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="block w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
                     />
                   </div>
                   <div className="sm:col-span-4">
                     <label
                       htmlFor={`activity-note-${row.id}`}
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-ink mb-1"
                     >
                       Note <span className="font-normal">(optional)</span>
                     </label>
@@ -306,7 +305,7 @@ export default function ActivityPage() {
                       value={row.note}
                       onChange={(e) => updateRow(row.id, "note", e.target.value)}
                       placeholder={activityType === "addition" ? "e.g. Filled tank" : "e.g. Range day, emergency use"}
-                      className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="block w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
                     />
                   </div>
                   <div className="sm:col-span-1 flex justify-end">
@@ -314,7 +313,7 @@ export default function ActivityPage() {
                       type="button"
                       onClick={() => removeRow(row.id)}
                       aria-label={`Remove row ${rows.indexOf(row) + 1}`}
-                      className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      className="p-2 text-muted hover:text-danger dark:hover:text-danger rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                       title="Remove row"
                     >
                       <Trash2 className="h-5 w-5" aria-hidden="true" />
@@ -328,7 +327,7 @@ export default function ActivityPage() {
               <button
                 type="button"
                 onClick={addRow}
-                className="inline-flex items-center text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+                className="inline-flex items-center text-sm font-medium text-caution hover:text-caution dark:hover:text-caution"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add another item
@@ -339,7 +338,7 @@ export default function ActivityPage() {
           {recordActivity.isError && (
             <div
               role="alert"
-              className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-red-700 dark:text-red-300 text-sm"
+              className="rounded-[3px] bg-danger-soft p-4 text-danger text-sm"
             >
               {recordActivity.error.message}
             </div>
@@ -347,7 +346,7 @@ export default function ActivityPage() {
           {recordActivity.isSuccess && (
             <div
               role="status"
-              className="rounded-md bg-green-50 dark:bg-green-900/20 p-4 text-green-700 dark:text-green-300 text-sm"
+              className="rounded-[3px] bg-success-soft p-4 text-action text-sm"
             >
               {activityType === "addition"
                 ? "Addition recorded. Inventory updated."
@@ -359,7 +358,7 @@ export default function ActivityPage() {
             <button
               type="submit"
               disabled={!hasValidRows || recordActivity.isPending || readOnly}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-caution disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {activityType === "addition" ? (
                 <Plus className="h-4 w-4 mr-2" />
@@ -378,19 +377,19 @@ export default function ActivityPage() {
         {items?.length === 0 ? (
           // No items yet: there's nothing to analyze, so show one guided callout
           // instead of two empty analytics/recent boxes.
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <Activity className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <div className="bg-raised rounded-[3px] p-8 text-center">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-[3px] bg-caution-soft">
+              <Activity className="h-5 w-5 text-caution" aria-hidden="true" />
             </div>
-            <p className="text-gray-700 dark:text-gray-200 font-medium">
+            <p className="text-ink font-medium">
               No items in inventory yet
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-muted mt-1">
               Add items from the Inventory page to start logging activity.
             </p>
             <a
               href="/inventory"
-              className="mt-4 inline-block text-amber-600 dark:text-amber-400 hover:underline"
+              className="mt-4 inline-block text-caution hover:underline"
             >
               Go to Inventory →
             </a>
@@ -399,14 +398,13 @@ export default function ActivityPage() {
           <>
             {/* Analytics */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <BarChart3 className="h-5 w-5 text-amber-500" />
+              <h2 className="text-xl font-semibold text-ink flex items-center gap-2 mb-4">
                 Activity analytics
               </h2>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 space-y-6">
+              <div className="open-section py-5 space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <fieldset className="min-w-0">
-                    <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <legend className="block text-sm font-medium text-ink mb-1">
                       Time range
                     </legend>
                     <div className="flex flex-wrap gap-2 items-center">
@@ -419,10 +417,10 @@ export default function ActivityPage() {
                             setStatsDays(d);
                           }}
                           aria-pressed={!useCustomDays && statsDays === d}
-                          className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+                          className={`px-3 py-1.5 rounded-[3px] text-sm font-medium ${
                             !useCustomDays && statsDays === d
-                              ? "bg-amber-600 text-white"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              ? "bg-action text-on-action"
+                              : "bg-surface text-ink hover:bg-surface dark:hover:bg-surface"
                           }`}
                         >
                           {d}d
@@ -433,9 +431,9 @@ export default function ActivityPage() {
                           type="checkbox"
                           checked={useCustomDays}
                           onChange={(e) => setUseCustomDays(e.target.checked)}
-                          className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                          className="rounded border-line text-caution focus:ring-caution"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Custom</span>
+                        <span className="text-sm text-ink">Custom</span>
                       </label>
                       {useCustomDays && (
                         <input
@@ -445,14 +443,14 @@ export default function ActivityPage() {
                           value={customDays}
                           onChange={(e) => setCustomDays(Number(e.target.value) || 1)}
                           aria-label="Custom range in days"
-                          className="w-20 px-2 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                          className="w-20 px-2 py-1.5 rounded-[3px] border border-line bg-raised text-ink text-sm"
                         />
                       )}
                     </div>
                   </fieldset>
 
                   <fieldset className="min-w-0">
-                    <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <legend className="block text-sm font-medium text-ink mb-1">
                       Categories
                     </legend>
                     <div className="flex flex-wrap gap-2">
@@ -460,10 +458,10 @@ export default function ActivityPage() {
                         type="button"
                         onClick={() => setCategoryFilterIds(null)}
                         aria-pressed={categoryFilterIds === null}
-                        className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+                        className={`px-3 py-1.5 rounded-[3px] text-sm font-medium ${
                           categoryFilterIds === null
-                            ? "bg-amber-600 text-white"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-action text-on-action"
+                            : "bg-surface text-ink hover:bg-surface dark:hover:bg-surface"
                         }`}
                       >
                         All
@@ -485,10 +483,10 @@ export default function ActivityPage() {
                               }
                             }}
                             aria-pressed={isActive}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+                            className={`px-3 py-1.5 rounded-[3px] text-sm font-medium ${
                               isActive
-                                ? "bg-amber-600 text-white"
-                                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                ? "bg-action text-on-action"
+                                : "bg-surface text-ink hover:bg-surface dark:hover:bg-surface"
                             }`}
                           >
                             {cat.name}
@@ -500,7 +498,7 @@ export default function ActivityPage() {
                 </div>
 
                 {statsLoading && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-center py-8 text-muted">
                     Loading charts…
                   </div>
                 )}
@@ -516,13 +514,13 @@ export default function ActivityPage() {
 
                 {!statsLoading && !hasAnyActivity && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                      <BarChart3 className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[3px] bg-surface">
+                      <BarChart3 className="h-5 w-5 text-muted" aria-hidden="true" />
                     </div>
-                    <p className="text-gray-700 dark:text-gray-200 font-medium">
+                    <p className="text-ink font-medium">
                       Nothing to chart yet
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
+                    <p className="text-sm text-muted mt-1 max-w-sm">
                       Log consumption or additions above and your trends will appear here.
                     </p>
                   </div>

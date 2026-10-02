@@ -246,7 +246,7 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -257,16 +257,16 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
         aria-modal="true"
         aria-label={itemId ? "Edit item" : "Add item"}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto outline-none"
+        className="bg-raised rounded-[3px] shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto outline-none"
       >
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="sticky top-0 bg-raised border-b border-line px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-ink">
             {itemId ? "Edit Item" : "Add Item"}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="text-muted hover:text-muted dark:hover:text-muted rounded-[3px] p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
           >
             <X className="h-5 w-5" />
           </button>
@@ -274,52 +274,56 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="itemform-name" className="block text-sm font-medium text-ink mb-1">
               Name *
             </label>
-            <input
+              <input
+                id="itemform-name"
               {...register("name", { required: true })}
-              className={`w-full px-3 py-2 border ${errors.name ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+              className={`w-full px-3 py-2 border ${errors.name ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">Name is required</p>
+              <p className="mt-1 text-sm text-danger">Name is required</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="itemform-description" className="block text-sm font-medium text-ink mb-1">
               Description
             </label>
-            <textarea
+              <textarea
+                id="itemform-description"
               {...register("description")}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-quantity" className="block text-sm font-medium text-ink mb-1">
                 Quantity *
               </label>
               <input
+                id="itemform-quantity"
                 type="number"
                 step="0.01"
                 {...register("quantity", { required: true, valueAsNumber: true })}
-                className={`w-full px-3 py-2 border ${errors.quantity ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${errors.quantity ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               />
               {errors.quantity && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Quantity is required</p>
+                <p className="mt-1 text-sm text-danger">Quantity is required</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-unit" className="block text-sm font-medium text-ink mb-1">
                 Unit *
               </label>
               <select
+                id="itemform-unit"
                 {...register("unit", { required: true })}
-                className={`w-full px-3 py-2 border ${errors.unit ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${errors.unit ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               >
                 <option value="">Select unit</option>
                 {POPULAR_UNITS.map((u) => (
@@ -331,28 +335,30 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
               </select>
               {selectedUnit === OTHER_UNIT_SENTINEL && (
                 <input
+                  aria-label="Custom unit"
                   {...register("unitCustom")}
                   placeholder="e.g. bottles, gallons, kWh"
-                  className={`mt-2 w-full px-3 py-2 border ${errors.unitCustom ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  className={`mt-2 w-full px-3 py-2 border ${errors.unitCustom ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                 />
               )}
               {errors.unit && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a unit</p>
+                <p className="mt-1 text-sm text-danger">Please select a unit</p>
               )}
               {errors.unitCustom && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.unitCustom.message}</p>
+                <p className="mt-1 text-sm text-danger">{errors.unitCustom.message}</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-locationId" className="block text-sm font-medium text-ink mb-1">
                 Location *
               </label>
               <select
+                id="itemform-locationId"
                 {...register("locationId", { required: true })}
-                className={`w-full px-3 py-2 border ${errors.locationId ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${errors.locationId ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               >
                 <option value="">Select location</option>
                 {locations?.map((loc) => (
@@ -362,17 +368,18 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                 ))}
               </select>
               {errors.locationId && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a location</p>
+                <p className="mt-1 text-sm text-danger">Please select a location</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-categoryId" className="block text-sm font-medium text-ink mb-1">
                 Category *
               </label>
               <select
+                id="itemform-categoryId"
                 {...register("categoryId", { required: true })}
-                className={`w-full px-3 py-2 border ${errors.categoryId ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full px-3 py-2 border ${errors.categoryId ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
               >
                 <option value="">Select category</option>
                 {categories?.map((cat) => (
@@ -382,28 +389,29 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                 ))}
               </select>
               {errors.categoryId && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">Please select a category</p>
+                <p className="mt-1 text-sm text-danger">Please select a category</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${targetDisabledByGoal ? "text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-300"}`}>
+              <label htmlFor="itemform-targetQuantity" className={`block text-sm font-medium mb-1 ${targetDisabledByGoal ? "text-muted" : "text-ink"}`}>
                 Target Quantity (Goal)
               </label>
               <input
+                id="itemform-targetQuantity"
                 type="number"
                 step="0.01"
                 {...register("targetQuantity", { valueAsNumber: true })}
                 disabled={targetDisabledByGoal}
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 py-2 border rounded-[3px] ${
                   targetDisabledByGoal
-                    ? "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    ? "border-line bg-surface text-muted cursor-not-allowed"
+                    : "border-line bg-raised text-ink"
                 }`}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted">
                 {targetDisabledByGoal
                   ? "Goal is set in Settings → Goals for this category/unit."
                   : "The ideal quantity you want to have for this item"}
@@ -411,16 +419,17 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-minQuantity" className="block text-sm font-medium text-ink mb-1">
                 Low Inventory Threshold
               </label>
               <input
+                id="itemform-minQuantity"
                 type="number"
                 step="0.01"
                 {...register("minQuantity", { valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted">
                 Leave empty or 0 for no threshold alerts. Otherwise you&apos;ll be alerted when quantity falls below this value.
               </p>
             </div>
@@ -428,10 +437,11 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
 
           {isFoodCategory && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-caloriesPerUnit" className="block text-sm font-medium text-ink mb-1">
                 Calories per unit *
               </label>
               <input
+                id="itemform-caloriesPerUnit"
                 type="number"
                 step="1"
                 min="0"
@@ -440,13 +450,13 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
                   required: "Required for food items",
                   min: { value: 1, message: "Enter calories per single unit (e.g. per jar, per can)" },
                 })}
-                className={`w-full max-w-xs px-3 py-2 border ${errors.caloriesPerUnit ? "border-red-500 dark:border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                className={`w-full max-w-xs px-3 py-2 border ${errors.caloriesPerUnit ? "border-danger" : "border-line"} rounded-[3px] bg-raised text-ink`}
                 placeholder="e.g. 3100"
               />
               {errors.caloriesPerUnit && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.caloriesPerUnit.message}</p>
+                <p className="mt-1 text-sm text-danger">{errors.caloriesPerUnit.message}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-muted">
                 Calories per single unit (e.g. per jar, per can, per bag). Total for this item = quantity ×
                 calories per unit. Required for Days of Food.
               </p>
@@ -455,98 +465,105 @@ export default function ItemForm({ itemId, defaultLocationId, onClose }: ItemFor
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name0" className="block text-sm font-medium text-ink mb-1">
                 Expiration Date
               </label>
               <input
+                id="itemform-name0"
                 type="date"
                 {...register("expirationDate")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name1" className="block text-sm font-medium text-ink mb-1">
                 Image URL
               </label>
               <input
+                id="itemform-name1"
                 type="url"
                 {...register("imageUrl")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name2" className="block text-sm font-medium text-ink mb-1">
                 Maintenance Interval (days)
               </label>
               <input
+                id="itemform-name2"
                 type="number"
                 {...register("maintenanceInterval", { valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name3" className="block text-sm font-medium text-ink mb-1">
                 Last Maintenance Date
               </label>
               <input
+                id="itemform-name3"
                 type="date"
                 {...register("lastMaintenanceDate")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name4" className="block text-sm font-medium text-ink mb-1">
                 Rotation Schedule (days)
               </label>
               <input
+                id="itemform-name4"
                 type="number"
                 {...register("rotationSchedule", { valueAsNumber: true })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="itemform-name5" className="block text-sm font-medium text-ink mb-1">
                 Last Rotation Date
               </label>
               <input
+                id="itemform-name5"
                 type="date"
                 {...register("lastRotationDate")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="itemform-name6" className="block text-sm font-medium text-ink mb-1">
               Notes
             </label>
-            <textarea
+              <textarea
+                id="itemform-name6"
               {...register("notes")}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-line rounded-[3px] bg-raised text-ink"
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-line">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+              className="px-4 py-2 border border-line rounded-[3px] text-sm font-medium text-ink bg-raised hover:bg-paper dark:hover:bg-surface"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              className="px-4 py-2 border border-transparent rounded-[3px] text-sm font-medium text-on-action bg-action hover:bg-action-hover"
             >
               {itemId ? "Update" : "Create"}
             </button>
