@@ -54,3 +54,6 @@ OPTIMIZATIONS.md
 
 # subagent artifacts
 /.pi-subagents
+
+# Local design previews and private companion session state
+/.superpowers/
