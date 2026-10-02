@@ -16,35 +16,12 @@ export default function LocationNav({
   onSelectLocation,
 }: LocationNavProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <button
-        onClick={() => onSelectLocation(undefined)}
-        className={`px-4 py-2 rounded-md text-sm font-medium ${
-          !selectedLocation
-            ? "bg-green-700 text-white"
-            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-        }`}
-      >
-        All Locations
-      </button>
-      {locations.map((location) => (
-        <button
-          key={location.id}
-          onClick={() =>
-            onSelectLocation(
-              selectedLocation === location.id ? undefined : location.id
-            )
-          }
-          className={`px-4 py-2 rounded-md text-sm font-medium ${
-            selectedLocation === location.id
-              ? "bg-green-700 text-white"
-              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-          }`}
-        >
-          {location.name}
-        </button>
-      ))}
+    <div className="flex items-center gap-2 min-w-0">
+      <label htmlFor="inventory-location-filter" className="text-sm font-medium">Location:</label>
+      <select id="inventory-location-filter" value={selectedLocation ?? ""} onChange={e => onSelectLocation(e.target.value || undefined)} className="min-w-0 max-w-48 px-3 py-2 border border-line bg-raised text-ink rounded-[3px] text-sm">
+        <option value="">All Locations</option>
+        {locations.map(location => <option key={location.id} value={location.id}>{location.name}</option>)}
+      </select>
     </div>
   );
 }
-

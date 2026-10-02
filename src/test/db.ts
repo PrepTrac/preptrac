@@ -6,8 +6,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /**
- * Create an isolated SQLite database in a temp directory with the current
- * Prisma schema applied. Each call returns a fresh PrismaClient so tests are
+ * Create an isolated SQLite database in a temp directory with the checked-in
+ * Prisma migrations applied. Each call returns a fresh PrismaClient so tests are
  * fully isolated (no shared state, no risk to the dev database).
  *
  * Used by router integration tests that exercise real Prisma queries —
@@ -23,9 +23,9 @@ export async function createTestDb(): Promise<TestDbHandle> {
   const dbPath = join(dir, "test.db");
   const url = `file:${dbPath}`;
 
-  // Apply the schema to the temp database. Prisma 7 no longer generates the
-  // client as part of `db push`; --accept-data-loss is harmless on a fresh DB.
-  execSync(`npx prisma db push --accept-data-loss`, {
+  // Deploy checked-in migrations to this fresh database without destructive
+  // schema-push flags. Never target the configured development database.
+  execSync(`npx prisma migrate deploy`, {
     stdio: "pipe",
     env: { ...process.env, DATABASE_URL: url },
   });

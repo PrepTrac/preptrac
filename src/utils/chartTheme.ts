@@ -29,35 +29,14 @@ export interface ChartTheme {
 }
 
 const LIGHT: ChartTheme = {
-  axis: "#4b5563", // gray-600
-  grid: "#e5e7eb", // gray-200
-  legend: "#374151", // gray-700
-  pieLabel: "#374151", // gray-700
-  tooltipStyle: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "0.5rem",
-    color: "#111827",
-  },
-  tooltipItemStyle: { color: "#111827" },
-  tooltipLabelStyle: { color: "#374151" },
+  axis: "#596151", grid: "#c1c6b5", legend: "#293126", pieLabel: "#293126",
+  tooltipStyle: { backgroundColor: "#faf9f2", border: "1px solid #c1c6b5", borderRadius: "3px", color: "#293126" },
+  tooltipItemStyle: { color: "#293126" }, tooltipLabelStyle: { color: "#293126" },
 };
-
 const DARK: ChartTheme = {
-  axis: "#9ca3af", // gray-400
-  grid: "#374151", // gray-700
-  legend: "#e5e7eb", // gray-200
-  pieLabel: "#e5e7eb", // gray-200
-  tooltipStyle: {
-    backgroundColor: "#1f2937", // gray-800
-    border: "1px solid #374151", // gray-700
-    borderRadius: "0.5rem",
-    color: "#f3f4f6", // gray-100
-  },
-  tooltipItemStyle: { color: "#f3f4f6" },
-  tooltipLabelStyle: { color: "#d1d5db" }, // gray-300
+  axis: "#bcc6af", grid: "#4b5842", legend: "#f1f0e3", pieLabel: "#f1f0e3",
+  tooltipStyle: { backgroundColor: "#343f2f", border: "1px solid #4b5842", borderRadius: "3px", color: "#f1f0e3" },
+  tooltipItemStyle: { color: "#f1f0e3" }, tooltipLabelStyle: { color: "#f1f0e3" },
 };
 
-export function chartTheme(isDark: boolean): ChartTheme {
-  return isDark ? DARK : LIGHT;
-}
+export function chartTheme(isDark: boolean): ChartTheme { return isDark ? DARK : LIGHT; }

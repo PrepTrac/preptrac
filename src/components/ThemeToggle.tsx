@@ -4,8 +4,8 @@ import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+export function ThemeToggle({ onSidebar = false }: { onSidebar?: boolean }) {
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -18,11 +18,11 @@ export function ThemeToggle() {
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      className={`p-2 rounded-[3px] ${onSidebar ? "sidebar-control" : "text-muted hover:bg-surface"}`}
+      aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} theme`}
     >
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         <Sun className="h-5 w-5" />
       ) : (
         <Moon className="h-5 w-5" />

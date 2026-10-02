@@ -34,9 +34,9 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
   const lowInventory = isLowInventory(item);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+    <div className="bg-surface border border-line rounded-[3px] p-4 flex flex-col h-full">
       {item.imageUrl && (
-        <div className="relative h-40 w-full mb-4 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700">
+        <div className="relative h-40 w-full mb-4 rounded-[3px] overflow-hidden bg-surface">
           <Image
             src={item.imageUrl}
             alt={item.name}
@@ -47,11 +47,11 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         </div>
       )}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-lg font-semibold text-ink">
             {item.name}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted">
             {item.category.name} • {item.location.name}
           </p>
         </div>
@@ -60,7 +60,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
             onClick={onEdit}
             aria-label={`Edit ${item.name}`}
             title={`Edit ${item.name}`}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="p-1 text-muted hover:text-muted dark:hover:text-muted rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
           >
             <Edit className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -69,19 +69,19 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
 
       <div className="mt-3">
         <div className="flex justify-between items-end">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className="text-2xl font-bold text-ink">
             {item.quantity} <span className="text-sm font-normal">{item.unit}</span>
           </p>
           {item.targetQuantity > 0 && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-xs text-muted mb-1">
               Goal: {item.targetQuantity} {item.unit}
             </p>
           )}
         </div>
         {item.targetQuantity > 0 && (
-          <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+          <div className="mt-2 w-full bg-surface rounded-[3px] h-1.5">
             <div
-              className="h-1.5 rounded-full bg-blue-600 transition-all duration-500"
+              className="h-1.5 rounded-[3px] bg-action transition-all duration-500"
               style={{
                 width: `${Math.min((item.quantity / item.targetQuantity) * 100, 100)}%`,
               }}
@@ -93,19 +93,19 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
       {(isExpiringSoon || needsMaint || lowInventory) && (
         <div className="mt-3 space-y-1">
           {isExpiringSoon && item.expirationDate && (
-            <div className="flex items-center text-sm text-red-600 dark:text-red-400">
+            <div className="flex items-center text-sm text-danger">
               <AlertCircle className="h-4 w-4 mr-1" />
               Expires: {format(new Date(item.expirationDate), "MMM d, yyyy")}
             </div>
           )}
           {needsMaint && (
-            <div className="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
+            <div className="flex items-center text-sm text-caution">
               <Wrench className="h-4 w-4 mr-1" />
               Needs Maintenance
             </div>
           )}
           {lowInventory && (
-            <div className="flex items-center text-sm text-orange-600 dark:text-orange-400">
+            <div className="flex items-center text-sm text-caution">
               <AlertCircle className="h-4 w-4 mr-1" />
               Low Inventory
             </div>
@@ -114,7 +114,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
       )}
 
       {item.description && (
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+        <p className="mt-2 text-sm text-muted line-clamp-2">
           {item.description}
         </p>
       )}
@@ -123,7 +123,7 @@ export default function ItemCard({ item, onEdit }: ItemCardProps) {
         {!readOnly && (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            className="text-sm text-danger hover:text-danger dark:hover:text-danger rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
           >
             Delete
           </button>

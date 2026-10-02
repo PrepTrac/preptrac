@@ -15,35 +15,23 @@ export type EventType =
 
 /** Tailwind badge classes (bg + text, light + dark) for each event type. */
 export const EVENT_BADGE_CLASSES: Record<EventType, string> = {
-  expiration: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  maintenance:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  rotation: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  battery_replacement:
-    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  expiration: "bg-danger-soft text-danger",
+  maintenance: "bg-caution-soft text-caution",
+  rotation: "bg-success-soft text-success",
+  battery_replacement: "bg-info-soft text-info",
 };
 
-/** Solid swatch class (legend color dot) for each event type. */
+/** The same semantic fills identify calendar legend entries. */
 export const EVENT_SWATCH_CLASSES: Record<EventType, string> = {
-  expiration: "bg-red-100 dark:bg-red-900",
-  maintenance: "bg-yellow-100 dark:bg-yellow-900",
-  rotation: "bg-blue-100 dark:bg-blue-900",
-  battery_replacement: "bg-purple-100 dark:bg-purple-900",
+  expiration: "bg-danger-soft", maintenance: "bg-caution-soft",
+  rotation: "bg-success-soft", battery_replacement: "bg-info-soft",
 };
 
-const DEFAULT_BADGE_CLASS =
-  "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
-
-/** Badge classes for an event type (falls back to gray for unknown types). */
 export function getEventBadgeClass(type: string): string {
-  return (EVENT_BADGE_CLASSES as Record<string, string>)[type] ?? DEFAULT_BADGE_CLASS;
+  return (EVENT_BADGE_CLASSES as Record<string, string>)[type] ?? "bg-surface text-ink";
 }
-
-/** Swatch classes for an event type (falls back to gray for unknown types). */
 export function getEventSwatchClass(type: string): string {
-  return (
-    (EVENT_SWATCH_CLASSES as Record<string, string>)[type] ?? "bg-gray-100 dark:bg-gray-700"
-  );
+  return (EVENT_SWATCH_CLASSES as Record<string, string>)[type] ?? "bg-surface";
 }
 
 /** Human-readable label, e.g. "battery_replacement" → "battery replacement". */

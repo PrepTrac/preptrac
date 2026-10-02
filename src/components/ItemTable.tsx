@@ -42,49 +42,49 @@ export default function ItemTable({ items, onEdit }: ItemTableProps) {
   const pendingDeleteItem = items.find((i) => i.id === pendingDeleteId) ?? null;
 
   return (
-    <div className="overflow-x-auto rounded-lg shadow border border-gray-200 dark:border-gray-700">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-800">
+    <div className="ledger">
+      <table className="min-w-full divide-y divide-line">
+        <thead className="bg-paper bg-raised">
           <tr>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Name
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Category
             </th>
             <th
               scope="col"
-              className="hidden md:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="hidden md:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Location
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Quantity
             </th>
             <th
               scope="col"
-              className="hidden sm:table-cell px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="hidden sm:table-cell px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Goal
             </th>
             <th
               scope="col"
-              className="hidden lg:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="hidden lg:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Expiration
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
             >
               Status
             </th>
@@ -95,26 +95,26 @@ export default function ItemTable({ items, onEdit }: ItemTableProps) {
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+        <tbody className="divide-y divide-line bg-raised">
           {items.map((item) => {
             const expiring = isExpiringSoon(item);
             const low = isLowInventory(item);
             const maintenance = needsMaintenance(item);
             return (
-              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+              <tr key={item.id} className="hover:bg-paper dark:hover:bg-surface">
+                <td className="px-4 py-3 text-sm font-medium text-ink">
                   {item.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                <td className="px-4 py-3 text-sm text-muted text-ink">
                   {item.category.name}
                 </td>
-                <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                <td className="hidden md:table-cell px-4 py-3 text-sm text-muted text-ink">
                   {item.location.name}
                 </td>
-                <td className="px-4 py-3 text-sm text-right text-gray-900 dark:text-white whitespace-nowrap">
-                  {item.quantity} <span className="text-gray-500 dark:text-gray-400">{item.unit}</span>
+                <td className="px-4 py-3 text-sm text-right text-ink whitespace-nowrap tabular-nums">
+                  {item.quantity} <span className="text-muted">{item.unit}</span>
                 </td>
-                <td className="hidden sm:table-cell px-4 py-3 text-sm text-right text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                <td className="hidden sm:table-cell px-4 py-3 text-sm text-right text-muted text-ink whitespace-nowrap">
                   {item.targetQuantity > 0
                     ? `${item.targetQuantity} ${item.unit}`
                     : "—"}
@@ -124,38 +124,38 @@ export default function ItemTable({ items, onEdit }: ItemTableProps) {
                     <span
                       className={
                         expiring
-                          ? "text-red-600 dark:text-red-400 font-medium"
-                          : "text-gray-600 dark:text-gray-300"
+                          ? "text-danger font-medium"
+                          : "text-muted text-ink"
                       }
                     >
                       {format(new Date(item.expirationDate), "MMM d, yyyy")}
                     </span>
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                    <span className="text-muted">—</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex flex-col gap-1">
                     {expiring && (
-                      <span className="inline-flex items-center text-red-600 dark:text-red-400">
+                      <span className="inline-flex items-center text-danger">
                         <AlertCircle className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                         Expiring soon
                       </span>
                     )}
                     {low && (
-                      <span className="inline-flex items-center text-orange-600 dark:text-orange-400">
+                      <span className="inline-flex items-center text-caution">
                         <AlertCircle className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                         Low inventory
                       </span>
                     )}
                     {maintenance && (
-                      <span className="inline-flex items-center text-yellow-600 dark:text-yellow-400">
+                      <span className="inline-flex items-center text-caution">
                         <Wrench className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                         Maintenance due
                       </span>
                     )}
                     {!expiring && !low && !maintenance && (
-                      <span className="text-gray-400 dark:text-gray-500">—</span>
+                      <span className="text-muted">—</span>
                     )}
                   </div>
                 </td>
@@ -165,7 +165,7 @@ export default function ItemTable({ items, onEdit }: ItemTableProps) {
                       onClick={() => onEdit(item.id)}
                       aria-label={`Edit ${item.name}`}
                       title={`Edit ${item.name}`}
-                      className="p-1.5 mr-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      className="p-1.5 mr-1 text-muted hover:text-muted dark:hover:text-muted rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -173,7 +173,7 @@ export default function ItemTable({ items, onEdit }: ItemTableProps) {
                       onClick={() => setPendingDeleteId(item.id)}
                       aria-label={`Delete ${item.name}`}
                       title={`Delete ${item.name}`}
-                      className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                      className="p-1.5 text-muted hover:text-danger dark:hover:text-danger rounded-[3px] focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>

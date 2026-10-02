@@ -30,7 +30,7 @@ export default function QRCodeDisplay({ data, title, onClose }: QRCodeDisplayPro
   if (loading) {
     return (
       <div className="p-4 text-center">
-        <div className="text-gray-500 dark:text-gray-400">Generating QR code...</div>
+        <div className="text-muted">Generating QR code...</div>
       </div>
     );
   }
@@ -38,24 +38,24 @@ export default function QRCodeDisplay({ data, title, onClose }: QRCodeDisplayPro
   if (!qrCode) {
     return (
       <div className="p-4 text-center">
-        <div className="text-red-500">Failed to generate QR code</div>
+        <div className="text-danger">Failed to generate QR code</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="p-6 bg-raised rounded-[3px] shadow-lg">
       {onClose && (
         <div className="flex justify-between items-center mb-4">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-ink">
               {title}
             </h3>
           )}
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="text-muted hover:text-muted dark:hover:text-muted rounded-[3px] p-1 -mr-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-action"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -71,7 +71,7 @@ export default function QRCodeDisplay({ data, title, onClose }: QRCodeDisplayPro
           unoptimized
         />
       </div>
-      <p className="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
+      <p className="mt-4 text-sm text-center text-muted">
         Scan with your phone to view details
       </p>
     </div>

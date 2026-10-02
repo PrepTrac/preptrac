@@ -1,53 +1,105 @@
 @import "tailwindcss";
-
-/* next-themes toggles a `.dark` class on <html>. Tailwind v4 defaults to the
- * media query, so define the class-based variant explicitly. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
+@theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-paper: var(--background);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-ink: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-on-action: var(--on-action);
+  --color-selected: var(--selected);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
 }
-
 :root {
-  --background: #f9fafb; /* gray-50 — matches the app shell's light background */
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f3f2e9;
+  --surface: #e8e9de;
+  --raised: #faf9f2;
+  --foreground: #293126;
+  --muted: #596151;
+  --line: #c1c6b5;
+  --action: #425b31;
+  --action-hover: #34452b;
+  --on-action: #ffffff;
+  --selected: #dce4cc;
+  --caution: #78520e;
+  --caution-soft: #f2e7c9;
+  --danger: #973e2d;
+  --danger-soft: #f3e0d8;
+  --success: #425b31;
+  --success-soft: #dce4cc;
+  --info: #515770;
+  --info-soft: #e2e3eb;
 }
-
-/* next-themes toggles a `.dark` class on <html> (attribute="class"). Mirror
- * the app shell palette here so the <body> background never falls back to the
- * near-black (#0a0a0a) template default. These are unlayered rules, so they
- * outrank Tailwind's layered `dark:` utilities — the values must agree. */
 .dark {
-  --background: #111827; /* gray-900 */
-  --foreground: #ededed;
+  color-scheme: dark;
+  --background: #272e25;
+  --surface: #30392b;
+  --raised: #343f2f;
+  --foreground: #f1f0e3;
+  --muted: #bcc6af;
+  --line: #4b5842;
+  --action: #bfd391;
+  --action-hover: #d2e2b0;
+  --on-action: #272e25;
+  --selected: #3f5034;
+  --caution: #edcd82;
+  --caution-soft: #463b24;
+  --danger: #f0b29b;
+  --danger-soft: #4e332c;
+  --success: #bfd391;
+  --success-soft: #3f5034;
+  --info: #c7c9e2;
+  --info-soft: #3b3c4d;
 }
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  /* Inter is loaded via next/font and exposed as --font-inter on <body>. */
-  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+body { color: var(--foreground); background: var(--background); font-family: var(--font-inter), system-ui, sans-serif; font-size: 14px; }
+@layer base {
+  button, input, select, textarea, summary, a { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), summary { cursor: pointer; }
+  input, select, textarea { min-width: 0; max-width: 100%; accent-color: var(--action); }
+  :focus-visible { outline: 2px solid var(--action); outline-offset: 3px; }
+  main { overflow-wrap: anywhere; }
+  h1 { letter-spacing: -0.035em; }
+  h2, h3 { letter-spacing: -0.015em; }
 }
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@layer components {
+  .page-shell { width: 100%; max-width: 1440px; margin-inline: auto; padding: 2rem clamp(1rem, 3vw, 3rem); }
+  .page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+  .section-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line); margin-bottom: 1rem; }
+  .section-heading h2 { font-size: 1rem; font-weight: 600; }
+  .index-label { font-family: ui-monospace, monospace; font-size: 12px; letter-spacing: .09em; color: var(--muted); }
+  .open-section { border-block: 1px solid var(--line); }
+  .ledger { border-block: 1px solid var(--line); overflow-x: auto; }
+  .ledger td { vertical-align: top; }
+  .coverage-band { background: var(--surface); border-block: 1px solid var(--line); }
+  .coverage-number { font-size: clamp(3.25rem, 5vw, 4rem); line-height: 1.1; font-weight: 600; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  .goal-scale { height: 12px; background: var(--line); position: relative; overflow: hidden; }
+  .goal-fill { display: block; height: 100%; background: var(--action); }
+  .goal-segments { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(10, 1fr); pointer-events: none; }
+  .goal-segments > span:not(:last-child) { border-right: 2px solid var(--surface); }
+  .sidebar { background: #34452b; color: #f1f0e3; --action: #bfd391; --action-hover: #d2e2b0; --muted: #d0d8c6; --line: #526248; }
+  .sidebar-link { display: flex; align-items: center; min-height: 46px; padding: .75rem 1rem; gap: .75rem; border-left: 3px solid transparent; color: #e0e6d8; }
+  .sidebar-link:hover { background: #405236; color: #fff; }
+  .sidebar-link[aria-current="page"] { background: #465b39; color: #fff; border-left-color: #bfd391; }
+  .sidebar-control { color: #e0e6d8; border-radius: 3px; }
+  .sidebar-control:hover { background: #465b39; color: #fff; }
+  .sidebar-popover { --foreground: #293126; --muted: #596151; --raised: #faf9f2; --line: #c1c6b5; --danger: #973e2d; --caution: #78520e; --action: #425b31; color: var(--foreground); }
+  .dark .sidebar-popover { --foreground: #f1f0e3; --muted: #bcc6af; --raised: #343f2f; --line: #4b5842; --danger: #f0b29b; --caution: #edcd82; --action: #bfd391; }
 }
-
-/*
- * Reduced-motion default: honor the user's OS preference by collapsing
- * non-essential animation/transition duration. Functional transitions
- * (e.g. focus rings) remain instant. Added as an app-level a11y default.
- */
+@layer utilities { .text-balance { text-wrap: balance; } }
+@media (max-width: 639px) { .page-shell { padding-block: 1.5rem; } }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

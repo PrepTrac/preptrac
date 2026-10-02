@@ -2,7 +2,7 @@
 
 import { api } from "~/utils/api";
 import { useState, useEffect } from "react";
-import { History, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -20,7 +20,7 @@ interface RecentActivityListProps {
   showTitle?: boolean;
   /** Compact layout (e.g. for dashboard) */
   compact?: boolean;
-  /** Optional link to full Activity page (e.g. "View all" on dashboard) */
+  /** Optional link to full page (e.g. "View all" on dashboard) */
   activityPageHref?: string;
 }
 
@@ -77,13 +77,12 @@ export default function RecentActivityList({
     <section className={compact ? "" : "mt-10"}>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         {showTitle && (
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <History className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-ink flex items-center gap-2">
             Recent activity
             {activityPageHref && (
               <Link
                 href={activityPageHref}
-                className="text-sm font-normal text-blue-600 dark:text-blue-400 hover:underline ml-2"
+                className="text-sm font-normal text-action hover:underline ml-2"
               >
                 View all →
               </Link>
@@ -92,15 +91,16 @@ export default function RecentActivityList({
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="open-section overflow-hidden">
         {/* Toolbar: rows per page, type filter, category filter, pagination */}
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-4">
+        <div className="px-4 py-3 border-b border-line flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Show</label>
+            <label className="text-sm text-muted whitespace-nowrap">Show</label>
             <select
+              aria-label="Rows per page"
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value) as 5 | 10 | 25)}
-              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-1.5 pl-2 pr-8"
+              className="rounded-[3px] border border-line bg-raised text-ink text-sm py-1.5 pl-2 pr-8"
             >
               {PAGE_SIZE_OPTIONS.map((n) => (
                 <option key={n} value={n}>
@@ -108,13 +108,13 @@ export default function RecentActivityList({
                 </option>
               ))}
             </select>
-            <span className="text-sm text-gray-600 dark:text-gray-400">rows</span>
+            <span className="text-sm text-muted">rows</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Type:</span>
-            <div className="flex rounded-md border border-gray-300 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-700">
+            <Filter className="h-4 w-4 text-muted" />
+            <span className="text-sm text-muted">Type:</span>
+            <div className="flex rounded-[3px] border border-line p-0.5 bg-surface">
               {TYPE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -122,8 +122,8 @@ export default function RecentActivityList({
                   onClick={() => setTypeFilter(opt.value)}
                   className={`px-3 py-1 text-sm font-medium rounded ${
                     typeFilter === opt.value
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                      ? "bg-raised text-ink "
+                      : "text-muted hover:text-ink dark:hover:text-muted"
                   }`}
                 >
                   {opt.label}
@@ -137,10 +137,10 @@ export default function RecentActivityList({
               <button
                 type="button"
                 onClick={() => setCategoryFilterOpen((o) => !o)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium ${
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-[3px] text-sm font-medium ${
                   categoryIds && categoryIds.length > 0
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-caution-soft text-caution bg-caution-soft text-caution"
+                    : "bg-surface text-ink hover:bg-surface dark:hover:bg-surface"
                 }`}
               >
                 Category {categoryIds?.length ? `(${categoryIds.length})` : ""}
@@ -152,12 +152,12 @@ export default function RecentActivityList({
                     aria-hidden="true"
                     onClick={() => setCategoryFilterOpen(false)}
                   />
-                  <div className="absolute left-0 top-full mt-1 z-20 w-56 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg py-2 max-h-60 overflow-auto">
+                  <div className="absolute left-0 top-full mt-1 z-20 w-56 rounded-[3px] border border-line bg-raised shadow-lg py-2 max-h-60 overflow-auto">
                     {categoryIds && categoryIds.length > 0 && (
                       <button
                         type="button"
                         onClick={clearCategoryFilter}
-                        className="w-full text-left px-3 py-1.5 text-sm text-amber-600 dark:text-amber-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full text-left px-3 py-1.5 text-sm text-caution hover:bg-surface dark:hover:bg-surface"
                       >
                         Clear category filter
                       </button>
@@ -165,15 +165,15 @@ export default function RecentActivityList({
                     {categories.map((cat) => (
                       <label
                         key={cat.id}
-                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface dark:hover:bg-surface cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={categoryIds?.includes(cat.id) ?? false}
                           onChange={() => toggleCategory(cat.id)}
-                          className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                          className="rounded border-line text-caution focus:ring-caution"
                         />
-                        <span className="text-sm text-gray-900 dark:text-white">{cat.name}</span>
+                        <span className="text-sm text-ink">{cat.name}</span>
                       </label>
                     ))}
                   </div>
@@ -183,28 +183,30 @@ export default function RecentActivityList({
           )}
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-muted">
               {totalCount === 0
                 ? "No entries"
                 : `${from}–${to} of ${totalCount}`}
             </span>
-            <div className="flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
+            <div className="flex rounded-[3px] border border-line overflow-hidden">
               <button
                 type="button"
+                aria-label="Previous activity page"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 py-1.5 bg-raised text-ink hover:bg-paper dark:hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-gray-600">
+              <span className="px-3 py-1.5 text-sm text-ink border-x border-line">
                 Page {page} of {totalPages}
               </span>
               <button
                 type="button"
+                aria-label="Next activity page"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 py-1.5 bg-raised text-ink hover:bg-paper dark:hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -213,15 +215,15 @@ export default function RecentActivityList({
         </div>
 
         {isLoading ? (
-          <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+          <div className="px-4 py-8 text-center text-muted text-sm">
             Loading…
           </div>
         ) : logs.length === 0 ? (
-          <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+          <div className="px-4 py-8 text-center text-muted text-sm">
             No activity matches the current filters.
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+          <ul className="divide-y divide-line">
             {logs.map((log) => (
               <li
                 key={log.id}
@@ -229,29 +231,29 @@ export default function RecentActivityList({
                   compact ? "px-4 py-2" : "px-4 py-3"
                 }`}
               >
-                <div>
-                  <span className="font-medium text-gray-900 dark:text-white">
+                <div className="min-w-0 flex-1">
+                  <span className="font-medium text-ink">
                     {log.item.name}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-2">
+                  <span className="text-muted ml-2">
                     {log.quantity} {log.item.unit}
                   </span>
                   <span
                     className={`ml-2 text-xs font-medium px-2 py-0.5 rounded ${
                       log.type === "addition"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                        ? "bg-success-soft text-action bg-success-soft text-action"
+                        : "bg-danger-soft text-danger bg-danger-soft text-danger"
                     }`}
                   >
                     {log.type === "addition" ? "Added" : "Used"}
                   </span>
                   {log.item.category && !compact && (
-                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="ml-2 text-xs text-muted">
                       {log.item.category.name}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3 text-sm text-muted">
                   {log.note && (
                     <span className="italic">&ldquo;{log.note}&rdquo;</span>
                   )}

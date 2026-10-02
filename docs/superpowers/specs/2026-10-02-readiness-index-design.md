@@ -2,7 +2,7 @@
 
 Date: 2026-10-02
 
-Status: Selected visual direction; app-wide specification awaiting user review.
+Status: Approved for implementation by user request on 2026-10-02; implemented for v0.3.0.
 
 ## Intent and agreed direction
 
@@ -140,7 +140,7 @@ All browser workflows must use a separate disposable local database with synthet
 
 ## Assumptions and limits
 
-The user approved the B visual direction, the app-wide layout scope, familiar navigation, a new identity, desktop priority, and dark-mode availability. The page treatments and production details in this document are the proposed extension of that direction and require review before implementation planning.
+The user approved the B visual direction, the app-wide layout scope, familiar navigation, a new identity, desktop priority, and dark-mode availability. The user subsequently authorized implementation of this document and requested a v0.3.0 release commit.
 
 The visual study's sample counts, dates, and shared 30-day targets are not product defaults. Production data and current policies take precedence.
 
