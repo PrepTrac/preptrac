@@ -1,6 +1,7 @@
 # PrepTrac visual overhaul: Readiness index
 
-Date: 2026-10-02  
+Date: 2026-10-02
+
 Status: Selected visual direction; app-wide specification awaiting user review.
 
 ## Intent and agreed direction
