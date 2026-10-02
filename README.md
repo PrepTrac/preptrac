@@ -4,7 +4,6 @@
 
 PrepTrac helps you organize food, water, ammo, medical supplies, tools, and more—by category and location—so you can see your full picture at a glance and keep everything up to date.
 
-If you like this project and want to support it, [buy me a coffee :)](https://buymeacoffee.com/hardenedsite)
 
 ![PrepTrac Dashboard](docs/images/Dashboard%20Page.png)
 
